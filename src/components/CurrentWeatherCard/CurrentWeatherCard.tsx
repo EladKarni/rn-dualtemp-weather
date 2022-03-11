@@ -20,12 +20,10 @@ const CurrentWeather = (props: CurrentWeatherPropsType) => {
         return <CurrentWeatherLoading date={props.date} />
     }
 
-    console.log(props.weather)
-
     return (
-        <Card date={props.date.toLocaleDateString()}>
+        <Card date={props.date.toLocaleDateString()} pv={18} ph={18} br={26} m={20} h={265} >
             <View style={CurrentWeatherStyles.mainArea}>
-                <WeatherIcon icon={displayWeatherIcon(props.weather?.icon)} disc={props.weather.description} />
+                <WeatherIcon icon={displayWeatherIcon(props.weather?.icon)} w={115} h={115} disc={props.weather.description} />
                 <View style={CurrentWeatherStyles.tempArea}>
                     <TempText temp={Math.round(props.temp).toString()} type="C" fs={60} lh={78} withSym={true} />
                     <TempText temp={Math.round((props.temp * 9 / 5) + 32).toString()} type="F" fs={30} lh={39} withSym={true} />

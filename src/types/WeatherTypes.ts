@@ -48,7 +48,7 @@ export interface HourlyEntity {
 	wind_speed: number;
 	wind_deg: number;
 	wind_gust: number;
-	weather?: WeatherEntity[] | null;
+	weather: WeatherEntity[];
 	pop: number;
 }
 export interface DailyEntity {

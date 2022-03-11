@@ -7,11 +7,17 @@ import CardHeader from '../CardHeader/CardHeader'
 import CardFooter from '../CardFooter/CardFooter'
 
 type CardPropTypes = {
-  date: string;
-  children?: JSX.Element;
+  date?: string;
+  w?: number;
+  h?: number;
+  br?: number;
+  m?: number;
+  pv: number;
+  ph: number
+  children: JSX.Element;
 };
 
-const Card = (props: CardPropTypes) => {
+const Card = ({ date, w, h, br, m, pv, ph, children }: CardPropTypes) => {
   return (
     <LinearGradient
       // Background Linear Gradient
@@ -19,11 +25,11 @@ const Card = (props: CardPropTypes) => {
         palette.blueLight,
         palette.blue
       ]}
-      style={styles.card}
+      style={{ ...styles.card, width: w, height: h, borderRadius: br, marginHorizontal: m, paddingVertical: pv, paddingHorizontal: ph }}
     >
-      <CardHeader date={props.date} />
-      {props.children}
-      <CardFooter />
+      {date ? <CardHeader date={date} /> : null}
+      {children}
+      {date ? <CardFooter /> : null}
     </LinearGradient>
   )
 }

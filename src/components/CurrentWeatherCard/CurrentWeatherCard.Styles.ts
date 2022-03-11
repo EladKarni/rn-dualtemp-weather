@@ -1,5 +1,4 @@
 import { StyleSheet } from 'react-native';
-import { palette } from '../../Styles/Palette';
 import { headerText } from '../../Styles/Typography';
 
 export const CurrentWeatherStyles = StyleSheet.create({

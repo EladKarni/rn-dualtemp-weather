@@ -9,8 +9,6 @@ type Style = {
 export const WeatherIconStyles = StyleSheet.create<Style>({
     weatherPreview: {
         resizeMode: 'contain',
-        width: 118,
-        height: 106,
     },
     weatherDisc: {
         ...headerText,

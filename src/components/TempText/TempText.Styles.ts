@@ -4,7 +4,7 @@ import { headerText } from '../../Styles/Typography';
 export const TempTextStyles = StyleSheet.create({
     temp: {
         ...headerText,
-        textAlign: "right",
+        textAlign: "center",
     },
     tempLastLetter: {
         textAlignVertical: 'top',

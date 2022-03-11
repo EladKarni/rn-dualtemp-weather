@@ -15,6 +15,7 @@ import {
 } from '@expo-google-fonts/dm-sans';
 import { palette } from './src/Styles/Palette';
 import { headerText } from './src/Styles/Typography';
+import HourlyForecast from './src/components/HourlyForecast/HourlyForecast';
 
 const wait = (timeout: number | undefined) => {
   return new Promise(resolve => setTimeout(resolve, timeout));
@@ -64,6 +65,7 @@ export default function App() {
       >
         <Text style={styles.containerHeaderText}>Weather Forecast</Text>
         <CurrentWeatherCard date={date} temp={forecast?.current.temp} weather={forecast?.current.weather[0]} />
+        <HourlyForecast hourlyForecast={forecast?.hourly?.slice(0, 24)} />
       </ScrollView>
     </SafeAreaView>
   )
@@ -72,7 +74,6 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 22,
     marginTop: -25,
     backgroundColor: palette.blueDark
   },
@@ -82,8 +83,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   containerHeaderText: {
-    paddingTop: 75,
-    paddingBottom: 50,
+    paddingTop: 65,
+    paddingBottom: 15,
     fontSize: 20,
     textAlign: 'center',
     ...headerText

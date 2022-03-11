@@ -5,14 +5,16 @@ import { WeatherIconStyles } from './WeatherIcon.Styles'
 
 type weatherIconPropsType = {
     icon: ImageSourcePropType;
-    disc: string;
+    w: number;
+    h: number;
+    disc?: string;
 }
 
-const WeatherIcon = (props: weatherIconPropsType) => {
+const WeatherIcon = ({ icon, w, h, disc }: weatherIconPropsType) => {
     return (
-        <View>
-            <Image source={props.icon} style={WeatherIconStyles.weatherPreview} />
-            <Text style={WeatherIconStyles.weatherDisc}>{props.disc}</Text>
+        <View style={{ alignItems: 'center' }}>
+            <Image source={icon} style={{ ...WeatherIconStyles.weatherPreview, width: w, height: h }} />
+            {disc && <Text style={WeatherIconStyles.weatherDisc}>{disc}</Text>}
         </View>
     )
 }
