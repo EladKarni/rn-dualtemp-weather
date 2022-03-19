@@ -1,18 +1,16 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { View, Text } from 'react-native';
+import { AppStateContext } from '../../../App';
 
 import { cardHeaderStyles } from './CardHeader.Styles';
 
-type CardHeaderPropTypes = {
-  date: string,
-};
+const CardHeader = () => {
+  const context = useContext(AppStateContext);
 
-
-const CardHeader = (props: CardHeaderPropTypes) => {
   return (
     <View style={cardHeaderStyles.cardHeader}>
       <Text style={cardHeaderStyles.todayText}>Today</Text>
-      <Text style={cardHeaderStyles.dateText}>{props.date}</Text>
+      <Text style={cardHeaderStyles.dateText}>{context?.date.format('MMMM Do YYYY')}</Text>
     </View>
   )
 }

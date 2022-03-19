@@ -1,8 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { createContext, useEffect, useState } from 'react';
 import { RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text } from 'react-native';
 import { fetchForecast } from './src/utils/fetchWeather';
 import CurrentWeatherCard from './src/components/CurrentWeatherCard/CurrentWeatherCard';
 import { Weather } from './src/types/WeatherTypes';
+import { palette } from './src/Styles/Palette';
+import { headerText } from './src/Styles/Typography';
+import HourlyForecast from './src/components/HourlyForecast/HourlyForecast';
+import moment, { Moment } from 'moment';
 
 import {
   useFonts,
@@ -13,18 +17,18 @@ import {
   DMSans_700Bold,
   DMSans_700Bold_Italic,
 } from '@expo-google-fonts/dm-sans';
-import { palette } from './src/Styles/Palette';
-import { headerText } from './src/Styles/Typography';
-import HourlyForecast from './src/components/HourlyForecast/HourlyForecast';
 
-const wait = (timeout: number | undefined) => {
-  return new Promise(resolve => setTimeout(resolve, timeout));
+export const AppStateContext = createContext<AppStateProviderPropTypes | null>(null);
+
+type AppStateProviderPropTypes = {
+  forecast: Weather | undefined;
+  date: Moment;
 }
 
 export default function App() {
   const [forecast, setForecast] = useState<Weather>();
   const [refreshing, setRefreshing] = useState(false);
-  const [date, setDate] = useState(new Date());
+  const [date, setDate] = useState(moment());
 
   let [fontsLoaded] = useFonts({
     DMSans_400Regular,
@@ -42,6 +46,7 @@ export default function App() {
   const loadForecast = async () => {
     setRefreshing(true)
     setForecast(await fetchForecast())
+    setDate(moment())
     setRefreshing(false)
   }
 
@@ -63,9 +68,11 @@ export default function App() {
           />
         }
       >
-        <Text style={styles.containerHeaderText}>Weather Forecast</Text>
-        <CurrentWeatherCard date={date} temp={forecast?.current.temp} weather={forecast?.current.weather[0]} />
-        <HourlyForecast hourlyForecast={forecast?.hourly?.slice(0, 24)} />
+        <AppStateContext.Provider value={{ forecast, date }}>
+          <Text style={styles.containerHeaderText}>Weather Forecast</Text>
+          <CurrentWeatherCard temp={forecast?.current.temp} weather={forecast?.current.weather[0]} />
+          <HourlyForecast hourlyForecast={forecast?.hourly?.slice(0, 24)} />
+        </AppStateContext.Provider>
       </ScrollView>
     </SafeAreaView>
   )

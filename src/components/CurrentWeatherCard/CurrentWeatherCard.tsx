@@ -12,16 +12,16 @@ import CurrentWeatherLoading from '../CurrentWeatherLoading/CurrentWeatherLoadin
 type CurrentWeatherPropsType = {
     temp?: number;
     weather?: WeatherEntity;
-    date: Date;
 }
 
 const CurrentWeather = (props: CurrentWeatherPropsType) => {
     if (props.temp === undefined || props.weather === undefined) {
-        return <CurrentWeatherLoading date={props.date} />
+        // return <CurrentWeatherLoading date={props.date} />
+        return null
     }
 
     return (
-        <Card date={props.date.toLocaleDateString()} pv={18} ph={18} br={26} m={20} h={265} >
+        <Card cardType="main" >
             <View style={CurrentWeatherStyles.mainArea}>
                 <WeatherIcon icon={displayWeatherIcon(props.weather?.icon)} w={115} h={115} disc={props.weather.description} />
                 <View style={CurrentWeatherStyles.tempArea}>

@@ -15,7 +15,7 @@ interface HourlyForecastItemProps {
 
 const HourlyForecastItem = ({ temp, dt, icon }: HourlyForecastItemProps) => {
     return (
-        <Card w={80} h={160} pv={20} ph={5} br={60} m={10}>
+        <Card cardType='hourly'>
             <View style={{ ...HourlyForecastItemStyles.HourlyItem, height: '100%', alignContent: 'center' }}>
                 <Text style={{ color: '#fff', textAlign: 'center' }}>
                     {moment.unix(dt).format('h:mm ').toUpperCase()}

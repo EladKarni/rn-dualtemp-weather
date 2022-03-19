@@ -7,29 +7,43 @@ import CardHeader from '../CardHeader/CardHeader'
 import CardFooter from '../CardFooter/CardFooter'
 
 type CardPropTypes = {
-  date?: string;
-  w?: number;
-  h?: number;
-  br?: number;
-  m?: number;
-  pv: number;
-  ph: number
-  children: JSX.Element;
+  // w?: number;
+  // h?: number;
+  // br?: number;
+  // m?: number;
+  // pv: number;
+  // ph: number;
+  cardType: string;
+  children: React.ReactNode;
 };
 
-const Card = ({ date, w, h, br, m, pv, ph, children }: CardPropTypes) => {
+const Card = ({ cardType, children }: CardPropTypes) => {
+
+  const applyCardTypeStyling = () => {
+    switch (cardType) {
+      case 'main':
+        return styles.cardMain;
+
+      case 'hourly':
+        return styles.cardHourly;
+
+      default:
+        return styles.cardMain;
+
+    }
+  }
+
   return (
     <LinearGradient
-      // Background Linear Gradient
       colors={[
         palette.blueLight,
         palette.blue
       ]}
-      style={{ ...styles.card, width: w, height: h, borderRadius: br, marginHorizontal: m, paddingVertical: pv, paddingHorizontal: ph }}
+      style={[styles.card, applyCardTypeStyling()]}
     >
-      {date ? <CardHeader date={date} /> : null}
+      {cardType === 'main' && <CardHeader />}
       {children}
-      {date ? <CardFooter /> : null}
+      {cardType === 'main' && <CardFooter />}
     </LinearGradient>
   )
 }
