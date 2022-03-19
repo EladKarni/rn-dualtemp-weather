@@ -3,6 +3,7 @@ import { headerText } from '../../Styles/Typography'
 
 export const cardHeaderStyles = StyleSheet.create({
   cardHeader: {
+    marginBottom: 15,
     flexDirection: 'row',
     justifyContent: 'space-between',
   },

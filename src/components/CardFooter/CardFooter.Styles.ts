@@ -3,6 +3,7 @@ import { headerText } from '../../Styles/Typography'
 
 export const CardFooterStyles = StyleSheet.create({
   cardFooter: {
+    marginVertical: 5,
     flexDirection: "row"
   },
   footerText: {

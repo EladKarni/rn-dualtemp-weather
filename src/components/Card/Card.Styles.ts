@@ -12,7 +12,6 @@ export const styles = StyleSheet.create({
         elevation: 10,
     },
     cardMain: {
-        height: 265,
         borderRadius: 26,
         marginHorizontal: 20,
         padding: 18,

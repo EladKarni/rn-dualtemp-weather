@@ -41,9 +41,7 @@ const Card = ({ cardType, children }: CardPropTypes) => {
       ]}
       style={[styles.card, applyCardTypeStyling()]}
     >
-      {cardType === 'main' && <CardHeader />}
       {children}
-      {cardType === 'main' && <CardFooter />}
     </LinearGradient>
   )
 }

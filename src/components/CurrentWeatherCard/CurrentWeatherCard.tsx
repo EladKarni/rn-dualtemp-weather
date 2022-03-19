@@ -8,6 +8,8 @@ import Card from '../Card/Card';
 
 import { CurrentWeatherStyles } from './CurrentWeatherCard.Styles'
 import CurrentWeatherLoading from '../CurrentWeatherLoading/CurrentWeatherLoading';
+import CardHeader from '../CardHeader/CardHeader';
+import CardFooter from '../CardFooter/CardFooter';
 
 type CurrentWeatherPropsType = {
     temp?: number;
@@ -22,6 +24,7 @@ const CurrentWeather = (props: CurrentWeatherPropsType) => {
 
     return (
         <Card cardType="main" >
+            <CardHeader />
             <View style={CurrentWeatherStyles.mainArea}>
                 <WeatherIcon icon={displayWeatherIcon(props.weather?.icon)} w={115} h={115} disc={props.weather.description} />
                 <View style={CurrentWeatherStyles.tempArea}>
@@ -29,6 +32,7 @@ const CurrentWeather = (props: CurrentWeatherPropsType) => {
                     <TempText temp={Math.round((props.temp * 9 / 5) + 32).toString()} type="F" fs={30} lh={39} withSym={true} />
                 </View>
             </View>
+            <CardFooter />
         </Card>
     )
 };
