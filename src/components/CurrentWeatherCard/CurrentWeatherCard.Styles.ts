@@ -1,5 +1,4 @@
 import { StyleSheet } from 'react-native';
-import { headerText } from '../../Styles/Typography';
 
 export const CurrentWeatherStyles = StyleSheet.create({
   mainArea: {
@@ -11,18 +10,6 @@ export const CurrentWeatherStyles = StyleSheet.create({
     textAlign: 'right',
     flexDirection: "column",
     alignContent: "flex-end",
-  },
-  tempC: {
-    ...headerText,
-    fontSize: 60,
-    lineHeight: 78,
-    textAlign: "right",
-  },
-  tempF: {
-    ...headerText,
-    fontSize: 30,
-    lineHeight: 39,
-    textAlign: "right",
   },
   tempLastLetterC: {
     fontSize: 60/2,

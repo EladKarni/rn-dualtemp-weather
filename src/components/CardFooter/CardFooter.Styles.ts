@@ -1,5 +1,4 @@
 import { StyleSheet } from 'react-native';
-import { headerText } from '../../Styles/Typography'
 
 export const CardFooterStyles = StyleSheet.create({
   cardFooter: {
@@ -7,7 +6,6 @@ export const CardFooterStyles = StyleSheet.create({
     flexDirection: "row"
   },
   footerText: {
-    ...headerText,
     fontSize: 14,
   },
   locationIcon: {

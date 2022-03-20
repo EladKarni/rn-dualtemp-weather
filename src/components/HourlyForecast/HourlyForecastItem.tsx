@@ -3,7 +3,7 @@ import WeatherIcon from '../WeatherIcon/WeatherIcon';
 import { View, Text, StyleSheet } from 'react-native';
 import { displayWeatherIcon } from '../../utils/Images';
 import moment from 'moment';
-import TempText from '../TempText/TempText';
+import TempText, { TempTextStyleTypes } from '../TempText/TempText';
 import Card from '../Card/Card';
 import { HourlyForecastItemStyles } from './HourlyForecast.Styles';
 
@@ -23,17 +23,15 @@ const HourlyForecastItem = ({ temp, dt, icon }: HourlyForecastItemProps) => {
                 <WeatherIcon icon={displayWeatherIcon(icon)} w={50} h={50} />
                 <View>
                     <TempText
-                        temp={Math.round(temp).toString()}
-                        type="C"
-                        fs={14}
-                        lh={14}
+                        temp={temp}
+                        tempType="C"
+                        textStyleType={TempTextStyleTypes.HOURLY}
                         withSym={true}
                     />
                     <TempText
-                        temp={Math.round((temp * 9 / 5) + 32).toString()}
-                        type="F"
-                        fs={14}
-                        lh={14}
+                        temp={temp}
+                        tempType="F"
+                        textStyleType={TempTextStyleTypes.HOURLY}
                         withSym={true}
                     />
                 </View>

@@ -27,6 +27,9 @@ const Card = ({ cardType, children }: CardPropTypes) => {
       case 'hourly':
         return styles.cardHourly;
 
+      case 'daily':
+        return styles.cardDaily;
+
       default:
         return styles.cardMain;
 

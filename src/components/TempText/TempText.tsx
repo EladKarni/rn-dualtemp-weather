@@ -1,22 +1,29 @@
 import { View, Text } from 'react-native'
 import React from 'react'
 import { TempTextStyles } from './TempText.Styles'
+import { typography } from '../../Styles/Typography';
 
 type TempTextPropsType = {
+    textStyleType: TempTextStyleTypes;
     withSym: boolean;
-    temp: string;
-    type?: string;
-    fs: number;
-    lh: number;
+    temp: number;
+    tempType?: string;
 }
 
-const TempText = (props: TempTextPropsType) => {
+export enum TempTextStyleTypes {
+    MAIN = 'tempCurrentMain',
+    SECONDARY = 'tempCurrentSecondary',
+    HOURLY = 'tempHourly',
+    DAILY = 'tempDaily'
+}
+
+const TempText = ({ temp, withSym, tempType, textStyleType }: TempTextPropsType) => {
     return (
-        <Text style={{ ...TempTextStyles.temp, fontSize: props.fs, lineHeight: props.lh }}>
-            {props.temp}
-            {props.withSym ? '°' : null}
-            <Text style={TempTextStyles.tempLastLetter}>{props?.type}</Text>
-        </Text>
+        <Text style={[typography.headerText, TempTextStyles.temp, TempTextStyles[textStyleType]]}>
+            {tempType?.toUpperCase() !== 'F' ? Math.round(temp) : Math.round((temp * 9 / 5) + 32)}
+            {withSym ? '°' : null}
+            <Text style={TempTextStyles.tempLastLetter}>{tempType}</Text>
+        </Text >
     )
 }
 

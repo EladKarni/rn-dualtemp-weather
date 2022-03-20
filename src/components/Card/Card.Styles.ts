@@ -24,5 +24,14 @@ export const styles = StyleSheet.create({
         paddingHorizontal: 5,
         borderRadius: 60,
         margin: 7.5,
+        shadowRadius: 15,
+    },
+    cardDaily: {
+        height: 50,
+        paddingVertical: 7.5,
+        borderRadius: 60,
+        marginVertical: 7.5,
+        paddingHorizontal: 5,
+        shadowRadius: 10
     }
 })

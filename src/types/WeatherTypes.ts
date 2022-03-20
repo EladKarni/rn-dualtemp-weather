@@ -4,9 +4,9 @@ export interface Weather {
 	timezone: string;
 	timezone_offset: number;
 	current: Current;
-	minutely?: MinutelyEntity[] | null;
-	hourly?: HourlyEntity[] | null;
-	daily?: DailyEntity[] | null;
+	minutely: MinutelyEntity[];
+	hourly: HourlyEntity[];
+	daily: DailyEntity[];
 }
 export interface Current {
 	dt: number;
@@ -66,7 +66,7 @@ export interface DailyEntity {
 	wind_speed: number;
 	wind_deg: number;
 	wind_gust: number;
-	weather?: WeatherEntity[] | null;
+	weather: WeatherEntity[];
 	clouds: number;
 	pop: number;
 	uvi: number;

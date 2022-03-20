@@ -1,8 +1,8 @@
 import React, { useContext, useEffect, useState } from 'react';
 import { View, Text } from 'react-native';
-import { AppStateContext } from '../../../App';
 import { CardFooterStyles } from './CardFooter.Styles';
-import { Moment } from 'moment';
+import { AppStateContext } from '../../utils/AppStateContext';
+import { typography } from '../../Styles/Typography';
 
 const CardFooter = () => {
     const context = useContext(AppStateContext);
@@ -18,7 +18,7 @@ const CardFooter = () => {
 
     return (
         <View style={CardFooterStyles.cardFooter}>
-            <Text style={CardFooterStyles.footerText}>Last Updated: {updatedString}</Text>
+            <Text style={[typography.headerText, CardFooterStyles.footerText]}>Last Updated: {updatedString}</Text>
         </View>
     )
 }
