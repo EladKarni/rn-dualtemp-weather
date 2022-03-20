@@ -18,18 +18,17 @@ export const styles = StyleSheet.create({
     },
     cardHourly: {
         justifyContent: 'space-between',
-        width: 75,
+        width: 65,
         height: 155,
         paddingVertical: 15,
-        paddingHorizontal: 5,
-        borderRadius: 60,
+        borderRadius: 32,
         margin: 7.5,
         shadowRadius: 15,
     },
     cardDaily: {
         height: 50,
         paddingVertical: 7.5,
-        borderRadius: 60,
+        borderRadius: 15,
         marginVertical: 7.5,
         paddingHorizontal: 5,
         shadowRadius: 10
