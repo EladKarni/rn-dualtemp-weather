@@ -1,5 +1,5 @@
 import React from 'react';
-import WeatherIcon from '../WeatherIcon/WeatherIcon';
+import WeatherIcon, { IconSizeTypes } from '../WeatherIcon/WeatherIcon';
 import { View, Text, StyleSheet } from 'react-native';
 import { displayWeatherIcon } from '../../utils/Images';
 import moment from 'moment';
@@ -16,11 +16,11 @@ interface HourlyForecastItemProps {
 const HourlyForecastItem = ({ temp, dt, icon }: HourlyForecastItemProps) => {
     return (
         <Card cardType='hourly'>
-            <View style={{ ...HourlyForecastItemStyles.HourlyItem, height: '100%', alignContent: 'center' }}>
-                <Text style={{ color: '#fff', textAlign: 'center' }}>
-                    {moment.unix(dt).format('h:mm ').toUpperCase()}
+            <View style={HourlyForecastItemStyles.HourlyItem}>
+                <Text style={HourlyForecastItemStyles.HourText}>
+                    {moment.unix(dt).format('HH:mm').toUpperCase()}
                 </Text>
-                <WeatherIcon icon={displayWeatherIcon(icon)} w={50} h={50} />
+                <WeatherIcon icon={displayWeatherIcon(icon)} iconSize={IconSizeTypes.MEDIUM} />
                 <View>
                     <TempText
                         temp={temp}

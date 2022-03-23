@@ -13,12 +13,25 @@ export const DailyForecastItemStyles = StyleSheet.create({
         justifyContent: 'space-between',
         paddingHorizontal: 15,
         alignItems: 'center',
-
     },
     dayText: {
         color: palette.grayLight,
         textAlign: 'center',
         alignContent: 'center',
         fontSize: 18
+    },
+    tempIconContainer: {
+        flexDirection: 'row',
+        alignContent: 'center',
+        alignItems: 'center'        
+    },
+    tempContainer: {
+        flexDirection: 'row',
+        height: 17.5,
+        paddingHorizontal: 10
+    },
+    tempDivider: {
+        fontStyle: 'italic',
+        color: palette.grayLight
     }
 })
