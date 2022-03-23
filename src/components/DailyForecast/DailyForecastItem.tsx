@@ -2,7 +2,7 @@ import React from 'react'
 import { View, Text } from 'react-native'
 import { DailyEntity } from '../../types/WeatherTypes';
 import { DailyForecastItemStyles } from './DailyForecast.Styles';
-import Card from '../Card/Card';
+import Card, { CardStyleTypes } from '../Card/Card';
 import moment from 'moment'
 import WeatherIcon, { IconSizeTypes } from '../WeatherIcon/WeatherIcon';
 import { displayWeatherIcon } from '../../utils/Images';
@@ -15,7 +15,7 @@ type DailyForecastItemPropTypes = {
 
 const DailyForecastItem = ({ day }: DailyForecastItemPropTypes) => {
     return (
-        <Card cardType='daily'>
+        <Card cardType={CardStyleTypes.DAILY}>
             <View style={DailyForecastItemStyles.dailyItem}>
                 <Text style={DailyForecastItemStyles.dayText}>{moment.unix(day.dt).format('dddd')}</Text>
                 <View style={DailyForecastItemStyles.tempIconContainer}>

@@ -4,10 +4,9 @@ import { displayWeatherIcon } from '../../utils/Images';
 import { WeatherEntity } from '../../types/WeatherTypes';
 import WeatherIcon, { IconSizeTypes } from '../WeatherIcon/WeatherIcon';
 import TempText, { TempTextStyleTypes } from '../TempText/TempText';
-import Card from '../Card/Card';
+import Card, { CardStyleTypes } from '../Card/Card';
 
 import { CurrentWeatherStyles } from './CurrentWeatherCard.Styles'
-import CurrentWeatherLoading from '../CurrentWeatherLoading/CurrentWeatherLoading';
 import CardHeader from '../CardHeader/CardHeader';
 import CardFooter from '../CardFooter/CardFooter';
 
@@ -18,7 +17,7 @@ type CurrentWeatherPropsType = {
 
 const CurrentWeather = ({ temp, weather }: CurrentWeatherPropsType) => {
     return (
-        <Card cardType="main" >
+        <Card cardType={CardStyleTypes.MAIN} >
             <CardHeader />
             <View style={CurrentWeatherStyles.mainArea}>
                 <WeatherIcon icon={displayWeatherIcon(weather?.icon)} iconSize={IconSizeTypes.LARGE} disc={weather.description} />

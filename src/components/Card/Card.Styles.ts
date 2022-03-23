@@ -1,7 +1,7 @@
 import { StyleSheet } from 'react-native'
 import { palette } from '../../Styles/Palette'
 
-export const styles = StyleSheet.create({
+export const CardStyles = StyleSheet.create({
     card: {
         justifyContent: 'space-between',
         marginBottom: 25,

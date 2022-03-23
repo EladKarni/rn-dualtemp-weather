@@ -4,7 +4,7 @@ import { View, Text, StyleSheet } from 'react-native';
 import { displayWeatherIcon } from '../../utils/Images';
 import moment from 'moment';
 import TempText, { TempTextStyleTypes } from '../TempText/TempText';
-import Card from '../Card/Card';
+import Card, { CardStyleTypes } from '../Card/Card';
 import { HourlyForecastItemStyles } from './HourlyForecast.Styles';
 
 interface HourlyForecastItemProps {
@@ -15,7 +15,7 @@ interface HourlyForecastItemProps {
 
 const HourlyForecastItem = ({ temp, dt, icon }: HourlyForecastItemProps) => {
     return (
-        <Card cardType='hourly'>
+        <Card cardType={CardStyleTypes.HOURLY}>
             <View style={HourlyForecastItemStyles.HourlyItem}>
                 <Text style={HourlyForecastItemStyles.HourText}>
                     {moment.unix(dt).format('HH:mm').toUpperCase()}

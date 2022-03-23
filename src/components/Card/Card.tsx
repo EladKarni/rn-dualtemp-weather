@@ -1,48 +1,27 @@
-import React, { Children } from 'react'
-import { View, Text } from 'react-native'
+import React from 'react'
 import { LinearGradient } from 'expo-linear-gradient'
-import { styles } from './Card.Styles'
 import { palette } from '../../Styles/Palette'
-import CardHeader from '../CardHeader/CardHeader'
-import CardFooter from '../CardFooter/CardFooter'
+import { CardStyles } from './Card.Styles';
 
 type CardPropTypes = {
-  // w?: number;
-  // h?: number;
-  // br?: number;
-  // m?: number;
-  // pv: number;
-  // ph: number;
-  cardType: string;
+  cardType: CardStyleTypes;
   children: React.ReactNode;
 };
 
+export enum CardStyleTypes {
+  MAIN = 'cardMain',
+  HOURLY = 'cardHourly',
+  DAILY = 'cardDaily'
+}
+
 const Card = ({ cardType, children }: CardPropTypes) => {
-
-  const applyCardTypeStyling = () => {
-    switch (cardType) {
-      case 'main':
-        return styles.cardMain;
-
-      case 'hourly':
-        return styles.cardHourly;
-
-      case 'daily':
-        return styles.cardDaily;
-
-      default:
-        return styles.cardMain;
-
-    }
-  }
-
   return (
     <LinearGradient
       colors={[
         palette.blueLight,
         palette.blue
       ]}
-      style={[styles.card, applyCardTypeStyling()]}
+      style={[CardStyles.card, CardStyles[cardType]]}
     >
       {children}
     </LinearGradient>
