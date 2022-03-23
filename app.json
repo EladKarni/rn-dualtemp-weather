@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "rn-weather-app-template",
-    "slug": "rn-weather-app-template",
+    "name": "Dualtemp Weather",
+    "slug": "dualtemp-weather",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
