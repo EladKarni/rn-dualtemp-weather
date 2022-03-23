@@ -32,6 +32,7 @@ export const DailyForecastItemStyles = StyleSheet.create({
     },
     tempDivider: {
         fontStyle: 'italic',
+        lineHeight: 17.5,
         color: palette.grayLight
     }
 })
