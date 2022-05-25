@@ -24,7 +24,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#1C1B4D"
       },
-      "package": "com.ekarni.rnweatherapptemplate"
+      "package": "com.ekarni.rndualtempweatherapp"
     },
     "web": {
       "favicon": "./assets/favicon.png"
