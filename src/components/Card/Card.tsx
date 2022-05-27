@@ -11,7 +11,8 @@ type CardPropTypes = {
 export enum CardStyleTypes {
   MAIN = 'cardMain',
   HOURLY = 'cardHourly',
-  DAILY = 'cardDaily'
+  DAILY = 'cardDaily',
+  DAILYXL = 'cardDailyExpanded'
 }
 
 const Card = ({ cardType, children }: CardPropTypes) => {

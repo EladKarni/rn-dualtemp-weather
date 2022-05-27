@@ -21,6 +21,7 @@ export const fetchForecast = async () => {
         if (!response.ok) {
             Alert.alert(`Error retrieving weather data: ${data.message}`);
         } else {
+            console.log({data})
             return data;
         }
     } catch (e) {

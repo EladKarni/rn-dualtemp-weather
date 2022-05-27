@@ -32,5 +32,12 @@ export const CardStyles = StyleSheet.create({
         marginVertical: 7.5,
         paddingHorizontal: 5,
         shadowRadius: 10
+    },
+    cardDailyExpanded: {
+        paddingVertical: 7.5,
+        borderRadius: 15,
+        marginVertical: 7.5,
+        paddingHorizontal: 5,
+        shadowRadius: 10
     }
 })
