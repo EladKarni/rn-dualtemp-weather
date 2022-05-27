@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import DailyForecastItem from './DailyForecastItem';
 import Subtitle from '../Subtitle/Subtitle';
 
@@ -11,11 +11,19 @@ type DailyForecastPropTypes = {
 }
 
 const DailyForecast = ({ dailyForecast }: DailyForecastPropTypes) => {
+    const [currentlySelectedIndex, setCurrentlySelectedIndex] = useState(0)
+
+    const setSelectedIndex = (index: number) => {
+        index !== currentlySelectedIndex
+            ? setCurrentlySelectedIndex(index)
+            : setCurrentlySelectedIndex(NaN)
+    }
+
     return (
         <View style={DailyForecastStyles.container}>
-            <Subtitle text={'Daily Forecast'} />
-            {dailyForecast.map((day) => {
-                return <DailyForecastItem day={day} key={day.dt} />
+            <Subtitle text={`Daily Forecast`} />
+            {dailyForecast.map((day, i) => {
+                return <DailyForecastItem day={day} key={day.dt} index={i} currSelected={currentlySelectedIndex} setSelected={setSelectedIndex} />
             })}
         </View>
     )
