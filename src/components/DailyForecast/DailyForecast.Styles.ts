@@ -71,4 +71,10 @@ export const DailyForecastItemStyles = StyleSheet.create({
         color: palette.grayLight,
         fontSize: 16
     },
+    dividerLine: {
+        borderBottomColor: palette.white,
+        borderBottomWidth: 1,
+        paddingVertical: 2,
+        marginHorizontal: 15
+    }
 })
