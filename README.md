@@ -36,7 +36,7 @@
   </p>
 </p>
 
-![image Screenshot](https://i.imgur.com/5yrP1Xw.png)
+![image Screenshot](assets/phone_modal.png)
 
 <!-- TABLE OF CONTENTS -->
 <details open="open">
@@ -64,12 +64,6 @@
   </ol>
 </details>
 
-
-
-<!-- ABOUT THE PROJECT -->
-## About The Project
-
-[![Product Name Screen Shot][product-screenshot]](https://example.com)
 
 ### Built With
 
@@ -166,17 +160,6 @@ Contributions are what make the open source community such an amazing place to l
 ## License
 
 Distributed under the MIT License. See `LICENSE` for more information.
-
-
-<!-- ACKNOWLEDGEMENTS -->
-## Acknowledgements
-
-* []()
-* []()
-* []()
-
-
-
 
 
 <!-- MARKDOWN LINKS & IMAGES -->
