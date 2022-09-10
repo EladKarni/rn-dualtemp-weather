@@ -28,6 +28,13 @@ export const DailyForecastItemStyles = StyleSheet.create({
         alignContent: 'center',
         fontSize: 18
     },
+    popText: {
+        color: palette.grayLight,
+        textAlign: 'center',
+        alignContent: 'center',
+        fontSize: 18,
+        marginRight: 10
+    },
     tempIconContainer: {
         flexDirection: 'row',
         alignContent: 'center',
@@ -41,6 +48,11 @@ export const DailyForecastItemStyles = StyleSheet.create({
     tempDivider: {
         fontStyle: 'italic',
         lineHeight: 17.5,
+        color: palette.grayLight
+    },
+    tempDividerXL: {
+        fontStyle: 'italic',
+        lineHeight: 14,
         color: palette.grayLight
     },
     descriptionText: {

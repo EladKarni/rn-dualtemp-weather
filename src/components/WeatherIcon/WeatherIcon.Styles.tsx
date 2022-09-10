@@ -31,5 +31,9 @@ export const WeatherIconStyles = StyleSheet.create({
     iconSmall: {
         width: 35,
         height: 35
+    },
+    iconTiny: {
+        width: 20,
+        height: 20 
     }
 });
