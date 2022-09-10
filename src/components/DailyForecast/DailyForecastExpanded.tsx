@@ -33,7 +33,7 @@ const DailyForecastExpanded = ({ day }: DailyForecastItemExpandedPropTypes) => {
                             labels: graphScale,
                             datasets: [
                                 {
-                                    data: [Object.values(day.feels_like)[2], Object.values(day.feels_like)[0], Object.values(day.feels_like)[1], Object.values(day.feels_like)[3]]
+                                    data: [day.feels_like['morn'], day.feels_like['day'], day.feels_like['eve'], day.feels_like['night']]
                                 }
                             ]
                         }}
