@@ -36,7 +36,9 @@
   </p>
 </p>
 
-![image Screenshot](assets/phone_modal.png)
+<p align="center">
+  <img width="550" height="450" src="assets/phone_modal.png">
+</p>
 
 <!-- TABLE OF CONTENTS -->
 <details open="open">
