@@ -1,17 +1,3 @@
-<!--
-*** Thanks for checking out the Best-README-Template. If you have a suggestion
-*** that would make this better, please fork the repo and create a pull request
-*** or simply open an issue with the tag "enhancement".
-*** Thanks again! Now go create something AMAZING! :D
-***
-***
-***
-*** To avoid retyping too much info. Do a search and replace for the following:
-*** eladkarni, rn-dualtemp-weather, twitter_handle, email, React-Native DualTemp Weather, project_description
--->
-
-
-
 <!-- PROJECT SHIELDS -->
 <!--
 *** I'm using markdown "reference style" links for readability.
@@ -25,7 +11,6 @@
 [![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
 [![MIT License][license-shield]][license-url]
-[![LinkedIn][linkedin-shield]][linkedin-url]
 
 
 
@@ -33,13 +18,12 @@
 <br />
 <p align="center">
   <a href="https://github.com/eladkarni/rn-dualtemp-weather">
-    <img src="assets/Images/icon.png" alt="Logo" width="80" height="80">
+    <img src="https://i.imgur.com/V1h7RCx.png" alt="Logo" width="80" height="80">
   </a>
 
   <h3 align="center">React-Native DualTemp Weather</h3>
 
   <p align="center">
-    project_description
     <br />
     <a href="https://github.com/eladkarni/rn-dualtemp-weather"><strong>Explore the docs »</strong></a>
     <br />
@@ -52,7 +36,7 @@
   </p>
 </p>
 
-
+![image Screenshot](https://i.imgur.com/5yrP1Xw.png)
 
 <!-- TABLE OF CONTENTS -->
 <details open="open">
@@ -198,14 +182,16 @@ Distributed under the MIT License. See `LICENSE` for more information.
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
 [contributors-shield]: https://img.shields.io/github/contributors/eladkarni/repo.svg?style=for-the-badge
-[contributors-url]: https://github.com/eladkarni/rn-dualtemp-weather/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/eladkarni/repo.svg?style=for-the-badge
-[forks-url]: https://github.com/eladkarni/rn-dualtemp-weather/network/members
-[stars-shield]: https://img.shields.io/github/stars/eladkarni/repo.svg?style=for-the-badge
-[stars-url]: https://github.com/eladkarni/rn-dualtemp-weather/stargazers
-[issues-shield]: https://img.shields.io/github/issues/eladkarni/repo.svg?style=for-the-badge
-[issues-url]: https://github.com/eladkarni/rn-dualtemp-weather/issues
-[license-shield]: https://img.shields.io/github/license/eladkarni/repo.svg?style=for-the-badge
-[license-url]: https://github.com/eladkarni/rn-dualtemp-weather/blob/master/LICENSE.txt
-[linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
-[linkedin-url]: https://linkedin.com/in/eladkarni
+[contributors-url]: https://github.com/EladKarni/rn-dualtemp-weather/graphs/contributors
+
+[forks-shield]: https://img.shields.io/github/forks/EladKarni/repo.svg?style=for-the-badge
+[forks-url]: https://github.com/EladKarni/rn-dualtemp-weather/network/members
+
+[stars-shield]: https://img.shields.io/github/stars/EladKarni/repo.svg?style=for-the-badge
+[stars-url]: https://github.com/EladKarni/rn-dualtemp-weather/stargazers
+
+[issues-shield]: https://img.shields.io/github/issues/EladKarni/repo.svg?style=for-the-badge
+[issues-url]: https://github.com/EladKarni/rn-dualtemp-weather/issues
+
+[license-shield]: https://img.shields.io/github/license/EladKarni/repo.svg?style=for-the-badge
+[license-url]: https://github.com/EladKarni/rn-dualtemp-weather/blob/master/LICENSE.txt
