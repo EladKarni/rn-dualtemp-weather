@@ -11,14 +11,18 @@ interface HourlyForecastItemProps {
     temp: number;
     dt: number;
     icon: string;
+    pop: number;
 }
 
-const HourlyForecastItem = ({ temp, dt, icon }: HourlyForecastItemProps) => {
+const HourlyForecastItem = ({ temp, dt, icon, pop }: HourlyForecastItemProps) => {
     return (
         <Card cardType={CardStyleTypes.HOURLY}>
             <View style={HourlyForecastItemStyles.HourlyItem}>
                 <Text style={HourlyForecastItemStyles.HourText}>
                     {moment.unix(dt).format('HH:mm').toUpperCase()}
+                </Text>
+                <Text style={HourlyForecastItemStyles.HourRain}>
+                    {(pop * 100).toFixed(0)}% Rain
                 </Text>
                 <WeatherIcon icon={displayWeatherIcon(icon)} iconSize={IconSizeTypes.MEDIUM} />
                 <View>
