@@ -23,6 +23,7 @@ const DailyForecastItem = ({ day, index, setSelected, currSelected }: DailyForec
                 <View style={DailyForecastItemStyles.dailyItemHeader}>
                     <Text style={DailyForecastItemStyles.dayText}>{moment.unix(day.dt).format('dddd')}</Text>
                     <View style={DailyForecastItemStyles.tempIconContainer}>
+                        <Text style={DailyForecastItemStyles.popText}>{day.pop * 100}%</Text>
                         <View style={DailyForecastItemStyles.tempContainer}>
                             <TempText
                                 temp={day.temp.day}

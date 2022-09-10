@@ -12,7 +12,8 @@ type weatherIconPropsType = {
 export enum IconSizeTypes {
     LARGE = 'iconLarge',
     MEDIUM = 'iconMedium',
-    SMALL = 'iconSmall'
+    SMALL = 'iconSmall',
+    TINY = 'iconTiny'
 }
 
 const WeatherIcon = ({ icon, iconSize, disc }: weatherIconPropsType) => {
