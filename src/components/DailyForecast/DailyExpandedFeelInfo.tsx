@@ -3,6 +3,7 @@ import React from 'react'
 import TempText, { TempTextStyleTypes } from '../TempText/TempText'
 import { DailyForecastExtendedItemStyles } from './DailyForecastExtendedItemStyles.Styles'
 import { FeelsLike } from '../../types/WeatherTypes'
+import DualTempText from '../TempText/DualTempText'
 type DailyExpandedFeelInfoPropTypes = {
     temp: number;
     label: string;
@@ -12,17 +13,10 @@ const DailyExpandedFeelInfo = ({ temp, label }: DailyExpandedFeelInfoPropTypes) 
         <View style={DailyForecastExtendedItemStyles.tempContainer}>
             <Text style={DailyForecastExtendedItemStyles.infoFeelTime}>{label}: </Text>
             <View style={DailyForecastExtendedItemStyles.horizontalText}>
-                <TempText
+                <DualTempText
                     temp={temp}
-                    textStyleType={TempTextStyleTypes.HOURLY}
-                    tempType='C'
-                    withSym={true}
-                />
-                <TempText
-                    temp={temp}
-                    textStyleType={TempTextStyleTypes.HOURLY}
-                    tempType='F'
-                    withSym={true}
+                    tempStyleC={TempTextStyleTypes.HOURLY}
+                    degree
                 />
             </View>
         </View>

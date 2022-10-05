@@ -6,6 +6,7 @@ import moment from 'moment';
 import TempText, { TempTextStyleTypes } from '../TempText/TempText';
 import Card, { CardStyleTypes } from '../Card/Card';
 import { HourlyForecastItemStyles } from './HourlyForecast.Styles';
+import DualTempText from '../TempText/DualTempText';
 
 interface HourlyForecastItemProps {
     temp: number;
@@ -26,17 +27,10 @@ const HourlyForecastItem = ({ temp, dt, icon, pop }: HourlyForecastItemProps) =>
                 </Text>
                 <WeatherIcon icon={displayWeatherIcon(icon)} iconSize={IconSizeTypes.MEDIUM} />
                 <View>
-                    <TempText
+                    <DualTempText
                         temp={temp}
-                        tempType="C"
-                        textStyleType={TempTextStyleTypes.HOURLY}
-                        withSym={true}
-                    />
-                    <TempText
-                        temp={temp}
-                        tempType="F"
-                        textStyleType={TempTextStyleTypes.HOURLY}
-                        withSym={true}
+                        tempStyleC={TempTextStyleTypes.HOURLY}
+                        degree
                     />
                 </View>
             </View>

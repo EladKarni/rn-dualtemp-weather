@@ -8,6 +8,7 @@ import WeatherIcon, { IconSizeTypes } from '../WeatherIcon/WeatherIcon';
 import { displayWeatherIcon } from '../../utils/Images';
 import TempText, { TempTextStyleTypes } from '../TempText/TempText';
 import DailyForecastExpanded from './DailyForecastExpanded';
+import DualTempText from '../TempText/DualTempText';
 
 type DailyForecastItemPropTypes = {
     day: DailyEntity;
@@ -25,19 +26,7 @@ const DailyForecastItem = ({ day, index, setSelected, currSelected }: DailyForec
                     <View style={DailyForecastItemStyles.tempIconContainer}>
                         <Text style={DailyForecastItemStyles.popText}>{(day.pop * 100).toFixed(0)}%</Text>
                         <View style={DailyForecastItemStyles.tempContainer}>
-                            <TempText
-                                temp={day.temp.day}
-                                textStyleType={TempTextStyleTypes.DAILY}
-                                tempType='C'
-                                withSym={false}
-                            />
-                            <Text style={DailyForecastItemStyles.tempDivider}> | </Text>
-                            <TempText
-                                temp={day.temp.day}
-                                textStyleType={TempTextStyleTypes.DAILY}
-                                tempType='F'
-                                withSym={false}
-                            />
+                            <DualTempText temp={day.temp.day} tempStyleC={TempTextStyleTypes.DAILY} degree divider />
                         </View>
                         <WeatherIcon icon={displayWeatherIcon(day.weather[0].icon)} iconSize={IconSizeTypes.SMALL} />
                     </View>

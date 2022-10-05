@@ -9,6 +9,7 @@ import Card, { CardStyleTypes } from '../Card/Card';
 import { CurrentWeatherStyles } from './CurrentWeatherCard.Styles'
 import CardHeader from '../CardHeader/CardHeader';
 import CardFooter from '../CardFooter/CardFooter';
+import DualTempText from '../TempText/DualTempText';
 
 type CurrentWeatherPropsType = {
     temp: number;
@@ -22,8 +23,12 @@ const CurrentWeather = ({ temp, weather }: CurrentWeatherPropsType) => {
             <View style={CurrentWeatherStyles.mainArea}>
                 <WeatherIcon icon={displayWeatherIcon(weather?.icon)} iconSize={IconSizeTypes.LARGE} disc={weather.description} />
                 <View style={CurrentWeatherStyles.tempArea}>
-                    <TempText temp={temp} tempType="C" withSym={true} textStyleType={TempTextStyleTypes.MAIN} />
-                    <TempText temp={temp} tempType="F" withSym={true} textStyleType={TempTextStyleTypes.SECONDARY} />
+                    <DualTempText
+                        temp={temp}
+                        tempStyleC={TempTextStyleTypes.MAIN}
+                        tempStyleF={TempTextStyleTypes.SECONDARY}
+                        degree
+                    />
                 </View>
             </View>
             <CardFooter />
