@@ -19,6 +19,8 @@ export const loadedImages = {
     snow: require('../../assets/Images/13d.png'),
     
     mist: require('../../assets/Images/50d.png'),
+
+    sunsetIcon: require('../../assets/Images/sunsetIcon.png')
 }
 
 export const displayWeatherIcon = (icon: string) => {
@@ -61,6 +63,9 @@ export const displayWeatherIcon = (icon: string) => {
         case '50d':
         case '50n':
             return loadedImages.mist
+        
+        case 'sunset':
+            return loadedImages.sunsetIcon
 
         default:
             return loadedImages.clearSkyDay

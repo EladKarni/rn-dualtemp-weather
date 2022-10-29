@@ -24,6 +24,7 @@ const HourlyForecast = (props: HourlyForecastPropsType) => {
                         temp={hour.item.temp}
                         dt={hour.item.dt}
                         icon={hour.item.weather[0].icon}
+                        pop={hour.item.pop}
                     />
                 }
                 }
