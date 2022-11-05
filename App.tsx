@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text, View, Image } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
 import { fetchForecast } from './src/utils/fetchWeather';
 import CurrentWeatherCard from './src/components/CurrentWeatherCard/CurrentWeatherCard';
@@ -20,10 +20,12 @@ import {
 } from '@expo-google-fonts/dm-sans';
 import DailyForecast from './src/components/DailyForecast/DailyForecast';
 import { AppStateContext } from './src/utils/AppStateContext';
+import { WeatherIconStyles } from './src/components/WeatherIcon/WeatherIcon.Styles';
 
 export default function App() {
   const [forecast, setForecast] = useState<Weather>();
-  const [refreshing, setRefreshing] = useState(false);
+  const [suburb, setSuburb] = useState<string>('');
+  const [refreshing, setRefreshing] = useState<boolean>(false);
   const [date, setDate] = useState(moment());
   const [appIsReady, setAppIsReady] = useState(false);
 
@@ -67,7 +69,9 @@ export default function App() {
 
   const loadForecast = async () => {
     setRefreshing(true)
-    setForecast(await fetchForecast())
+    const fetched = await fetchForecast()
+    setForecast(fetched?.data);
+    setSuburb(fetched?.location.suburb);
     setDate(moment())
     setRefreshing(false)
   }
@@ -93,6 +97,10 @@ export default function App() {
         >
           <AppStateContext.Provider value={{ forecast, date }}>
             <Text style={[typography.headerText, styles.containerHeaderText]}>Weather Forecast</Text>
+            <View style={styles.locationHeader}>
+              <Text style={[typography.headerText, styles.locationText]}>{suburb}</Text>
+              <Image source={require('./assets/Images/locationIcon.png')} style={WeatherIconStyles.iconTiny} />
+            </View>
             <CurrentWeatherCard temp={forecast.current.temp} weather={forecast.current.weather[0]} />
             <HourlyForecast hourlyForecast={forecast.hourly?.slice(0, 24)} />
             <DailyForecast dailyForecast={forecast.daily} />
@@ -116,8 +124,20 @@ const styles = StyleSheet.create({
   },
   containerHeaderText: {
     paddingTop: 65,
-    paddingBottom: 15,
     fontSize: 20,
     textAlign: 'center',
+  },
+  locationText: {
+    paddingRight: 5
+  },
+  locationHeader: {
+    margin: 'auto',
+    height: 30,
+    paddingBottom: 5,
+    marginBottom: 15,
+    paddingHorizontal: 10,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center'
   }
 });
