@@ -71,7 +71,7 @@ export default function App() {
     setRefreshing(true)
     const fetched = await fetchForecast()
     setForecast(fetched?.data);
-    setSuburb(fetched?.location.suburb);
+    setSuburb(fetched?.location.suburb ?? fetched?.location.city);
     setDate(moment())
     setRefreshing(false)
   }
