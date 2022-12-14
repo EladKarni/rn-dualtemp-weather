@@ -1,9 +1,10 @@
 import { Alert } from 'react-native';
 import * as Location from 'expo-location';
 import { fetchReverseGeocoding } from './fetchReverseGeocoding';
+import Constants from 'expo-constants';
 
-const openWeatherKey = `646fbf920b1e674d7c20911ce0f3b779`;
-const url = `https://api.openweathermap.org/data/2.5/onecall?&units=metric&exclude=minutely&appid=${openWeatherKey}`;
+const weatherApiKey: string = Constants.expoConfig?.extra ? Constants.expoConfig?.extra.weatherAPI : ''
+const url = `https://api.openweathermap.org/data/2.5/onecall?&units=metric&exclude=minutely&appid=${weatherApiKey}`;
 
 export const fetchForecast = async () => {
     try {
