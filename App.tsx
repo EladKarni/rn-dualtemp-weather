@@ -69,8 +69,9 @@ export default function App() {
   const loadForecast = async () => {
     setRefreshing(true)
     const fetched = await fetchForecast()
+    console.log("🚀 ~ file: App.tsx:72 ~ loadForecast ~ fetched", fetched)
     setForecast(fetched?.data);
-    setLocation(fetched?.location.suburb ?? fetched?.location.city);
+    setLocation(fetched?.location?.district ?? fetched?.location.city);
     setDate(moment())
     setRefreshing(false)
   }
