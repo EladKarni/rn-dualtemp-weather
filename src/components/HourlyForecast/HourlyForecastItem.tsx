@@ -25,7 +25,7 @@ const HourlyForecastItem = ({ temp, dt, icon, pop }: HourlyForecastItemProps) =>
                 <Text style={HourlyForecastItemStyles.HourRain}>
                     {(pop * 100).toFixed(0)}% Rain
                 </Text>
-                <WeatherIcon icon={displayWeatherIcon("10n")} iconSize={IconSizeTypes.MEDIUM} />
+                <WeatherIcon icon={displayWeatherIcon(icon)} iconSize={IconSizeTypes.MEDIUM} />
                 <View style={styles.temp}>
                     <DualTempText
                         temp={temp}
