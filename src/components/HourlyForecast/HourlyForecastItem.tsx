@@ -25,8 +25,8 @@ const HourlyForecastItem = ({ temp, dt, icon, pop }: HourlyForecastItemProps) =>
                 <Text style={HourlyForecastItemStyles.HourRain}>
                     {(pop * 100).toFixed(0)}% Rain
                 </Text>
-                <WeatherIcon icon={displayWeatherIcon(icon)} iconSize={IconSizeTypes.MEDIUM} />
-                <View>
+                <WeatherIcon icon={displayWeatherIcon("10n")} iconSize={IconSizeTypes.MEDIUM} />
+                <View style={styles.temp}>
                     <DualTempText
                         temp={temp}
                         tempStyleC={TempTextStyleTypes.HOURLY}
@@ -39,13 +39,8 @@ const HourlyForecastItem = ({ temp, dt, icon, pop }: HourlyForecastItemProps) =>
 };
 
 const styles = StyleSheet.create({
-    hour: {
-        flex: 1,
-        padding: 6,
-        height: 100,
-        alignItems: 'center',
-        color: '#fff',
-        justifyContent: 'space-between'
+    temp: {
+        marginTop: 5
     },
 });
 

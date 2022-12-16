@@ -20,7 +20,7 @@ export const CardStyles = StyleSheet.create({
         justifyContent: 'space-between',
         width: 65,
         height: 155,
-        paddingVertical: 15,
+        paddingVertical: 12,
         borderRadius: 32,
         margin: 7.5,
         shadowRadius: 15,
