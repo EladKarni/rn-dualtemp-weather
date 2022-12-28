@@ -25,7 +25,6 @@ const styles = StyleSheet.create({
   },
   containerHeaderText: {
     fontSize: 20,
-    paddingTop: Platform.OS === "android" ? StatusBar.currentHeight : 0,
     textAlign: 'center',
   },
   locationText: {
