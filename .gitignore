@@ -13,3 +13,6 @@ api-gcs.*
 
 # macOS
 .DS_Store
+
+# config
+app.config.js
