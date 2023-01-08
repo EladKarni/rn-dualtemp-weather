@@ -103,6 +103,8 @@ Before getting started, you'll need to setup your enviorment.
   npm install -g eas-cli
   ```
 
+<br />
+
 ### Installation
 
 1. Clone the repo
@@ -112,8 +114,7 @@ Before getting started, you'll need to setup your enviorment.
 2. Install packages
    ```sh
    npm install
-   ```
-
+   ``` 
 
 <br>
 
@@ -122,6 +123,17 @@ Before getting started, you'll need to setup your enviorment.
 
 If you have all of the dependencies installs, then you are ready to get started!
 
+### <u>Required API Keys</u>
+You'll also need to make sure you have the required API keys to run the app. One will be for the weather data and another will be for the reverse geolocation (converting a GPS coordinates to a city or county).
+
+The first key you'll need is from [Open Weather](https://openweathermap.org/)
+<br/>
+The second key you'll need is for the reverse geolocation [Geoapify](https://www.geoapify.com/)
+
+
+Once you have both keys, you'll need to dupliacte the `app.config.template.js` and rename the copy to `app.config.js`. Then add the API keys in the empty `""`
+
+### <u>Running The App</u>
 To start the project, use the following command:
 ```sh
   npm start
