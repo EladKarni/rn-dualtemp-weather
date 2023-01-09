@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { RefreshControl, SafeAreaView, ScrollView, StyleSheet, Text, View, Image } from 'react-native';
+import { RefreshControl, SafeAreaView, ScrollView, StyleSheet, View } from 'react-native';
 import * as SplashScreen from 'expo-splash-screen';
 import { fetchForecast } from './src/utils/fetchWeather';
 import CurrentWeatherCard from './src/components/CurrentWeatherCard/CurrentWeatherCard';
@@ -23,6 +23,7 @@ import { AppStateContext } from './src/utils/AppStateContext';
 
 export default function App() {
   const [forecast, setForecast] = useState<Weather>();
+  const [tempScale, setTempScale] = useState<'C' | 'F'>('F');
   const [location, setLocation] = useState<string>('');
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [date, setDate] = useState(moment());
@@ -94,7 +95,7 @@ export default function App() {
             />
           }
         >
-          <AppStateContext.Provider value={{ forecast, date }}>
+          <AppStateContext.Provider value={{ forecast, date, tempScale, setTempScale }}>
             <AppHeader location={location} />
             <CurrentWeatherCard temp={forecast.current.temp} weather={forecast.current.weather[0]} />
             <HourlyForecast hourlyForecast={forecast.hourly?.slice(0, 24)} />
@@ -114,6 +115,6 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'center'
   }
 });

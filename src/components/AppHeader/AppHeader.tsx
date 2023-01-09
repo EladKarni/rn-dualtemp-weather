@@ -1,14 +1,23 @@
-import React from 'react'
+import React, { useContext } from 'react'
 import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native'
 import { WeatherIconStyles } from '../WeatherIcon/WeatherIcon.Styles';
 import { typography } from '../../Styles/Typography';
 import { palette } from '../../Styles/Palette';
+import { AppStateContext } from '../../utils/AppStateContext';
 
 type AppHeaderPropTypes = {
     location: string;
 }
 
 const AppHeader = ({ location }: AppHeaderPropTypes) => {
+  const context = useContext(AppStateContext);  
+  const tempScale = context?.tempScale;
+  const setTempScale = context?.setTempScale;
+  
+  const _onPressHandler = () => {
+    setTempScale && setTempScale(tempScale === 'C' ? 'F' : 'C')
+  }
+
   return (
     <View style={styles.headerContainer}>
         <View style={styles.mainHeaderTitle}>
@@ -18,9 +27,9 @@ const AppHeader = ({ location }: AppHeaderPropTypes) => {
               <Image source={require('../../../assets/Images/locationIcon.png')} style={WeatherIconStyles.iconTiny} />
           </View>
         </View>
-        <TouchableOpacity onPress={() => console.log("Test")} style={styles.defaultScaleSwitch}>
+        <TouchableOpacity onPress={_onPressHandler} style={styles.defaultScaleSwitch}>
           <Text style={styles.selectedScaleText}>
-            C
+            {tempScale?.toUpperCase()}
           </Text>
         </TouchableOpacity>
     </View>
@@ -60,15 +69,16 @@ const styles = StyleSheet.create({
     borderColor: palette.blueLight,
     borderWidth: 5,
     borderRadius: 15,
-    paddingVertical: 4,
-    paddingHorizontal: 10,
+    paddingVertical: 5,
+    width: 50,
     top: 38,
-    right: 20,
+    right: 20
   },
   selectedScaleText: {
     color: palette.white,
     fontWeight: 'bold',
-    fontSize: 26
+    fontSize: 26,
+    textAlign: 'center'
   }
 });
 
