@@ -38,7 +38,6 @@ const AppHeader = ({ location }: AppHeaderPropTypes) => {
 
 const styles = StyleSheet.create({
   headerContainer: {
-    paddingTop: 35,
     width: '100%',
     display: 'flex',
     flexDirection: 'row',
@@ -71,7 +70,7 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     paddingVertical: 5,
     width: 50,
-    top: 38,
+    top: 4,
     right: 20
   },
   selectedScaleText: {
