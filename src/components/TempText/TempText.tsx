@@ -23,7 +23,7 @@ const TempText = ({ temp, withSym, tempType, textStyleType }: TempTextPropsType)
             {tempType?.toUpperCase() !== 'F' ? Math.round(temp) : Math.round((temp * 9 / 5) + 32)}
             {withSym ? '°' : null}
             <Text style={TempTextStyles.tempLastLetter}>{tempType}</Text>
-        </Text >
+        </Text>
     )
 }
 

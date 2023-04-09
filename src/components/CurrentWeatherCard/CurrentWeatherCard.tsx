@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import { displayWeatherIcon } from '../../utils/Images';
 import { WeatherEntity } from '../../types/WeatherTypes';
 import WeatherIcon, { IconSizeTypes } from '../WeatherIcon/WeatherIcon';
-import TempText, { TempTextStyleTypes } from '../TempText/TempText';
+import { TempTextStyleTypes } from '../TempText/TempText';
 import Card, { CardStyleTypes } from '../Card/Card';
 
 import { CurrentWeatherStyles } from './CurrentWeatherCard.Styles'
