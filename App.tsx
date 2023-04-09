@@ -21,6 +21,7 @@ import {
 import DailyForecast from './src/components/DailyForecast/DailyForecast';
 import { AppStateContext } from './src/utils/AppStateContext';
 import { getSelectedTempScale } from "./src/utils/AsyncStorageHelper";
+import AppFooter from './src/components/AppFooter/AppFooter';
 
 export default function App() {
   const [forecast, setForecast] = useState<Weather>();
@@ -103,6 +104,7 @@ export default function App() {
             <HourlyForecast hourlyForecast={forecast.hourly?.slice(0, 24)} />
             <DailyForecast dailyForecast={forecast.daily} />
           </AppStateContext.Provider>
+          <AppFooter />
         </ScrollView>
       </View>
     </SafeAreaView>
