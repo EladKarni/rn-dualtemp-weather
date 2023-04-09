@@ -20,6 +20,7 @@ import {
 } from '@expo-google-fonts/dm-sans';
 import DailyForecast from './src/components/DailyForecast/DailyForecast';
 import { AppStateContext } from './src/utils/AppStateContext';
+import { getSelectedTempScale } from "./src/utils/AsyncStorageHelper";
 
 export default function App() {
   const [forecast, setForecast] = useState<Weather>();
@@ -68,6 +69,7 @@ export default function App() {
   }, [appIsReady]);
 
   const loadForecast = async () => {
+    setTempScale(await getSelectedTempScale());
     setRefreshing(true)
     const fetched = await fetchForecast()
     setForecast(fetched?.data);
