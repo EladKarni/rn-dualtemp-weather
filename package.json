@@ -1,6 +1,6 @@
 {
   "name": "dualtemp-weather",
-  "version": "1.0.0",
+  "version": "1.1.1",
   "main": "node_modules/expo/AppEntry.js",
   "scripts": {
     "start": "npx expo start --tunnel",
@@ -22,7 +22,7 @@
     "moment": "^2.29.1",
     "react": "18.1.0",
     "react-dom": "18.1.0",
-    "react-native": "0.70.5",
+    "react-native": "0.70.8",
     "react-native-chart-kit": "^6.12.0",
     "react-native-svg": "13.4.0",
     "react-native-web": "~0.18.9"
