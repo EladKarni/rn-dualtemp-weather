@@ -11,11 +11,11 @@ type DailyExpandedFeelInfoPropTypes = {
 const DailyExpandedFeelInfo = ({ temp, label }: DailyExpandedFeelInfoPropTypes) => {
     return (
         <View style={DailyForecastExtendedItemStyles.tempContainer}>
-            <Text style={DailyForecastExtendedItemStyles.infoFeelTime}>{label}: </Text>
+            <Text style={DailyForecastExtendedItemStyles.infoFeelTime} allowFontScaling={false}>{label}: </Text>
             <View style={DailyForecastExtendedItemStyles.horizontalText}>
                 <DualTempText
                     temp={temp}
-                    tempStyleC={TempTextStyleTypes.HOURLY}
+                    tempStyleC={TempTextStyleTypes.DAILY}
                     degree
                 />
             </View>

@@ -18,8 +18,8 @@ export const CardStyles = StyleSheet.create({
     },
     cardHourly: {
         justifyContent: 'space-between',
-        width: 65,
-        height: 155,
+        minWidth: 90,
+        height: 170,
         paddingVertical: 12,
         borderRadius: 32,
         margin: 7.5,

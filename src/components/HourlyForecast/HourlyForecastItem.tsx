@@ -16,6 +16,8 @@ interface HourlyForecastItemProps {
 }
 
 const HourlyForecastItem = ({ temp, dt, icon, pop }: HourlyForecastItemProps) => {
+    const downFallType = temp > 0 ? "Rain" : "Snow"
+
     return (
         <Card cardType={CardStyleTypes.HOURLY}>
             <View style={HourlyForecastItemStyles.HourlyItem}>
@@ -23,7 +25,7 @@ const HourlyForecastItem = ({ temp, dt, icon, pop }: HourlyForecastItemProps) =>
                     {moment.unix(dt).format('HH:mm').toUpperCase()}
                 </Text>
                 <Text style={HourlyForecastItemStyles.HourRain}>
-                    {(pop * 100).toFixed(0)}% Rain
+                    {(pop * 100).toFixed(0)}% {downFallType}
                 </Text>
                 <WeatherIcon icon={displayWeatherIcon(icon)} iconSize={IconSizeTypes.MEDIUM} />
                 <View style={styles.temp}>
