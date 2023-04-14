@@ -77,7 +77,7 @@ const DailyForecastExpanded = ({ day }: DailyForecastItemExpandedPropTypes) => {
                             Sunrise:
                         </Text>
                         <Text style={DailyForecastExtendedItemStyles.InfoSectionText} allowFontScaling={false}>
-                            {moment.unix(day.sunrise).format('hh:mm')}
+                            {moment.unix(day.sunrise).format('h:mm')}
                         </Text>
                     </View>
                     <View style={DailyForecastExtendedItemStyles.InfoSectionTextUnit}>
@@ -86,7 +86,7 @@ const DailyForecastExpanded = ({ day }: DailyForecastItemExpandedPropTypes) => {
                             Sunset:
                         </Text>
                         <Text style={DailyForecastExtendedItemStyles.InfoSectionText} allowFontScaling={false}>
-                            {moment.unix(day.sunset).format('hh:mm')}
+                            {moment.unix(day.sunset).format('h:mm')}
                         </Text>
                     </View>
 
