@@ -1,4 +1,4 @@
-import { BackHandler, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { palette } from '../../Styles/Palette';
 
 export const DailyForecastExtendedItemStyles = StyleSheet.create({
@@ -7,10 +7,9 @@ export const DailyForecastExtendedItemStyles = StyleSheet.create({
         paddingTop: 10
     },
     InfoSectionContainer: {
-        width: '40%',
-        marginLeft: -20,
+        width: '35%',
+        marginLeft: 15,
         justifyContent: 'space-between',
-        marginBottom: 5
     },
     InfoSectionTextUnit: {
         flexDirection: 'row',
@@ -38,12 +37,15 @@ export const DailyForecastExtendedItemStyles = StyleSheet.create({
         lineHeight: 14
     },
     tempContainer: {
+        textAlignVertical: 'bottom',
         flexDirection: 'row',
+        alignItems: 'center',
         justifyContent: 'space-between'
     },
     horizontalText: {
-        flexDirection: 'row',
         width: 70,
+        alignItems: 'center',
+        flexDirection: 'row',
         justifyContent: 'space-between'
     }
 })

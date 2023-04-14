@@ -2,7 +2,7 @@
   "expo": {
     "name": "Dualtemp Weather",
     "slug": "dualtemp-weather",
-    "version": "1.1.1",
+    "version": "1.1.2",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "splash": {
@@ -19,10 +19,10 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.ekarni.rndualtempweatherapp",
-      "buildNumber": "1.1.1"
+      "buildNumber": "1.1.2"
     },
     "android": {
-      "versionCode": 4,
+      "versionCode": 5,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#1C1B4D"

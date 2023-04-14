@@ -20,10 +20,10 @@ export const TempTextStyles = StyleSheet.create({
     },
     tempHourly: {
         fontSize: 14,
-        lineHeight: 14
+        lineHeight: 14,
     },
     tempDaily: {
         fontSize: 12,
-        lineHeight: 18
+        lineHeight: 16,
     }
 });
