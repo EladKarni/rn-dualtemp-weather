@@ -14,8 +14,6 @@ export const fetchForecast = async () => {
             Alert.alert('Permission to access location was denied');
         }
 
-        // console.log(await fetchGPSLocation(), "fetchGPS")
-        // console.log(await Location.getCurrentPositionAsync(), "getLocation Expo")
         const location = await fetchGPSLocation() as Location.LocationObject;
         
         const response = await fetch(
