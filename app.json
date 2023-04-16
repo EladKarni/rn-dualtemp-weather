@@ -18,6 +18,9 @@
     ],
     "ios": {
       "supportsTablet": true,
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "This app uses your location to show you the weather."
+      },
       "bundleIdentifier": "com.ekarni.rndualtempweatherapp",
       "buildNumber": "1.1.2"
     },
