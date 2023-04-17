@@ -34,10 +34,18 @@
     ·
     <a href="https://github.com/eladkarni/rn-dualtemp-weather/issues">Request Feature</a>
   </p>
+  <h3 align="center">Now available on the Google Play Store!</h3>
+  <h5 align="center"><i>Coming Soon to Apple App Store</i></h3>
+  <p align="center">
+    <a href="https://play.google.com/store/apps/details?id=com.ekarni.rndualtempweatherapp&hl=en_US&gl=US">
+      <img src="assets/google-play-badge.png" alt="Play Store Link" width="128" height="50">
+    </a>
+  </p>
+</a>
 </p>
 
 <p align="center">
-  <img width="550" height="450" src="assets/phone_modal.png">
+  <img width="500" height="550" src="assets/ReadMe_screenshot.png">
 </p>
 
 <!-- TABLE OF CONTENTS -->
