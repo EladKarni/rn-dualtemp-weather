@@ -110,7 +110,6 @@ Before getting started, you'll need to setup your enviorment.
   ```sh
   npm install -g eas-cli
   ```
-
 <br />
 
 ### Installation
@@ -151,9 +150,9 @@ This will start the development server and provide you additional options for te
 Once you are done done testing on your Simulator or using the Expo Go app, you can build the app the following command:
 
 ```sh
-  eas build -p android --profile previewAPK
+  eas build --profile development --platform android
 ```
-Note that `previewAPK` is one of the predefined build presets. To see the other options or add your own, checkout `eas.json` in the root directory.
+Note that `development` is one of the predefined build presets. To see the other options or add your own, checkout `eas.json` in the root directory.
 
 <br>
 <br>
