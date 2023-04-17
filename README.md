@@ -81,7 +81,7 @@
 * [EAS](https://expo.dev/eas)
 * [React-Native](https://reactnative.dev/)
 * [Typescript](https://www.typescriptlang.org/)
-* [Openweathermap](https://openweathermap.org/)
+* [Open Weather](https://openweathermap.org/)
 
 
 
