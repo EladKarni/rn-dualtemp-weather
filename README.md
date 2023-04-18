@@ -153,7 +153,7 @@ Once you are done done testing on your Simulator or using the Expo Go app, you c
 ```sh
   eas build --profile development --platform android
 ```
-Note that `development` is one of the predefined build presets. To see the other options or add your own, checkout `eas.json` in the root directory.
+Note that `development` is one of the predefined build presets. To see the other options or add your own, checkout `eas.json` in the root directory. You'll also need to remove `app.config.js` from the `.gitignore` as EAS uses that to determain what to upload for processing.
 
 <br>
 <br>
