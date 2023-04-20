@@ -28,7 +28,7 @@
     <a href="https://github.com/eladkarni/rn-dualtemp-weather"><strong>Explore the docs »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/eladkarni/rn-dualtemp-weather">View Demo</a>
+    <a href="https://dualtemp-weather.netlify.app/">View Demo</a>
     ·
     <a href="https://github.com/eladkarni/rn-dualtemp-weather/issues">Report Bug</a>
     ·
