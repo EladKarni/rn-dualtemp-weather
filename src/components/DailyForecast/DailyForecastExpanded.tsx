@@ -17,7 +17,7 @@ type DailyForecastItemExpandedPropTypes = {
 
 const DailyForecastExpanded = ({ day }: DailyForecastItemExpandedPropTypes) => {
 
-    const graphScale = ['Morning', 'Day', 'Evening', 'Night']
+    const graphScale = ['Morning', 'Noon', 'Evening', 'Night']
     const [cardWidth, setCardWidth] = useState(0)
 
     const context = useContext(AppStateContext);  
