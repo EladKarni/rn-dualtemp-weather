@@ -28,16 +28,26 @@
     <a href="https://github.com/eladkarni/rn-dualtemp-weather"><strong>Explore the docs »</strong></a>
     <br />
     <br />
-    <a href="https://github.com/eladkarni/rn-dualtemp-weather">View Demo</a>
+    <a href="https://dualtemp-weather.netlify.app/">View Demo</a>
     ·
     <a href="https://github.com/eladkarni/rn-dualtemp-weather/issues">Report Bug</a>
     ·
     <a href="https://github.com/eladkarni/rn-dualtemp-weather/issues">Request Feature</a>
   </p>
+  <h3 align="center">Now available on the Google Play Store & Apple App Store!</h3>
+  <p align="center">
+    <a href="https://apps.apple.com/app/id1665040449?platform=iphone">
+      <img src="assets/app-store-badge.svg" alt="Play Store Link" width="102" height="50">
+    </a>
+    <a href="https://play.google.com/store/apps/details?id=com.ekarni.rndualtempweatherapp&hl=en_US&gl=US">
+      <img src="assets/google-play-badge.png" alt="Play Store Link" width="128" height="50">
+    </a>
+  </p>
+</a>
 </p>
 
 <p align="center">
-  <img width="550" height="450" src="assets/phone_modal.png">
+  <img width="500" height="550" src="assets/ReadMe_screenshot.png">
 </p>
 
 <!-- TABLE OF CONTENTS -->
@@ -70,9 +80,10 @@
 ### Built With
 
 * [Expo](https://expo.dev/)
+* [EAS](https://expo.dev/eas)
 * [React-Native](https://reactnative.dev/)
 * [Typescript](https://www.typescriptlang.org/)
-* [Openweathermap](https://openweathermap.org/)
+* [Open Weather](https://openweathermap.org/)
 
 
 
@@ -102,7 +113,6 @@ Before getting started, you'll need to setup your enviorment.
   ```sh
   npm install -g eas-cli
   ```
-
 <br />
 
 ### Installation
@@ -143,9 +153,9 @@ This will start the development server and provide you additional options for te
 Once you are done done testing on your Simulator or using the Expo Go app, you can build the app the following command:
 
 ```sh
-  eas build -p android --profile previewAPK
+  eas build --profile development --platform android
 ```
-Note that `previewAPK` is one of the predefined build presets. To see the other options or add your own, checkout `eas.json` in the root directory.
+Note that `development` is one of the predefined build presets. To see the other options or add your own, checkout `eas.json` in the root directory. You'll also need to remove `app.config.js` from the `.gitignore` as EAS uses that to determain what to upload for processing.
 
 <br>
 <br>
@@ -178,17 +188,17 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
-[contributors-shield]: https://img.shields.io/github/contributors/eladkarni/repo.svg?style=for-the-badge
+[contributors-shield]: https://img.shields.io/github/contributors/eladkarni/rn-dualtemp-weather.svg?style=for-the-badge
 [contributors-url]: https://github.com/EladKarni/rn-dualtemp-weather/graphs/contributors
 
-[forks-shield]: https://img.shields.io/github/forks/EladKarni/repo.svg?style=for-the-badge
+[forks-shield]: https://img.shields.io/github/forks/EladKarni/rn-dualtemp-weather.svg?style=for-the-badge
 [forks-url]: https://github.com/EladKarni/rn-dualtemp-weather/network/members
 
-[stars-shield]: https://img.shields.io/github/stars/EladKarni/repo.svg?style=for-the-badge
+[stars-shield]: https://img.shields.io/github/stars/EladKarni/rn-dualtemp-weather.svg?style=for-the-badge
 [stars-url]: https://github.com/EladKarni/rn-dualtemp-weather/stargazers
 
-[issues-shield]: https://img.shields.io/github/issues/EladKarni/repo.svg?style=for-the-badge
+[issues-shield]: https://img.shields.io/github/issues/EladKarni/rn-dualtemp-weather.svg?style=for-the-badge
 [issues-url]: https://github.com/EladKarni/rn-dualtemp-weather/issues
 
-[license-shield]: https://img.shields.io/github/license/EladKarni/repo.svg?style=for-the-badge
+[license-shield]: https://img.shields.io/github/license/EladKarni/rn-dualtemp-weather.svg?style=for-the-badge
 [license-url]: https://github.com/EladKarni/rn-dualtemp-weather/blob/master/LICENSE.txt

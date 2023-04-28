@@ -23,6 +23,9 @@ import { AppStateContext } from './src/utils/AppStateContext';
 import { getSelectedTempScale } from "./src/utils/AsyncStorageHelper";
 import AppFooter from './src/components/AppFooter/AppFooter';
 
+// Keep the splash screen visible while we fetch resources
+SplashScreen.preventAutoHideAsync();
+
 export default function App() {
   const [forecast, setForecast] = useState<Weather>();
   const [tempScale, setTempScale] = useState<'C' | 'F'>('F');
@@ -43,8 +46,6 @@ export default function App() {
   useEffect(() => {
     async function prepare() {
       try {
-        // Keep the splash screen visible while we fetch resources
-        await SplashScreen.preventAutoHideAsync();
         //Load Forecast data
         await loadForecast();
       } catch (e) {
