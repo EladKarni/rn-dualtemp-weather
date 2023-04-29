@@ -24,15 +24,15 @@ const styles = StyleSheet.create({
         paddingVertical: 5
     },
     geoapifyText: {
-        color: palette.grayLight,
+        color: palette.highlightColor,
         textAlign: 'center'
     },
     openweatherText: {
-        color: palette.grayLight,
+        color: palette.highlightColor,
         textAlign: 'center'
     },
     linkText: {
-        color: palette.blueLight,
+        color: palette.primaryLight,
         textAlign: 'center'
     },
     weatherLogo: {

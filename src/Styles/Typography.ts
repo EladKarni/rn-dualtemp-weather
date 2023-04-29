@@ -5,6 +5,6 @@ export const typography = StyleSheet.create({
   headerText: {
     fontFamily: 'DMSans_500Medium',
     lineHeight: 29,
-    color: palette.white,
+    color: palette.textColor,
   }
 })

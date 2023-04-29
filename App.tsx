@@ -115,7 +115,7 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: palette.blueDark
+    backgroundColor: palette.primaryDark
   },
   scrollView: {
     flex: 1,

@@ -23,13 +23,13 @@ export const DailyForecastItemStyles = StyleSheet.create({
         paddingHorizontal: 15,
     },
     dayText: {
-        color: palette.grayLight,
+        color: palette.textColor,
         textAlign: 'center',
         alignContent: 'center',
         fontSize: 18
     },
     popText: {
-        color: palette.grayLight,
+        color: palette.textColor,
         textAlign: 'center',
         alignContent: 'center',
         fontSize: 18,
@@ -48,20 +48,20 @@ export const DailyForecastItemStyles = StyleSheet.create({
     tempDivider: {
         fontStyle: 'italic',
         lineHeight: 17.5,
-        color: palette.grayLight
+        color: palette.textColor
     },
     tempDividerXL: {
         fontStyle: 'italic',
         lineHeight: 14,
-        color: palette.grayLight
+        color: palette.textColor
     },
     descriptionText: {
-        color: palette.grayLight,
+        color: palette.textColor,
         textTransform: 'capitalize',
         fontSize: 12
     },
     rainChancesText: {
-        color: palette.grayLight,
+        color: palette.textColor,
         fontSize: 12
     },
     expandedTempAreaContainer: {
@@ -73,18 +73,18 @@ export const DailyForecastItemStyles = StyleSheet.create({
         justifyContent: 'flex-end'
     },
     sideBySideTempText: {
-        color: palette.grayLight,
+        color: palette.textColor,
         paddingRight: 5
     },
     sunCycleContainer: {
         justifyContent: 'flex-start'
     },
     sunCycleText: {
-        color: palette.grayLight,
+        color: palette.textColor,
         fontSize: 16
     },
     dividerLine: {
-        borderBottomColor: palette.white,
+        borderBottomColor: palette.textColor,
         borderBottomWidth: 1,
         paddingVertical: 2,
         marginHorizontal: 15
