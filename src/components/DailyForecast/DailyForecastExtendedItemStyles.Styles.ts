@@ -16,13 +16,13 @@ export const DailyForecastExtendedItemStyles = StyleSheet.create({
         justifyContent: 'space-around'
     },
     InfoSectionText: {
-        color: palette.grayLight,
+        color: palette.textColor,
         textAlign: 'left',
         alignContent: 'center',
         fontSize: 16
     },
     infoFeelTitle: {
-        color: palette.grayLight,
+        color: palette.textColor,
         paddingVertical: 5,
         textAlign: 'center',
         alignContent: 'center',
@@ -30,7 +30,7 @@ export const DailyForecastExtendedItemStyles = StyleSheet.create({
         fontSize: 20
     },
     infoFeelTime: {
-        color: palette.grayLight,
+        color: palette.textColor,
         textAlign: 'left',
         alignContent: 'center',
         fontSize: 14,

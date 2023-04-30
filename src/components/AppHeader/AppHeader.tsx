@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
   },
   defaultScaleSwitch: {
     position: 'absolute',
-    borderColor: palette.blueLight,
+    borderColor: palette.primaryLight,
     borderWidth: 5,
     borderRadius: 15,
     paddingVertical: 5,
@@ -77,7 +77,7 @@ const styles = StyleSheet.create({
     right: 20
   },
   selectedScaleText: {
-    color: palette.white,
+    color: palette.textColor,
     fontWeight: 'bold',
     fontSize: 26,
     textAlign: 'center'
