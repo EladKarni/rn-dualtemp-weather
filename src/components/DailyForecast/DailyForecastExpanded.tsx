@@ -29,7 +29,7 @@ const DailyForecastExpanded = ({ day }: DailyForecastItemExpandedPropTypes) => {
                 style={DailyForecastExtendedItemStyles.container}
                 onLayout={({ nativeEvent }) => setCardWidth(nativeEvent.layout.width)}
             >
-                <View>
+                <View style={DailyForecastExtendedItemStyles.GraphSectionContainer}>
                     <LineChart
                         data={{
                             labels: graphScale,
@@ -39,8 +39,8 @@ const DailyForecastExpanded = ({ day }: DailyForecastItemExpandedPropTypes) => {
                                 }
                             ]
                         }}
-                        width={cardWidth / 1.5} // from react-native
-                        height={265}
+                        width={cardWidth / 1.35}
+                        height={250}
                         withVerticalLines={false}
                         yAxisSuffix="°"
                         yAxisInterval={1} // optional, defaults to 1
@@ -63,10 +63,11 @@ const DailyForecastExpanded = ({ day }: DailyForecastItemExpandedPropTypes) => {
                         }}
                         bezier
                         style={{
-                            marginBottom: 10,
-                            borderRadius: 16,
-                            marginLeft: -30,
-                            marginRight: 0
+                            width: '100%',
+                            justifyContent: 'flex-start',
+                            marginLeft: -20,
+                            marginRight: -20,
+                            marginBottom: -20
                         }}
                     />
                 </View>
