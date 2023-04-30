@@ -41,7 +41,8 @@ export const DailyForecastExtendedItemStyles = StyleSheet.create({
     },
     infoFeelTime: {
         color: palette.textColor,
-        textAlign: 'right',
+        textAlign: 'left',
+        alignContent: 'center',
         fontSize: 14,
         lineHeight: 14
     },
