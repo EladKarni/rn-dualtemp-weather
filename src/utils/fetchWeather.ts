@@ -1,11 +1,9 @@
 import { Alert } from 'react-native';
 import * as Location from 'expo-location';
 import { fetchReverseGeocoding } from './fetchReverseGeocoding';
-import Constants from 'expo-constants';
 import { fetchGPSLocation } from './fetchUserLocation';
 
-const weatherApiKey: string = Constants.expoConfig?.extra ? Constants.expoConfig?.extra.weatherAPI : ''
-const url = `https://api.openweathermap.org/data/2.5/onecall?&units=metric&exclude=minutely&appid=${weatherApiKey}`;
+export const base_url = `https://open-weather-proxy-pi.vercel.app/api/v1/`;
 
 export const fetchForecast = async () => {
     try {
@@ -17,11 +15,13 @@ export const fetchForecast = async () => {
         const location = await fetchGPSLocation() as Location.LocationObject;
         
         const response = await fetch(
-            `${url}&lat=${location.coords.latitude}&lon=${location.coords.longitude}`
+            `${base_url}get-weather?lat=${location.coords.latitude}&long=${location.coords.longitude}`
         );
+
         const data = await response.json();
 
         if (!response.ok) {
+            console.log(response);
             Alert.alert(`Error retrieving weather data: ${data.message}`);
         } else {
             return {data: data, location: await fetchReverseGeocoding(location.coords.latitude, location.coords.longitude)};
