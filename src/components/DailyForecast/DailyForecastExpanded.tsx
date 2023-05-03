@@ -53,12 +53,12 @@ const DailyForecastExpanded = ({ day }: DailyForecastItemExpandedPropTypes) => {
                             backgroundGradientFrom: "white",
                             backgroundGradientToOpacity: 0,
                             decimalPlaces: 0, // optional, defaults to 2dp
-                            color: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
-                            labelColor: (opacity = 1) => `rgba(255, 255, 255, ${opacity})`,
+                            color: (opacity = 1) => palette.textColor,
+                            labelColor: (opacity = 1) => palette.textColor,
                             propsForDots: {
                                 r: "5",
-                                strokeWidth: "3",
-                                stroke: palette.grayLight
+                                strokeWidth: "1",
+                                stroke: palette.textColor
                             }
                         }}
                         bezier

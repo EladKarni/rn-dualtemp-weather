@@ -19,8 +19,8 @@ const Card = ({ cardType, children }: CardPropTypes) => {
   return (
     <LinearGradient
       colors={[
-        palette.blueLight,
-        palette.blue
+        palette.primaryLight,
+        palette.primaryColor
       ]}
       style={[CardStyles.card, CardStyles[cardType]]}
     >

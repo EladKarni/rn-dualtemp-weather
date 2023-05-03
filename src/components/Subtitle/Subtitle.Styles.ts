@@ -5,6 +5,6 @@ export const SubTitleStyles = StyleSheet.create({
     subtitle: {
         fontSize: 24,
         marginVertical: 12,
-        color: palette.white,
+        color: palette.textColor,
     },
 });
