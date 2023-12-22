@@ -11,6 +11,7 @@
 [![Stargazers][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
 [![MIT License][license-shield]][license-url]
+[![Netlify Status][netlify-shield]][netlify-url]
 
 
 
@@ -202,3 +203,6 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 [license-shield]: https://img.shields.io/github/license/EladKarni/rn-dualtemp-weather.svg?style=for-the-badge
 [license-url]: https://github.com/EladKarni/rn-dualtemp-weather/blob/master/LICENSE.txt
+
+[netlify-shield]: https://img.shields.io/netlify/dab5e8be-4a0f-4957-8dba-4aa99d705e43?style=for-the-badge
+[netlify-url]: https://api.netlify.com/api/v1/badges/dab5e8be-4a0f-4957-8dba-4aa99d705e43/deploy-status
