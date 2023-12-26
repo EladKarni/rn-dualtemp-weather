@@ -16,3 +16,7 @@ api-gcs.*
 
 # config
 app.config.js
+
+# native
+android/
+ios/
