@@ -12,6 +12,7 @@ type HourlyForecastPropsType = {
 }
 
 const HourlyForecast = (props: HourlyForecastPropsType) => {
+    console.log(props.hourlyForecast[0]);
     return (
         <View style={HourlyForecastStyles.container}>
             <Subtitle text={'Hourly Forecast'} />
@@ -20,12 +21,15 @@ const HourlyForecast = (props: HourlyForecastPropsType) => {
                 data={props.hourlyForecast}
                 keyExtractor={(item, index) => index.toString()}
                 renderItem={(hour) => {
-                    return <HourlyForecastItem
+                    return (
+                      <HourlyForecastItem
                         temp={hour.item.temp}
                         dt={hour.item.dt}
                         icon={hour.item.weather[0].icon}
                         pop={hour.item.pop}
-                    />
+                        desc={hour.item.weather[0].description}
+                      />
+                    );
                 }
                 }
             />

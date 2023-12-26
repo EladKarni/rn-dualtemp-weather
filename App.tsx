@@ -8,6 +8,7 @@ import { palette } from './src/Styles/Palette';
 import HourlyForecast from './src/components/HourlyForecast/HourlyForecast';
 import AppHeader from './src/components/AppHeader/AppHeader';
 import moment from 'moment';
+import "moment/locale/he";
 import DailyForecast from "./src/components/DailyForecast/DailyForecast";
 import { AppStateContext } from "./src/utils/AppStateContext";
 import { getSelectedTempScale } from "./src/utils/AsyncStorageHelper";
@@ -47,6 +48,7 @@ export default function App() {
 
   i18n.locale =
     getLocales()[0].languageCode === "iw" ? "he" : getLocales()[0].languageCode;
+  moment.locale(i18n.locale);
 
   useEffect(() => {
     async function prepare() {

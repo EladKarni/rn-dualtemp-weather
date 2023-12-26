@@ -10,37 +10,49 @@ import DualTempText from '../TempText/DualTempText';
 import { AppStateContext } from '../../utils/AppStateContext';
 
 interface HourlyForecastItemProps {
-    temp: number;
-    dt: number;
-    icon: string;
-    pop: number;
+  temp: number;
+  dt: number;
+  icon: string;
+  pop: number;
+  desc: string;
 }
 
-const HourlyForecastItem = ({ temp, dt, icon, pop }: HourlyForecastItemProps) => {
-    const downFallType = temp > 0 ? "Rain" : "Snow"
-    const context = useContext(AppStateContext);  
-    const timeFormat = context?.tempScale === 'C' ? "HH:mm" : "h:mm a";
-    
-    return (
-        <Card cardType={CardStyleTypes.HOURLY}>
-            <View style={HourlyForecastItemStyles.HourlyItem}>
-                <Text style={HourlyForecastItemStyles.HourText}>
-                    {moment.unix(dt).format(timeFormat).toUpperCase()}
-                </Text>
-                <Text style={HourlyForecastItemStyles.HourRain}>
-                    {(pop * 100).toFixed(0)}% {downFallType}
-                </Text>
-                <WeatherIcon icon={displayWeatherIcon(icon)} iconSize={IconSizeTypes.MEDIUM} />
-                <View style={styles.temp}>
-                    <DualTempText
-                        temp={temp}
-                        tempStyleC={TempTextStyleTypes.HOURLY}
-                        degree
-                    />
-                </View>
-            </View>
-        </Card>
-    );
+const HourlyForecastItem = ({
+  temp,
+  dt,
+  icon,
+  pop,
+  desc,
+}: HourlyForecastItemProps) => {
+  const context = useContext(AppStateContext);
+  const timeFormat = context?.tempScale === "C" ? "HH:mm" : "h:mm a";
+
+  return (
+    <Card cardType={CardStyleTypes.HOURLY}>
+      <View style={HourlyForecastItemStyles.HourlyItem}>
+        <Text style={HourlyForecastItemStyles.HourText}>
+          {moment.unix(dt).format(timeFormat).toUpperCase()}
+        </Text>
+        {pop > 0 && (
+          <Text style={HourlyForecastItemStyles.HourRain}>
+            <Text>{desc.split(" ")[0]} </Text>
+            <Text>{`${(pop * 100).toFixed(0)}%`}</Text>
+          </Text>
+        )}
+        <WeatherIcon
+          icon={displayWeatherIcon(icon)}
+          iconSize={IconSizeTypes.MEDIUM}
+        />
+        <View style={styles.temp}>
+          <DualTempText
+            temp={temp}
+            tempStyleC={TempTextStyleTypes.HOURLY}
+            degree
+          />
+        </View>
+      </View>
+    </Card>
+  );
 };
 
 const styles = StyleSheet.create({
