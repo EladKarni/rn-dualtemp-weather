@@ -13,13 +13,6 @@ const CardFooter = () => {
   const [updatedString, setUpdatedString] = useState<string>();
 
   useEffect(() => {
-    // console.log(
-    //   new Intl.DateTimeFormat("he", {
-    //     year: "numeric",
-    //     month: "long",
-    //     day: "numeric",
-    //   }).format(new Date(context?.date.fromNow()))
-    // );
     const updateStringFunc = setInterval(
       () => setUpdatedString(context?.date.fromNow()),
       100

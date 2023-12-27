@@ -5,5 +5,17 @@ export const en = {
     PoweredBy: "Reverse geocoding powered by ",
     Geoapify: "Geoapify",
     ProvidedBy: "Weather data provided by",
-    OpenWeather: "OpenWeather"
+    OpenWeather: "OpenWeather",
+    HourlyTitle: 'Hourly Forecast',
+    DailyTitle: 'Daily Forecast',
+    Feels: 'Feels Like',
+    MinMax: 'Min/Max',
+    Sunrise: "Sunrise: ",
+    Sunset: "Sunset: ",
+    Morn: "Morn",
+    Noon: "Noon",
+    Even: "Even",
+    Night: "Night",
+    Max: "Max",
+    Min: "Min",
 }
