@@ -21,6 +21,7 @@ const HourlyForecast = (props: HourlyForecastPropsType) => {
         data={props.hourlyForecast}
         keyExtractor={(item, index) => index.toString()}
         renderItem={(hour) => {
+          const percpType = hour.item?.snow ? "❄" : "💧";
           return (
             <HourlyForecastItem
               temp={hour.item.temp}
@@ -28,6 +29,7 @@ const HourlyForecast = (props: HourlyForecastPropsType) => {
               icon={hour.item.weather[0].icon}
               pop={hour.item.pop}
               desc={hour.item.weather[0].description}
+              percType={percpType}
             />
           );
         }}

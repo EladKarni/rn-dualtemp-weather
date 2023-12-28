@@ -50,6 +50,8 @@ export interface HourlyEntity {
 	wind_gust: number;
 	weather: WeatherEntity[];
 	pop: number;
+	rain?: {};
+	snow?: {};
 }
 export interface DailyEntity {
 	dt: number;
@@ -70,6 +72,8 @@ export interface DailyEntity {
 	clouds: number;
 	pop: number;
 	uvi: number;
+	rain?: {};
+	snow?: {};
 }
 export interface Temp {
 	day: number;

@@ -8,6 +8,7 @@ import Card, { CardStyleTypes } from '../Card/Card';
 import { HourlyForecastItemStyles } from './HourlyForecast.Styles';
 import DualTempText from '../TempText/DualTempText';
 import { AppStateContext } from '../../utils/AppStateContext';
+import PopType from "../PopType/PopType";
 
 interface HourlyForecastItemProps {
   temp: number;
@@ -15,6 +16,7 @@ interface HourlyForecastItemProps {
   icon: string;
   pop: number;
   desc: string;
+  percType?: string;
 }
 
 const HourlyForecastItem = ({
@@ -23,22 +25,15 @@ const HourlyForecastItem = ({
   icon,
   pop,
   desc,
+  percType,
 }: HourlyForecastItemProps) => {
-  const context = useContext(AppStateContext);
-  const timeFormat = context?.tempScale === "C" ? "HH:mm" : "h:mm a";
-
   return (
     <Card cardType={CardStyleTypes.HOURLY}>
       <View style={HourlyForecastItemStyles.HourlyItem}>
         <Text style={HourlyForecastItemStyles.HourText}>
-          {moment.unix(dt).format(timeFormat).toUpperCase()}
+          {moment.unix(dt).format("LT").toUpperCase()}
         </Text>
-        {pop > 0 && (
-          <Text style={HourlyForecastItemStyles.HourRain}>
-            <Text>{desc.split(" ")[0]} </Text>
-            <Text>{`${(pop * 100).toFixed(0)}%`}</Text>
-          </Text>
-        )}
+        <PopType pop={pop} percType={percType} />
         <WeatherIcon
           icon={displayWeatherIcon(icon)}
           iconSize={IconSizeTypes.MEDIUM}

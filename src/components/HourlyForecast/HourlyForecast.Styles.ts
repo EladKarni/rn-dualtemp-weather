@@ -18,8 +18,4 @@ export const HourlyForecastItemStyles = StyleSheet.create({
         color: palette.textColor,
         textAlign: 'center'
     },
-    HourRain: {
-        color: palette.textColor,
-        textAlign: 'center'
-    }
 })

@@ -37,7 +37,6 @@ export const DailyForecastItemStyles = StyleSheet.create({
     },
     tempIconContainer: {
         flexDirection: 'row',
-        alignContent: 'center',
         alignItems: 'center'        
     },
     tempContainer: {
