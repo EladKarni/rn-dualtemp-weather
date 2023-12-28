@@ -4,8 +4,7 @@ import { palette } from '../../Styles/Palette';
 export const DailyForecastExtendedItemStyles = StyleSheet.create({
     container: {
         flexDirection: 'row',
-        paddingTop: 10,
-        paddingHorizontal: 10,
+        paddingTop: 5
     },
     InfoSectionContainer: {
         flex: 2,
@@ -13,8 +12,9 @@ export const DailyForecastExtendedItemStyles = StyleSheet.create({
         justifyContent: 'space-between',
     },
     InfoSectionTextUnit: {
+        marginTop: 10,
         flexDirection: 'row',
-        justifyContent: 'space-around'
+        justifyContent: 'space-between'
     },
     InfoSectionText: {
         color: palette.textColor,

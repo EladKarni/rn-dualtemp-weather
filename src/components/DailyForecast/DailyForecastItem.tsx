@@ -32,7 +32,7 @@ const DailyForecastItem = ({
         index === currSelected ? CardStyleTypes.DAILYXL : CardStyleTypes.DAILY
       }
     >
-      <TouchableOpacity onPress={() => setSelected(index)}>
+      <TouchableOpacity onPress={() => setSelected(index)} style={{paddingHorizontal: 10, paddingBottom: 10}}>
         <View style={DailyForecastItemStyles.dailyItemHeader}>
           <Text style={DailyForecastItemStyles.dayText}>
             {moment.unix(day.dt).format("dddd")}

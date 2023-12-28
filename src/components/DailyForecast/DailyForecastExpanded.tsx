@@ -90,43 +90,6 @@ const DailyForecastExpanded = ({ day }: DailyForecastItemExpandedPropTypes) => {
           style={directionStyle}
         />
         <View style={DailyForecastExtendedItemStyles.InfoSectionContainer}>
-          <View style={DailyForecastExtendedItemStyles.InfoSectionTextUnit}>
-            <WeatherIcon
-              icon={displayWeatherIcon("01d")}
-              iconSize={IconSizeTypes.TINY}
-            />
-            <Text
-              style={DailyForecastExtendedItemStyles.InfoSectionText}
-              allowFontScaling={false}
-            >
-              {i18n.t("Sunrise")}
-            </Text>
-            <Text
-              style={DailyForecastExtendedItemStyles.InfoSectionText}
-              allowFontScaling={false}
-            >
-              {moment.unix(day.sunrise).format("LT")}
-            </Text>
-          </View>
-          <View style={DailyForecastExtendedItemStyles.InfoSectionTextUnit}>
-            <WeatherIcon
-              icon={displayWeatherIcon("sunset")}
-              iconSize={IconSizeTypes.TINY}
-            />
-            <Text
-              style={DailyForecastExtendedItemStyles.InfoSectionText}
-              allowFontScaling={false}
-            >
-              {i18n.t("Sunset")}
-            </Text>
-            <Text
-              style={DailyForecastExtendedItemStyles.InfoSectionText}
-              allowFontScaling={false}
-            >
-              {moment.unix(day.sunset).format("LT")}
-            </Text>
-          </View>
-
           <Text style={DailyForecastExtendedItemStyles.infoFeelTitle}>
             {i18n.t("Feels")}
           </Text>
@@ -153,6 +116,42 @@ const DailyForecastExpanded = ({ day }: DailyForecastItemExpandedPropTypes) => {
           <DailyExpandedFeelInfo temp={day.temp.max} label={i18n.t("Max")} />
           <DailyExpandedFeelInfo temp={day.temp.min} label={i18n.t("Min")} />
         </View>
+      </View>
+      <View style={DailyForecastExtendedItemStyles.InfoSectionTextUnit}>
+        <WeatherIcon
+          icon={displayWeatherIcon("01d")}
+          iconSize={IconSizeTypes.TINY}
+        />
+        <Text
+          style={DailyForecastExtendedItemStyles.InfoSectionText}
+          allowFontScaling={false}
+        >
+          {i18n.t("Sunrise")}
+        </Text>
+        <Text
+          style={DailyForecastExtendedItemStyles.InfoSectionText}
+          allowFontScaling={false}
+        >
+          {moment.unix(day.sunrise).format("LT")}
+        </Text>
+      </View>
+      <View style={DailyForecastExtendedItemStyles.InfoSectionTextUnit}>
+        <WeatherIcon
+          icon={displayWeatherIcon("sunset")}
+          iconSize={IconSizeTypes.TINY}
+        />
+        <Text
+          style={DailyForecastExtendedItemStyles.InfoSectionText}
+          allowFontScaling={false}
+        >
+          {i18n.t("Sunset")}
+        </Text>
+        <Text
+          style={DailyForecastExtendedItemStyles.InfoSectionText}
+          allowFontScaling={false}
+        >
+          {moment.unix(day.sunset).format("LT")}
+        </Text>
       </View>
     </>
   );
