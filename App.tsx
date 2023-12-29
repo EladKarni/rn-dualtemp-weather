@@ -13,7 +13,7 @@ import DailyForecast from "./src/components/DailyForecast/DailyForecast";
 import { AppStateContext } from "./src/utils/AppStateContext";
 import { getSelectedTempScale } from "./src/utils/AsyncStorageHelper";
 import AppFooter from "./src/components/AppFooter/AppFooter";
-import { i18n } from "./src/localization/i18n";
+import { i18n, translations } from "./src/localization/i18n";
 import { getLocales } from "expo-localization";
 
 import {
@@ -46,8 +46,9 @@ export default function App() {
     DMSans_700Bold_Italic,
   });
 
-  i18n.locale =
+  const deviceLocal =
     getLocales()[0].languageCode === "iw" ? "he" : getLocales()[0].languageCode;
+  i18n.locale = translations.hasOwnProperty(deviceLocal) ? deviceLocal : "en";
   moment.locale(i18n.locale);
 
   useEffect(() => {
