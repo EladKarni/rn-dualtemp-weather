@@ -14,7 +14,7 @@ export const en = {
     Sunset: "Sunset: ",
     Morn: "Morn",
     Noon: "Noon",
-    Even: "Even",
+    Eve: "Eve",
     Night: "Night",
     Max: "Max",
     Min: "Min",

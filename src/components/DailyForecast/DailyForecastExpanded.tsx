@@ -103,7 +103,7 @@ const DailyForecastExpanded = ({ day }: DailyForecastItemExpandedPropTypes) => {
           />
           <DailyExpandedFeelInfo
             temp={day.feels_like.eve}
-            label={i18n.t("Even")}
+            label={i18n.t("Eve")}
           />
           <DailyExpandedFeelInfo
             temp={day.feels_like.night}

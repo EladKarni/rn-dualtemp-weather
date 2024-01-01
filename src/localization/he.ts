@@ -14,7 +14,7 @@ export const he = {
     Sunset: "שקיעת: ",
     Morn: "בוקר",
     Noon: "צהריים",
-    Even: "ערב",
+    Eve: "ערב",
     Night: "לילה",
     Max: "מקסימום",
     Min: "מינימום",
