@@ -13,6 +13,9 @@
     "assetBundlePatterns": [
       "**/*"
     ],
+    "extra": {
+      "supportsRTL": true
+    },
     "plugins": [
       [
         "expo-build-properties",
