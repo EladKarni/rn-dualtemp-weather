@@ -6,5 +6,6 @@ export const SubTitleStyles = StyleSheet.create({
         fontSize: 24,
         marginVertical: 12,
         color: palette.textColor,
+        textAlign: "left"
     },
 });
