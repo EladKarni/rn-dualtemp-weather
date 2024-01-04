@@ -9,6 +9,8 @@ import HourlyForecast from './src/components/HourlyForecast/HourlyForecast';
 import AppHeader from './src/components/AppHeader/AppHeader';
 import moment from "moment";
 import "moment/locale/he";
+import "moment/locale/es";
+import "moment/locale/ar";
 import DailyForecast from "./src/components/DailyForecast/DailyForecast";
 import { AppStateContext } from "./src/utils/AppStateContext";
 import { getSelectedTempScale } from "./src/utils/AsyncStorageHelper";
@@ -48,7 +50,7 @@ export default function App() {
 
   const deviceLocal =
     getLocales()[0].languageCode === "iw" ? "he" : getLocales()[0].languageCode;
-  i18n.locale = translations.hasOwnProperty(deviceLocal) ? deviceLocal : "en";
+  i18n.locale = deviceLocal
   moment.locale(i18n.locale);
 
   useEffect(() => {
