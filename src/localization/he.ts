@@ -1,6 +1,6 @@
 export const he = {
     Today: "היום",
-    Updated: "עודכן לאחרונה: ",
+    Updated: "עודכן ",
     Title: "מזג האוויר",
     PoweredBy: "קידוד גיאוגרפי הפוך מופעל על ידי ",
     Geoapify: "Geoapify",

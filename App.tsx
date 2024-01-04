@@ -17,6 +17,7 @@ import { getSelectedTempScale } from "./src/utils/AsyncStorageHelper";
 import AppFooter from "./src/components/AppFooter/AppFooter";
 import { i18n, translations } from "./src/localization/i18n";
 import { getLocales } from "expo-localization";
+import { uses24HourClock } from "react-native-localize";
 
 import {
   useFonts,
@@ -48,14 +49,37 @@ export default function App() {
     DMSans_700Bold_Italic,
   });
 
-  const deviceLocal =
-    getLocales()[0].languageCode === "iw" ? "he" : getLocales()[0].languageCode;
-  i18n.locale = deviceLocal
-  moment.locale(i18n.locale);
+  const setLocale = () => {
+    const clockStyle = uses24HourClock() ? "HH:mm" : "h:mm a";
+    moment().format(clockStyle);
+    const userLocale =
+      getLocales()[0].languageCode === "iw"
+        ? "he"
+        : getLocales()[0].languageCode;
+    //If locale isn't in the translations object, it'll default to English
+    const deviceLocal = translations[userLocale] ? userLocale : "en";
+    i18n.locale = deviceLocal;
+    moment.updateLocale(i18n.locale, {
+      longDateFormat: {
+        LT: clockStyle,
+        LTS: "h:mm:ss A",
+        L: "MM/DD/YYYY",
+        l: "M/D/YYYY",
+        LL: "MMMM Do YYYY",
+        ll: "MMM D YYYY",
+        LLL: "MMMM Do YYYY LT",
+        lll: "MMM D YYYY LT",
+        LLLL: "dddd, MMMM Do YYYY LT",
+        llll: "ddd, MMM D YYYY LT",
+      },
+    });
+  };
 
   useEffect(() => {
     async function prepare() {
       try {
+        //Set locale
+        setLocale();
         //Load Forecast data
         await loadForecast();
       } catch (e) {
