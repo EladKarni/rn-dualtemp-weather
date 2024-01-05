@@ -18,4 +18,6 @@ export const he = {
     Night: "לילה",
     Max: "מקסימום",
     Min: "מינימום",
+    SpeedInfo: "קמ\"ש",
+    SpeedInfoImp: "מי\"ש",
 }

@@ -9,6 +9,7 @@ import { HourlyForecastItemStyles } from './HourlyForecast.Styles';
 import DualTempText from '../TempText/DualTempText';
 import { AppStateContext } from '../../utils/AppStateContext';
 import PopType from "../PopType/PopType";
+import { i18n } from "../../localization/i18n";
 
 interface HourlyForecastItemProps {
   temp: number;
@@ -16,6 +17,7 @@ interface HourlyForecastItemProps {
   icon: string;
   pop: number;
   desc: string;
+  wind: number;
   percType?: string;
 }
 
@@ -25,8 +27,16 @@ const HourlyForecastItem = ({
   icon,
   pop,
   desc,
+  wind,
   percType,
 }: HourlyForecastItemProps) => {
+  const { tempScale } = useContext(AppStateContext);
+  const wind_speed =
+    tempScale === "C"
+      ? `${(wind * 3.6).toFixed(0)}`
+      : `${(wind * 2.23694).toFixed(0)}`;
+  const wind_speed_scale =
+    tempScale === "C" ? i18n.t("SpeedInfo") : i18n.t("SpeedInfoImp");
   return (
     <Card cardType={CardStyleTypes.HOURLY}>
       <View style={HourlyForecastItemStyles.HourlyItem}>
@@ -34,6 +44,12 @@ const HourlyForecastItem = ({
           {moment.unix(dt).format("LT").toUpperCase()}
         </Text>
         <PopType pop={pop} percType={percType} />
+        <View style={HourlyForecastItemStyles.HourWindInfo}>
+          <Text style={HourlyForecastItemStyles.HourText}>{wind_speed}</Text>
+          <Text style={HourlyForecastItemStyles.HourText}>
+            {wind_speed_scale}
+          </Text>
+        </View>
         <WeatherIcon
           icon={displayWeatherIcon(icon)}
           iconSize={IconSizeTypes.MEDIUM}

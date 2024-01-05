@@ -10,8 +10,8 @@ interface PopTypeProps {
 const PopType = ({ pop, percType }: PopTypeProps) => {
   return (
     <Text style={PopTypeStyles.PopStyles}>
-      <Text>{`${(pop * 100).toFixed(0)}%`}</Text>
       <Text>{percType}</Text>
+      <Text>{`${(pop * 100).toFixed(0)}%`}</Text>
     </Text>
   );
 };

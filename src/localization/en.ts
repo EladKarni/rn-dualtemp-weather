@@ -18,4 +18,6 @@ export const en = {
     Night: "Night",
     Max: "Max",
     Min: "Min",
+    SpeedInfo: "km/h",
+    SpeedInfoImp: "mph",
 }

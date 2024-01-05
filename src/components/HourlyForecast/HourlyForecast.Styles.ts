@@ -12,10 +12,17 @@ export const HourlyForecastItemStyles = StyleSheet.create({
     HourlyItem: {
         justifyContent: 'space-between',
         height: '100%',
-        alignContent: 'center'
+        alignContent: 'center',
     },
     HourText: {
         color: palette.textColor,
         textAlign: 'center'
     },
+    HourWindInfo: {
+        display: 'flex',
+        flexDirection: 'row',
+        marginHorizontal: 'auto',
+        justifyContent: 'center',
+        gap: 3
+    }
 })

@@ -18,4 +18,6 @@ export const ar = {
     Night: "ليلاً",
     Max: "الأعلى",
     Min: "دقيقة",
+    SpeedInfo: "كم/ساعة",
+    SpeedInfoImp: "ميلا في الساعة",
 }

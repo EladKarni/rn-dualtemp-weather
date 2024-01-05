@@ -29,6 +29,7 @@ const HourlyForecast = (props: HourlyForecastPropsType) => {
               icon={hour.item.weather[0].icon}
               pop={hour.item.pop}
               desc={hour.item.weather[0].description}
+              wind={hour.item.wind_speed}
               percType={percpType}
             />
           );
