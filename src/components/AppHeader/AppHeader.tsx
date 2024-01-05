@@ -24,18 +24,13 @@ const AppHeader = ({ location }: AppHeaderPropTypes) => {
     tempScale !== undefined && storeSelectedTempScale(savedTemp);
   };
 
-  const textDirectionStyle =
-    getLocales()[0].textDirection == "ltr"
-      ? TextDirection.ltr
-      : TextDirection.rtl;
-
   return (
     <View style={styles.headerContainer}>
       <View style={styles.mainHeaderTitle}>
         <Text style={[typography.headerText, styles.containerHeaderText]}>
           {i18n.t("Title")}
         </Text>
-        <View style={[styles.locationHeader, textDirectionStyle]}>
+        <View style={[styles.locationHeader]}>
           <Text style={[typography.headerText, styles.locationText]}>
             {location}
           </Text>
@@ -73,6 +68,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 5,
   },
   locationHeader: {
+    display: "flex",
+    flexDirection: "row",
     margin: "auto",
     height: 30,
     marginBottom: 15,
