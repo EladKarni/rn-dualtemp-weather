@@ -28,6 +28,7 @@ import {
   DMSans_700Bold,
   DMSans_700Bold_Italic,
 } from "@expo-google-fonts/dm-sans";
+import { HelloWidgetPreviewScreen } from "./src/widget/HelloWidgetPreviewScreen";
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
@@ -137,6 +138,7 @@ export default function App() {
               temp={forecast.current.temp}
               weather={forecast.current.weather[0]}
             />
+            <HelloWidgetPreviewScreen />
             <HourlyForecast hourlyForecast={forecast.hourly?.slice(0, 24)} />
             <DailyForecast dailyForecast={forecast.daily} />
           </AppStateContext.Provider>

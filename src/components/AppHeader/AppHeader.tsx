@@ -6,8 +6,6 @@ import { palette } from '../../Styles/Palette';
 import { AppStateContext } from '../../utils/AppStateContext';
 import { storeSelectedTempScale } from '../../utils/AsyncStorageHelper';
 import { i18n } from "../../localization/i18n";
-import { getLocales } from "expo-localization";
-import { TextDirection } from "../../Styles/TextDirection";
 
 type AppHeaderPropTypes = {
   location: string;
