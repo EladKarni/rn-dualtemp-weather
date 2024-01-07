@@ -11,7 +11,7 @@ export const he = {
     Feels: 'מרגיש כמו',
     MinMax: 'טווח טמפ׳',
     Sunrise: "זריחה: ",
-    Sunset: "שקיעת: ",
+    Sunset: "שקיעה: ",
     Morn: "בוקר",
     Noon: "צהריים",
     Eve: "ערב",
