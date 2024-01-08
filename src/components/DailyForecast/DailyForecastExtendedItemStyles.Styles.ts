@@ -4,7 +4,8 @@ import { palette } from '../../Styles/Palette';
 export const DailyForecastExtendedItemStyles = StyleSheet.create({
     container: {
         flexDirection: 'row',
-        paddingTop: 5
+        paddingTop: 5,
+        gap: 10
     },
     InfoSectionContainer: {
         flex: 2,

@@ -1,14 +1,14 @@
-import { View, Text } from 'react-native'
-import { DailyForecastExtendedItemStyles } from './DailyForecastExtendedItemStyles.Styles';
-import { DailyEntity } from '../../types/WeatherTypes';
-import React, { useContext, useState } from 'react'
-import { LineChart } from 'react-native-chart-kit';
-import { palette } from '../../Styles/Palette';
-import moment from 'moment';
-import WeatherIcon, { IconSizeTypes } from '../WeatherIcon/WeatherIcon';
-import { displayWeatherIcon } from '../../utils/Images';
-import DailyExpandedFeelInfo from './DailyExpandedFeelInfo';
-import { AppStateContext } from '../../utils/AppStateContext';
+import { View, Text, Image, ActivityIndicator } from "react-native";
+import { DailyForecastExtendedItemStyles } from "./DailyForecastExtendedItemStyles.Styles";
+import { DailyEntity } from "../../types/WeatherTypes";
+import React, { useContext, useEffect, useRef, useState } from "react";
+import { LineChart } from "react-native-chart-kit";
+import { palette } from "../../Styles/Palette";
+import moment from "moment";
+import WeatherIcon, { IconSizeTypes } from "../WeatherIcon/WeatherIcon";
+import { displayWeatherIcon } from "../../utils/Images";
+import DailyExpandedFeelInfo from "./DailyExpandedFeelInfo";
+import { AppStateContext } from "../../utils/AppStateContext";
 import { i18n } from "../../localization/i18n";
 import { getLocales } from "expo-localization";
 import { TextDirection } from "../../Styles/TextDirection";
@@ -18,27 +18,31 @@ type DailyForecastItemExpandedPropTypes = {
 };
 
 const DailyForecastExpanded = ({ day }: DailyForecastItemExpandedPropTypes) => {
-  const graphScale = ["🌅", "🌞", "🌆", "🌃"];
+  const [gifURL, setGifURL] = useState<string>(null);
   const [cardWidth, setCardWidth] = useState(0);
+  const rng = Math.floor(Math.random() * 100);
 
-  const context = useContext(AppStateContext);
-  const tempScale = context?.tempScale;
-  const rtlStyles = {
-    flex: 2,
-    marginBottom: -20,
-    marginLeft: -7,
-    marginRight: 25,
-    paddingRight: 50,
+  const btsNames = {
+    Sunday: "Jungkook",
+    Monday: "V",
+    Tuesday: "Jimin",
+    Wednesday: "SUGA",
+    Thursday: "Jin",
+    Friday: "RM",
+    Saturday: "j-hope",
   };
-  const ltrStyles = {
-    flex: 2,
-    marginBottom: -20,
-    marginLeft: -20,
-    marginRight: 25,
-    paddingRight: 50,
-  };
-  const directionStyle =
-    getLocales()[0].textDirection == "ltr" ? ltrStyles : rtlStyles;
+
+  const todayString = moment.unix(day.dt).format("dddd");
+  const requestURL = `https://api.giphy.com/v1/gifs/search?api_key=Hx1CI4vtmPQOXYjHiRq0IKKlxEpX1Mlm&q=BTS%20${btsNames[todayString]}&limit=1`;
+
+  useEffect(() => {
+    const giphyCall = async () => {
+      const respons = await fetch(requestURL);
+      const giphyResp = await respons.json();
+      setGifURL(giphyResp.data[0].images.downsized.url);
+    };
+    giphyCall();
+  }, []);
 
   return (
     <>
@@ -46,49 +50,17 @@ const DailyForecastExpanded = ({ day }: DailyForecastItemExpandedPropTypes) => {
         style={DailyForecastExtendedItemStyles.container}
         onLayout={({ nativeEvent }) => setCardWidth(nativeEvent.layout.width)}
       >
-        <LineChart
-          data={{
-            labels: graphScale,
-            datasets: [
-              {
-                data: [
-                  day.feels_like["morn"],
-                  day.feels_like["day"],
-                  day.feels_like["eve"],
-                  day.feels_like["night"],
-                ],
-              },
-            ],
-          }}
-          width={cardWidth / 1.5} // from react-native
-          height={265}
-          withVerticalLines={false}
-          yAxisSuffix="°"
-          yAxisInterval={1} // optional, defaults to 1
-          fromZero
-          formatYLabel={(temp) =>
-            tempScale === "F"
-              ? (parseInt(temp) * 1.8 + 32).toFixed(0).toString()
-              : temp
-          }
-          chartConfig={{
-            backgroundColor: "transparent",
-            backgroundGradientTo: "white",
-            backgroundGradientFromOpacity: 0,
-            backgroundGradientFrom: "white",
-            backgroundGradientToOpacity: 0,
-            decimalPlaces: 0, // optional, defaults to 2dp
-            color: (opacity = 1) => palette.textColor,
-            labelColor: (opacity = 1) => palette.textColor,
-            propsForDots: {
-              r: "5",
-              strokeWidth: "1",
-              stroke: palette.textColor,
-            },
-          }}
-          bezier
-          style={directionStyle}
-        />
+        {gifURL !== null ? (
+          <Image
+            source={{
+              uri: gifURL,
+            }}
+            style={{ width: 175, height: 200 }}
+          />
+        ) : (
+          <ActivityIndicator />
+        )}
+
         <View style={DailyForecastExtendedItemStyles.InfoSectionContainer}>
           <Text style={DailyForecastExtendedItemStyles.infoFeelTitle}>
             {i18n.t("Feels")}
@@ -157,4 +129,4 @@ const DailyForecastExpanded = ({ day }: DailyForecastItemExpandedPropTypes) => {
   );
 };
 
-export default DailyForecastExpanded
+export default DailyForecastExpanded;

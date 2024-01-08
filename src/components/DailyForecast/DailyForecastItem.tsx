@@ -6,7 +6,7 @@ import Card, { CardStyleTypes } from '../Card/Card';
 import moment from 'moment'
 import WeatherIcon, { IconSizeTypes } from '../WeatherIcon/WeatherIcon';
 import { displayWeatherIcon } from '../../utils/Images';
-import TempText, { TempTextStyleTypes } from '../TempText/TempText';
+import { TempTextStyleTypes } from "../TempText/TempText";
 import DailyForecastExpanded from './DailyForecastExpanded';
 import DualTempText from '../TempText/DualTempText';
 import PopType from "../PopType/PopType";
