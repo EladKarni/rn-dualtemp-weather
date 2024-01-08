@@ -1,6 +1,5 @@
 const widgetConfig = {
   // Paths to all custom fonts used in all widgets
-  fonts: ['./assets/fonts/Inter.ttf'],
   widgets: [
     {
       name: 'Hello', // This name will be the **name** with which we will reference our widget.
@@ -8,7 +7,7 @@ const widgetConfig = {
       minWidth: '320dp',
       minHeight: '120dp',
       description: 'This is my first widget', // Description shown in the widget picker
-      previewImage: './assets/widget-preview/hello.png', // Path to widget preview image
+      previewImage: './assets/widget-preview.png', // Path to widget preview image
 
       // How often, in milliseconds, that this AppWidget wants to be updated.
       // The task handler will be called with widgetAction = 'UPDATE_WIDGET'.
