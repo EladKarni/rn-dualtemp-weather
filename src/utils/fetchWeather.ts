@@ -7,7 +7,7 @@ const base_url = `https://open-weather-proxy-git-feat-localization-param-eladkar
 
 export const fetchForecast = async (locale: string) => {
     try {
-        const { status } = await Location.requestForegroundPermissionsAsync();
+        const { status } = await Location.requestBackgroundPermissionsAsync();
         if (status !== 'granted') {
             Alert.alert('Permission to access location was denied');
         }

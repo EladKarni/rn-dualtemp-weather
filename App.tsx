@@ -1,12 +1,19 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { RefreshControl, SafeAreaView, ScrollView, StyleSheet, View } from 'react-native';
-import * as SplashScreen from 'expo-splash-screen';
-import { fetchForecast } from './src/utils/fetchWeather';
-import CurrentWeatherCard from './src/components/CurrentWeatherCard/CurrentWeatherCard';
-import { Weather } from './src/types/WeatherTypes';
-import { palette } from './src/Styles/Palette';
-import HourlyForecast from './src/components/HourlyForecast/HourlyForecast';
-import AppHeader from './src/components/AppHeader/AppHeader';
+import {
+  Button,
+  RefreshControl,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  View,
+} from "react-native";
+import * as SplashScreen from "expo-splash-screen";
+import { fetchForecast } from "./src/utils/fetchWeather";
+import CurrentWeatherCard from "./src/components/CurrentWeatherCard/CurrentWeatherCard";
+import { Weather } from "./src/types/WeatherTypes";
+import { palette } from "./src/Styles/Palette";
+import HourlyForecast from "./src/components/HourlyForecast/HourlyForecast";
+import AppHeader from "./src/components/AppHeader/AppHeader";
 import moment from "moment";
 import "moment/locale/he";
 import "moment/locale/es";
@@ -18,6 +25,9 @@ import AppFooter from "./src/components/AppFooter/AppFooter";
 import { i18n, translations } from "./src/localization/i18n";
 import { getLocales } from "expo-localization";
 import { uses24HourClock } from "react-native-localize";
+import * as BackgroundFetch from "expo-background-fetch";
+import * as TaskManager from "expo-task-manager";
+import * as Location from "expo-location";
 
 import {
   useFonts,
@@ -28,7 +38,7 @@ import {
   DMSans_700Bold,
   DMSans_700Bold_Italic,
 } from "@expo-google-fonts/dm-sans";
-import { HelloWidgetPreviewScreen } from "./src/widget/HelloWidgetPreviewScreen";
+import { LOCATION_TASK_NAME } from "./src/utils/BackgroundDataFetching";
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
@@ -49,6 +59,27 @@ export default function App() {
     DMSans_700Bold,
     DMSans_700Bold_Italic,
   });
+
+  const registerBackgroundFetchAsync = async () => {
+    return BackgroundFetch.registerTaskAsync(LOCATION_TASK_NAME, {
+      minimumInterval: 60 * 1, // 1 minutes
+      stopOnTerminate: false, // android only,
+      startOnBoot: true, // android only
+    });
+  };
+
+  const startBackgroundFetchHandler = async () => {
+    const isRegistered = await TaskManager.isTaskRegisteredAsync(
+      LOCATION_TASK_NAME
+    );
+    if (!isRegistered) {
+      await registerBackgroundFetchAsync();
+    }
+  };
+
+  // useEffect(() => {
+  //   startBackgroundFetchHandler();
+  // }, []);
 
   const setLocale = () => {
     const clockStyle = uses24HourClock() ? "HH:mm" : "h:mm a";
@@ -138,7 +169,6 @@ export default function App() {
               temp={forecast.current.temp}
               weather={forecast.current.weather[0]}
             />
-            <HelloWidgetPreviewScreen />
             <HourlyForecast hourlyForecast={forecast.hourly?.slice(0, 24)} />
             <DailyForecast dailyForecast={forecast.daily} />
           </AppStateContext.Provider>

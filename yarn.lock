@@ -4089,6 +4089,13 @@ expo-asset@~8.10.1:
     path-browserify "^1.0.0"
     url-parse "^1.5.9"
 
+expo-background-fetch@~11.3.0:
+  version "11.3.0"
+  resolved "https://registry.yarnpkg.com/expo-background-fetch/-/expo-background-fetch-11.3.0.tgz#91915127d43a38aeb11128ee8777749383b18335"
+  integrity sha512-aRBCg+kp/5j6XJBrcww8i7TPZ7RbybTLDwmBNzsqjUUKH9M8rkTJxy+eoo1qbFp3NGGrfTSNXPyXkH59hwR1mA==
+  dependencies:
+    expo-task-manager "~11.3.0"
+
 expo-build-properties@~0.8.3:
   version "0.8.3"
   resolved "https://registry.yarnpkg.com/expo-build-properties/-/expo-build-properties-0.8.3.tgz#fbfa156e9619bebda71c66af9a26ebc3490b2365"
@@ -4237,6 +4244,13 @@ expo-structured-headers@~3.3.0:
   version "3.3.0"
   resolved "https://registry.yarnpkg.com/expo-structured-headers/-/expo-structured-headers-3.3.0.tgz#9f0b041a1d243a22a4a23d9eb19f02ace3c5258c"
   integrity sha512-t+h5Zqaukd3Tn97LaWPpibVsmiC/TFP8F+8sAUliwCSMzgcb5TATRs2NcAB+JcIr8EP3JJDyYXJrZle1cjs4mQ==
+
+expo-task-manager@~11.3.0:
+  version "11.3.0"
+  resolved "https://registry.yarnpkg.com/expo-task-manager/-/expo-task-manager-11.3.0.tgz#880ad617f4c0c92ad5bb5025debc4ad855955427"
+  integrity sha512-580XaQGOC2IHLjPV3GBeIwlfxtjuBaitENsUxHvCVgWusatWkq0frq7uzG3yVpG3UHUuQwSOHvkJ6X/3EjdYXw==
+  dependencies:
+    unimodules-app-loader "~4.2.0"
 
 expo-updates-interface@~0.10.0:
   version "0.10.1"
@@ -8477,6 +8491,11 @@ unicode-property-aliases-ecmascript@^2.0.0:
   version "2.1.0"
   resolved "https://registry.yarnpkg.com/unicode-property-aliases-ecmascript/-/unicode-property-aliases-ecmascript-2.1.0.tgz#43d41e3be698bd493ef911077c9b131f827e8ccd"
   integrity sha512-6t3foTQI9qne+OZoVQB/8x8rk2k1eVy1gRXhV3oFQ5T6R1dqQ1xtin3XqSlx3+ATBkliTaR/hHyJBm+LVPNM8w==
+
+unimodules-app-loader@~4.2.0:
+  version "4.2.0"
+  resolved "https://registry.yarnpkg.com/unimodules-app-loader/-/unimodules-app-loader-4.2.0.tgz#29d0790771b1b9b8ef378632249bc5f756912c37"
+  integrity sha512-q3FHCw04JUjsDXxvTvJPl63sBseHCiqHWD/3imOseGP+PZLzW46boQmnxSaHcdIOoWK88N/npyEh6eDN9Wyvng==
 
 unique-filename@^1.1.1:
   version "1.1.1"
