@@ -6,11 +6,7 @@ import CurrentWeatherCard from './src/components/CurrentWeatherCard/CurrentWeath
 import { Weather } from './src/types/WeatherTypes';
 import { palette } from './src/Styles/Palette';
 import HourlyForecast from './src/components/HourlyForecast/HourlyForecast';
-import AppHeader from './src/components/AppHeader/AppHeader';
-import moment from "moment";
-import "moment/locale/he";
-import "moment/locale/es";
-import "moment/locale/ar";
+import AppHeader from "./src/components/AppHeader/AppHeader";
 import DailyForecast from "./src/components/DailyForecast/DailyForecast";
 import { AppStateContext } from "./src/utils/AppStateContext";
 import { getSelectedTempScale } from "./src/utils/AsyncStorageHelper";
@@ -18,6 +14,11 @@ import AppFooter from "./src/components/AppFooter/AppFooter";
 import { i18n, translations } from "./src/localization/i18n";
 import { getLocales } from "expo-localization";
 import { uses24HourClock } from "react-native-localize";
+
+import moment from "moment";
+import "moment/locale/he";
+import "moment/locale/es";
+import "moment/locale/ar";
 
 import {
   useFonts,
