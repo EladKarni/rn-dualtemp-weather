@@ -25,14 +25,14 @@ const DailyForecastExpanded = ({ day }: DailyForecastItemExpandedPropTypes) => {
   const tempScale = context?.tempScale;
   const rtlStyles = {
     flex: 2,
-    marginBottom: -20,
+    marginBottom: -5,
     marginLeft: -7,
     marginRight: 25,
     paddingRight: 50,
   };
   const ltrStyles = {
     flex: 2,
-    marginBottom: -20,
+    marginBottom: -5,
     marginLeft: -20,
     marginRight: 25,
     paddingRight: 50,
@@ -60,12 +60,12 @@ const DailyForecastExpanded = ({ day }: DailyForecastItemExpandedPropTypes) => {
               },
             ],
           }}
-          width={cardWidth / 1.5} // from react-native
-          height={265}
+          width={cardWidth / 1.45} // from react-native
+          height={196}
           withVerticalLines={false}
           yAxisSuffix="°"
           yAxisInterval={1} // optional, defaults to 1
-          fromZero
+          fromZero={false}
           formatYLabel={(temp) =>
             tempScale === "F"
               ? (parseInt(temp) * 1.8 + 32).toFixed(0).toString()
@@ -123,13 +123,13 @@ const DailyForecastExpanded = ({ day }: DailyForecastItemExpandedPropTypes) => {
           iconSize={IconSizeTypes.TINY}
         />
         <Text
-          style={DailyForecastExtendedItemStyles.InfoSectionText}
+          style={DailyForecastExtendedItemStyles.InfoSectionTextLG}
           allowFontScaling={false}
         >
           {i18n.t("Sunrise")}
         </Text>
         <Text
-          style={DailyForecastExtendedItemStyles.InfoSectionText}
+          style={DailyForecastExtendedItemStyles.InfoSectionTextLG}
           allowFontScaling={false}
         >
           {moment.unix(day.sunrise).format("LT")}
@@ -141,13 +141,13 @@ const DailyForecastExpanded = ({ day }: DailyForecastItemExpandedPropTypes) => {
           iconSize={IconSizeTypes.TINY}
         />
         <Text
-          style={DailyForecastExtendedItemStyles.InfoSectionText}
+          style={DailyForecastExtendedItemStyles.InfoSectionTextLG}
           allowFontScaling={false}
         >
           {i18n.t("Sunset")}
         </Text>
         <Text
-          style={DailyForecastExtendedItemStyles.InfoSectionText}
+          style={DailyForecastExtendedItemStyles.InfoSectionTextLG}
           allowFontScaling={false}
         >
           {moment.unix(day.sunset).format("LT")}

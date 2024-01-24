@@ -21,6 +21,11 @@ export const DailyForecastExtendedItemStyles = StyleSheet.create({
         alignContent: 'center',
         fontSize: 16
     },
+    InfoSectionTextLG: {
+        color: palette.textColor,
+        alignContent: 'center',
+        fontSize: 18
+    },
     infoFeelTitle: {
         color: palette.textColor,
         paddingVertical: 5,
