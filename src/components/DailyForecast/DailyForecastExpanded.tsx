@@ -1,14 +1,14 @@
-import { View, Text } from 'react-native'
-import { DailyForecastExtendedItemStyles } from './DailyForecastExtendedItemStyles.Styles';
-import { DailyEntity } from '../../types/WeatherTypes';
-import React, { useContext, useState } from 'react'
-import { LineChart } from 'react-native-chart-kit';
-import { palette } from '../../Styles/Palette';
-import moment from 'moment';
-import WeatherIcon, { IconSizeTypes } from '../WeatherIcon/WeatherIcon';
-import { displayWeatherIcon } from '../../utils/Images';
-import DailyExpandedFeelInfo from './DailyExpandedFeelInfo';
-import { AppStateContext } from '../../utils/AppStateContext';
+import { View, Text } from "react-native";
+import { DailyForecastExtendedItemStyles } from "./DailyForecastExtendedItemStyles.Styles";
+import { DailyEntity } from "../../types/WeatherTypes";
+import React, { useContext, useState } from "react";
+import { LineChart } from "react-native-chart-kit";
+import { palette } from "../../Styles/Palette";
+import moment from "moment";
+import WeatherIcon, { IconSizeTypes } from "../WeatherIcon/WeatherIcon";
+import { displayWeatherIcon } from "../../utils/Images";
+import DailyExpandedFeelInfo from "./DailyExpandedFeelInfo";
+import { AppStateContext } from "../../utils/AppStateContext";
 import { i18n } from "../../localization/i18n";
 import { getLocales } from "expo-localization";
 import { TextDirection } from "../../Styles/TextDirection";
@@ -157,4 +157,4 @@ const DailyForecastExpanded = ({ day }: DailyForecastItemExpandedPropTypes) => {
   );
 };
 
-export default DailyForecastExpanded
+export default DailyForecastExpanded;
