@@ -20,4 +20,9 @@ export const en = {
     Min: "Min",
     SpeedInfo: "km/h",
     SpeedInfoImp: "mph",
+    Percipitation: "Percipitation",
+    Snow: "Snow",
+    Rain: "Rain",
+    PercpInfo: "mm/h",
+    PercpInfoImp: "in/h",
 }

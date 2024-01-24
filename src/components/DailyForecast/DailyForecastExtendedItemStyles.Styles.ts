@@ -8,7 +8,6 @@ export const DailyForecastExtendedItemStyles = StyleSheet.create({
     },
     InfoSectionContainer: {
         flex: 2,
-        width: '45%',
         justifyContent: 'space-between',
     },
     InfoSectionTextUnit: {
@@ -20,6 +19,11 @@ export const DailyForecastExtendedItemStyles = StyleSheet.create({
         color: palette.textColor,
         alignContent: 'center',
         fontSize: 16
+    },
+    SunMoonSectionText: {
+        color: palette.textColor,
+        alignContent: 'center',
+        fontSize: 18
     },
     infoFeelTitle: {
         color: palette.textColor,
@@ -47,5 +51,13 @@ export const DailyForecastExtendedItemStyles = StyleSheet.create({
         alignItems: 'center',
         flexDirection: 'row',
         justifyContent: 'space-between'
+    },
+    SectionContainer: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        gap: 10,
+    },
+    Flex1: {
+        flex: 1
     }
 })

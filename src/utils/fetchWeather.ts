@@ -23,6 +23,7 @@ export const fetchForecast = async (locale: string) => {
         if (!response.ok) {
             Alert.alert(`Error retrieving weather data: ${data.message}`);
         } else {
+            console.log(data)
             return { data: data, location: await fetchReverseGeocoding(base_url, location.coords.latitude, location.coords.longitude, locale) };
         }
     } catch (e) {
