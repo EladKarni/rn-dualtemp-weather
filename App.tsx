@@ -19,6 +19,7 @@ import moment from "moment";
 import "moment/locale/he";
 import "moment/locale/es";
 import "moment/locale/ar";
+import "moment/locale/fr";
 
 import {
   useFonts,
