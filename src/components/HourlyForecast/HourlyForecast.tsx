@@ -6,31 +6,37 @@ import HourlyForecastItem from './HourlyForecastItem';
 import { HourlyForecastStyles } from './HourlyForecast.Styles';
 
 import { HourlyEntity } from '../../types/WeatherTypes';
+import { i18n } from "../../localization/i18n";
 
 type HourlyForecastPropsType = {
-    hourlyForecast?: HourlyEntity[];
-}
+  hourlyForecast?: HourlyEntity[];
+};
 
 const HourlyForecast = (props: HourlyForecastPropsType) => {
-    return (
-        <View style={HourlyForecastStyles.container}>
-            <Subtitle text={'Hourly Forecast'} />
-            <FlatList
-                horizontal
-                data={props.hourlyForecast}
-                keyExtractor={(item, index) => index.toString()}
-                renderItem={(hour) => {
-                    return <HourlyForecastItem
-                        temp={hour.item.temp}
-                        dt={hour.item.dt}
-                        icon={hour.item.weather[0].icon}
-                        pop={hour.item.pop}
-                    />
-                }
-                }
+  return (
+    <View style={HourlyForecastStyles.container}>
+      <Subtitle text={i18n.t("HourlyTitle")} />
+      <FlatList
+        horizontal
+        data={props.hourlyForecast}
+        keyExtractor={(item, index) => index.toString()}
+        renderItem={(hour) => {
+          const percpType = hour.item?.snow ? "❄" : "💧";
+          return (
+            <HourlyForecastItem
+              temp={hour.item.temp}
+              dt={hour.item.dt}
+              icon={hour.item.weather[0].icon}
+              pop={hour.item.pop}
+              desc={hour.item.weather[0].description}
+              wind={hour.item.wind_speed}
+              percType={percpType}
             />
-        </View>
-    );
+          );
+        }}
+      />
+    </View>
+  );
 };
 
 export default HourlyForecast;

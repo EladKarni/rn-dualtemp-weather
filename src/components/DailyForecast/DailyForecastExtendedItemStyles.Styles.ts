@@ -4,22 +4,27 @@ import { palette } from '../../Styles/Palette';
 export const DailyForecastExtendedItemStyles = StyleSheet.create({
     container: {
         flexDirection: 'row',
-        paddingTop: 10
+        paddingTop: 5
     },
     InfoSectionContainer: {
-        width: '35%',
-        marginLeft: 15,
+        flex: 2,
+        width: '45%',
         justifyContent: 'space-between',
     },
     InfoSectionTextUnit: {
+        marginTop: 10,
         flexDirection: 'row',
-        justifyContent: 'space-around'
+        justifyContent: 'space-between'
     },
     InfoSectionText: {
         color: palette.textColor,
-        textAlign: 'left',
         alignContent: 'center',
         fontSize: 16
+    },
+    InfoSectionTextLG: {
+        color: palette.textColor,
+        alignContent: 'center',
+        fontSize: 18
     },
     infoFeelTitle: {
         color: palette.textColor,
