@@ -15,7 +15,7 @@ const CardHeader = () => {
         {i18n.t("Today")}
       </Text>
       <Text style={[typography.headerText, cardHeaderStyles.dateText]}>
-        {context?.date.format("MMMM Do YYYY")}
+        {context.date.format("LL")}
       </Text>
     </View>
   );

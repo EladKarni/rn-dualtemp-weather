@@ -61,20 +61,7 @@ export default function App() {
     //If locale isn't in the translations object, it'll default to English
     const deviceLocal = translations[userLocale] ? userLocale : "en";
     i18n.locale = deviceLocal;
-    moment.updateLocale(i18n.locale, {
-      longDateFormat: {
-        LT: clockStyle,
-        LTS: "h:mm:ss A",
-        L: "MM/DD/YYYY",
-        l: "M/D/YYYY",
-        LL: "MMMM Do YYYY",
-        ll: "MMM D YYYY",
-        LLL: "MMMM Do YYYY LT",
-        lll: "MMM D YYYY LT",
-        LLLL: "dddd, MMMM Do YYYY LT",
-        llll: "ddd, MMM D YYYY LT",
-      },
-    });
+    moment.locale(deviceLocal);
   };
 
   useEffect(() => {
