@@ -30,6 +30,7 @@ import {
   DMSans_700Bold,
   DMSans_700Bold_Italic,
 } from "@expo-google-fonts/dm-sans";
+import { getLanguage } from "react-native-localization-settings";
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
@@ -54,10 +55,7 @@ export default function App() {
   const setLocale = () => {
     const clockStyle = uses24HourClock() ? "HH:mm" : "h:mm a";
     moment().format(clockStyle);
-    const userLocale =
-      getLocales()[0].languageCode === "iw"
-        ? "he"
-        : getLocales()[0].languageCode;
+    const userLocale = getLanguage().split("-")[0];
     //If locale isn't in the translations object, it'll default to English
     const deviceLocal = translations[userLocale] ? userLocale : "en";
     i18n.locale = deviceLocal;
@@ -66,6 +64,7 @@ export default function App() {
 
   useEffect(() => {
     async function prepare() {
+      console.log(getLanguage());
       try {
         //Set locale
         setLocale();
