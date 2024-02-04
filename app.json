@@ -2,7 +2,7 @@
   "expo": {
     "name": "Dualtemp Weather",
     "slug": "dualtemp-weather",
-    "version": "1.1.5",
+    "version": "1.2.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "splash": {
@@ -39,10 +39,10 @@
         "NSLocationWhenInUseUsageDescription": "This app uses your location to show you the weather."
       },
       "bundleIdentifier": "com.ekarni.rndualtempweatherapp",
-      "buildNumber": "1.1.5"
+      "buildNumber": "1.2.0"
     },
     "android": {
-      "versionCode": 9,
+      "versionCode": 10,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#1C1B4D"
