@@ -12,8 +12,8 @@ import { AppStateContext } from "./src/utils/AppStateContext";
 import { getSelectedTempScale } from "./src/utils/AsyncStorageHelper";
 import AppFooter from "./src/components/AppFooter/AppFooter";
 import { i18n, translations } from "./src/localization/i18n";
-import { getLocales } from "expo-localization";
 import { uses24HourClock } from "react-native-localize";
+import { getLanguage } from "react-native-localization-settings";
 
 import moment from "moment";
 import "moment/locale/he";
@@ -30,7 +30,6 @@ import {
   DMSans_700Bold,
   DMSans_700Bold_Italic,
 } from "@expo-google-fonts/dm-sans";
-import { getLanguage } from "react-native-localization-settings";
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
