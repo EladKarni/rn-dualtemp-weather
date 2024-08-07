@@ -12,8 +12,8 @@ import { AppStateContext } from "./src/utils/AppStateContext";
 import { getSelectedTempScale } from "./src/utils/AsyncStorageHelper";
 import AppFooter from "./src/components/AppFooter/AppFooter";
 import { i18n, translations } from "./src/localization/i18n";
-import { getLocales } from "expo-localization";
 import { uses24HourClock } from "react-native-localize";
+import { getLanguage } from "react-native-localization-settings";
 
 import moment from "moment";
 import "moment/locale/he";
@@ -54,10 +54,7 @@ export default function App() {
   const setLocale = () => {
     const clockStyle = uses24HourClock() ? "HH:mm" : "h:mm a";
     moment().format(clockStyle);
-    const userLocale =
-      getLocales()[0].languageCode === "iw"
-        ? "he"
-        : getLocales()[0].languageCode;
+    const userLocale = getLanguage().split("-")[0];
     //If locale isn't in the translations object, it'll default to English
     const deviceLocal = translations[userLocale] ? userLocale : "en";
     i18n.locale = deviceLocal;
@@ -66,6 +63,7 @@ export default function App() {
 
   useEffect(() => {
     async function prepare() {
+      console.log(getLanguage());
       try {
         //Set locale
         setLocale();
