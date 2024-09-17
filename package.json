@@ -1,6 +1,6 @@
 {
   "name": "dualtemp-weather",
-  "version": "1.1.5",
+  "version": "1.2.1",
   "scripts": {
     "start": "expo start --dev-client",
     "android": "expo run:android",
