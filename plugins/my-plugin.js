@@ -1,18 +1,14 @@
 const {
   AndroidConfig,
   withAndroidManifest,
-  withXcodeProject,
+  withInfoPlist,
   XML,
 } = require("expo/config-plugins");
 const { mkdirSync } = require("fs");
 
 function withIosLocalizableProject(config, languageList) {
-  return withXcodeProject(config, async (config) => {
-    const xcodeProject = config.modResults;
-    languageList.forEach((locale) => {
-      xcodeProject.addKnownRegion(locale);
-    });
-
+  return withInfoPlist(config, async (config) => {
+    config.modResults.CFBundleLocalizations = languageList;
     return config;
   });
 };
