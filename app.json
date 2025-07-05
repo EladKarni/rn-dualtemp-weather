@@ -32,18 +32,6 @@
       ],
       [
         "expo-localization"
-      ],
-      [
-        "./plugins/my-plugin.js",
-        {
-          "langs": [
-            "en",
-            "he",
-            "fr",
-            "ar",
-            "es"
-          ]
-        }
       ]
     ],
     "ios": {
