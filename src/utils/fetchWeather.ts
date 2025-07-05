@@ -3,7 +3,7 @@ import * as Location from 'expo-location';
 import { fetchReverseGeocoding } from './fetchReverseGeocoding';
 import { fetchGPSLocation } from './fetchUserLocation';
 
-const base_url = `https://open-weather-proxy-git-feat-localization-param-eladkarni.vercel.app/api/v1/`;
+const base_url = `https://open-weather-proxy-pi.vercel.app/api/v1/`;
 
 export const fetchForecast = async (locale: string) => {
     try {
@@ -13,7 +13,7 @@ export const fetchForecast = async (locale: string) => {
         }
 
         const location = await fetchGPSLocation() as Location.LocationObject;
-        
+
         const response = await fetch(
             `${base_url}get-weather?lat=${location.coords.latitude}&long=${location.coords.longitude}&lang=${locale}`
         );

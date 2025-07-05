@@ -1,6 +1,6 @@
 {
   "name": "dualtemp-weather",
-  "version": "1.1.5",
+  "version": "1.2.1",
   "scripts": {
     "start": "expo start --dev-client",
     "android": "expo run:android",
@@ -26,9 +26,9 @@
     "moment": "^2.29.1",
     "react": "18.2.0",
     "react-dom": "18.2.0",
-    "react-native": "0.72.6",
+    "react-native": "~0.72.6",
     "react-native-chart-kit": "^6.12.0",
-    "react-native-localization-settings": "^1.0.2",
+    "react-native-localization-settings": "1.2.0",
     "react-native-localize": "^3.0.4",
     "react-native-svg": "13.9.0",
     "react-native-web": "~0.19.6"
@@ -39,5 +39,6 @@
     "@types/react-native": "~0.64.12",
     "typescript": "^5.1.3"
   },
-  "private": true
+  "private": true,
+  "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }
