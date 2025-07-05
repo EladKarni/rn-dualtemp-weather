@@ -2,10 +2,9 @@
   "expo": {
     "name": "Dualtemp Weather",
     "slug": "dualtemp-weather",
-    "version": "1.1.5",
+    "version": "1.2.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
@@ -14,11 +13,37 @@
     "assetBundlePatterns": [
       "**/*"
     ],
+    "extra": {
+      "supportsRTL": true
+    },
     "plugins": [
       [
         "expo-build-properties",
         {
           "android": {
+            "compileSdkVersion": 34,
+            "targetSdkVersion": 34,
+            "buildToolsVersion": "34.0.0"
+          },
+          "ios": {
+            "deploymentTarget": "15.0"
+          }
+        }
+      ],
+      [
+        "expo-localization"
+      ],
+      [
+        "./plugins/my-plugin.js",
+        {
+          "langs": [
+            "en",
+            "he",
+            "fr",
+            "ar",
+            "es"
+          ]
+        }
             "compileSdkVersion": 33,
             "targetSdkVersion": 33,
             "buildToolsVersion": "33.0.0"
@@ -35,10 +60,10 @@
         "NSLocationWhenInUseUsageDescription": "This app uses your location to show you the weather."
       },
       "bundleIdentifier": "com.ekarni.rndualtempweatherapp",
-      "buildNumber": "1.1.5"
+      "buildNumber": "1.2.1"
     },
     "android": {
-      "versionCode": 9,
+      "versionCode": 11,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#1C1B4D"

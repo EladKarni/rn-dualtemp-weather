@@ -6,8 +6,20 @@ import CurrentWeatherCard from './src/components/CurrentWeatherCard/CurrentWeath
 import { Weather } from './src/types/WeatherTypes';
 import { palette } from './src/Styles/Palette';
 import HourlyForecast from './src/components/HourlyForecast/HourlyForecast';
-import AppHeader from './src/components/AppHeader/AppHeader';
-import moment from 'moment';
+import AppHeader from "./src/components/AppHeader/AppHeader";
+import DailyForecast from "./src/components/DailyForecast/DailyForecast";
+import { AppStateContext } from "./src/utils/AppStateContext";
+import { getSelectedTempScale } from "./src/utils/AsyncStorageHelper";
+import AppFooter from "./src/components/AppFooter/AppFooter";
+import { i18n, translations } from "./src/localization/i18n";
+import { uses24HourClock } from "react-native-localize";
+import { getLanguage } from "react-native-localization-settings";
+
+import moment from "moment";
+import "moment/locale/he";
+import "moment/locale/es";
+import "moment/locale/ar";
+import "moment/locale/fr";
 
 import {
   useFonts,
@@ -17,19 +29,15 @@ import {
   DMSans_500Medium_Italic,
   DMSans_700Bold,
   DMSans_700Bold_Italic,
-} from '@expo-google-fonts/dm-sans';
-import DailyForecast from './src/components/DailyForecast/DailyForecast';
-import { AppStateContext } from './src/utils/AppStateContext';
-import { getSelectedTempScale } from "./src/utils/AsyncStorageHelper";
-import AppFooter from './src/components/AppFooter/AppFooter';
+} from "@expo-google-fonts/dm-sans";
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
 
 export default function App() {
   const [forecast, setForecast] = useState<Weather>();
-  const [tempScale, setTempScale] = useState<'C' | 'F'>('F');
-  const [location, setLocation] = useState<string>('');
+  const [tempScale, setTempScale] = useState<"C" | "F">("F");
+  const [location, setLocation] = useState<string>("");
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [date, setDate] = useState(moment());
   const [appIsReady, setAppIsReady] = useState(false);
@@ -43,9 +51,22 @@ export default function App() {
     DMSans_700Bold_Italic,
   });
 
+  const setLocale = () => {
+    const clockStyle = uses24HourClock() ? "HH:mm" : "h:mm a";
+    moment().format(clockStyle);
+    const userLocale = getLanguage().split("-")[0];
+    //If locale isn't in the translations object, it'll default to English
+    const deviceLocal = translations[userLocale] ? userLocale : "en";
+    i18n.locale = deviceLocal;
+    moment.locale(deviceLocal);
+  };
+
   useEffect(() => {
     async function prepare() {
+      console.log(getLanguage());
       try {
+        //Set locale
+        setLocale();
         //Load Forecast data
         await loadForecast();
       } catch (e) {
@@ -55,7 +76,6 @@ export default function App() {
         setAppIsReady(true);
       }
     }
-
     prepare();
   }, []);
 
@@ -72,16 +92,16 @@ export default function App() {
 
   const loadForecast = async () => {
     setTempScale(await getSelectedTempScale());
-    setRefreshing(true)
-    const fetched = await fetchForecast()
+    setRefreshing(true);
+    const fetched = await fetchForecast(i18n.locale);
     setForecast(fetched?.data);
-    setLocation(fetched?.location?.district ?? fetched?.location.city);
-    setDate(moment())
-    setRefreshing(false)
-  }
+    setLocation(fetched?.location.city);
+    setDate(moment());
+    setRefreshing(false);
+  };
 
   const onRefresh = React.useCallback(async () => {
-    loadForecast()
+    loadForecast();
   }, []);
 
   if (!fontsLoaded || !appIsReady || !forecast) {
@@ -93,15 +113,17 @@ export default function App() {
       <View onLayout={onLayoutRootView}>
         <ScrollView
           refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-            />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
         >
-          <AppStateContext.Provider value={{ forecast, date, tempScale, setTempScale }}>
+          <AppStateContext.Provider
+            value={{ forecast, date, tempScale, setTempScale }}
+          >
             <AppHeader location={location} />
-            <CurrentWeatherCard temp={forecast.current.temp} weather={forecast.current.weather[0]} />
+            <CurrentWeatherCard
+              temp={forecast.current.temp}
+              weather={forecast.current.weather[0]}
+            />
             <HourlyForecast hourlyForecast={forecast.hourly?.slice(0, 24)} />
             <DailyForecast dailyForecast={forecast.daily} />
           </AppStateContext.Provider>
@@ -109,7 +131,7 @@ export default function App() {
         </ScrollView>
       </View>
     </SafeAreaView>
-  )
+  );
 }
 
 const styles = StyleSheet.create({

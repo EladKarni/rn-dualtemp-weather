@@ -18,5 +18,9 @@ ios/
 # macOS
 .DS_Store
 
-# config
-app.config.js
+# native
+android/
+ios/
+
+# Play Store
+weatherapp-343514-164f4d091599.json
