@@ -11,6 +11,10 @@ npm-debug.*
 web-build/
 api-gcs.*
 
+# Native Code
+android/
+ios/
+
 # macOS
 .DS_Store
 
