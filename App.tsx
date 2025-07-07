@@ -1,11 +1,17 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { RefreshControl, SafeAreaView, ScrollView, StyleSheet, View } from 'react-native';
-import * as SplashScreen from 'expo-splash-screen';
-import { fetchForecast } from './src/utils/fetchWeather';
-import CurrentWeatherCard from './src/components/CurrentWeatherCard/CurrentWeatherCard';
-import { Weather } from './src/types/WeatherTypes';
-import { palette } from './src/Styles/Palette';
-import HourlyForecast from './src/components/HourlyForecast/HourlyForecast';
+import React, { useCallback, useEffect, useState } from "react";
+import {
+  RefreshControl,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  View,
+} from "react-native";
+import * as SplashScreen from "expo-splash-screen";
+import { fetchForecast } from "./src/utils/fetchWeather";
+import CurrentWeatherCard from "./src/components/CurrentWeatherCard/CurrentWeatherCard";
+import { tempScales, Weather } from "./src/types/WeatherTypes";
+import { palette } from "./src/Styles/Palette";
+import HourlyForecast from "./src/components/HourlyForecast/HourlyForecast";
 import AppHeader from "./src/components/AppHeader/AppHeader";
 import DailyForecast from "./src/components/DailyForecast/DailyForecast";
 import { AppStateContext } from "./src/utils/AppStateContext";
@@ -36,7 +42,7 @@ SplashScreen.preventAutoHideAsync();
 
 export default function App() {
   const [forecast, setForecast] = useState<Weather>();
-  const [tempScale, setTempScale] = useState<"C" | "F">("F");
+  const [tempScale, setTempScale] = useState<tempScales>("F");
   const [location, setLocation] = useState<string>("");
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [date, setDate] = useState(moment());
@@ -137,11 +143,11 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: palette.primaryDark
+    backgroundColor: palette.primaryDark,
   },
   scrollView: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center'
-  }
+    alignItems: "center",
+    justifyContent: "center",
+  },
 });
