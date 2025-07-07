@@ -3,7 +3,7 @@ import * as Location from 'expo-location';
 
 const sleep = (ms: number | undefined) => new Promise((r) => setTimeout(r, ms));
 
-export const fetchGPSLocation = async () => {
+export const fetchGPSLocation = async () : Promise<Location.LocationObject> => {
   let location;
   let tries = 0;
   const MAX_NUMBER_OF_TRIES = 2;
@@ -26,6 +26,8 @@ export const fetchGPSLocation = async () => {
   ]);
 
   if (location) return Promise.resolve(location);
+
+  console.log(location, "Location not found after 2 tries");
 
   return Promise.reject("Unable to determin location");
 };
