@@ -1,6 +1,6 @@
 {
   "cli": {
-    "version": ">= 0.47.0",
+    "version": "16.13.4",
     "promptToConfigurePushNotifications": false
   },
   "build": {
@@ -23,7 +23,17 @@
       "channel": "production"
     }
   },
-  "submit": {
-    "production": {}
+"submit": {
+    "production": {
+      "android": {
+        "serviceAccountKeyPath": "./serviceKey.json",
+        "track": "production"
+      },
+      "ios": {
+        "appleId": "elad.karni@gmail.com",
+        "ascAppId": "1665040449",
+        "appleTeamId": "RUW8C26QSP"
+      }
+    }
   }
 }
