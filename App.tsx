@@ -7,9 +7,8 @@ import {
   View,
 } from "react-native";
 import * as SplashScreen from "expo-splash-screen";
-import { fetchForecast } from "./src/utils/fetchWeather";
+import { base_url, fetchForecast } from "./src/utils/fetchWeather";
 import CurrentWeatherCard from "./src/components/CurrentWeatherCard/CurrentWeatherCard";
-import { tempScales, Weather } from "./src/types/WeatherTypes";
 import { palette } from "./src/Styles/Palette";
 import HourlyForecast from "./src/components/HourlyForecast/HourlyForecast";
 import AppHeader from "./src/components/AppHeader/AppHeader";
@@ -17,9 +16,8 @@ import DailyForecast from "./src/components/DailyForecast/DailyForecast";
 import { AppStateContext } from "./src/utils/AppStateContext";
 import { getSelectedTempScale } from "./src/utils/AsyncStorageHelper";
 import AppFooter from "./src/components/AppFooter/AppFooter";
-import { i18n, translations } from "./src/localization/i18n";
-import { uses24HourClock } from "react-native-localize";
-import { getLanguage } from "react-native-localization-settings";
+import { i18n } from "./src/localization/i18n";
+import { useQuery } from "@tanstack/react-query";
 
 import moment from "moment";
 import "moment/locale/he";
@@ -36,17 +34,60 @@ import {
   DMSans_700Bold,
   DMSans_700Bold_Italic,
 } from "@expo-google-fonts/dm-sans";
+import { fetchLocale } from "./src/utils/fetchLocale";
+import { fetchReverseGeocoding } from "./src/utils/fetchReverseGeocoding";
+import { fetchGPSLocation } from "./src/utils/fetchUserLocation";
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
 
 export default function App() {
-  const [forecast, setForecast] = useState<Weather>();
-  const [tempScale, setTempScale] = useState<tempScales>("F");
-  const [location, setLocation] = useState<string>("");
-  const [refreshing, setRefreshing] = useState<boolean>(false);
-  const [date, setDate] = useState(moment());
-  const [appIsReady, setAppIsReady] = useState(false);
+  const { data: tempScale, refetch: updateTempScale } = useQuery({
+    queryKey: ["tempScale"],
+    queryFn: getSelectedTempScale,
+  });
+
+  const { data: locale, isSuccess: fetchedLocaleSuccessfully } = useQuery({
+    queryKey: ["locale"],
+    queryFn: fetchLocale,
+  });
+
+  const {
+    data: location,
+    isSuccess: locationFetched,
+    isError,
+  } = useQuery({
+    queryKey: ["location"],
+    queryFn: async () => await fetchGPSLocation(),
+    enabled: fetchedLocaleSuccessfully,
+  });
+
+  const { data: locationName, isSuccess: locationNameFetched } = useQuery({
+    queryKey: ["locationName", i18n.locale, location],
+    queryFn: async () => {
+      if (!location) return null;
+      return await fetchReverseGeocoding(
+        base_url,
+        location.coords.latitude,
+        location.coords.longitude,
+        i18n.locale
+      );
+    },
+    enabled: locationFetched,
+  });
+
+  const {
+    data: forecast,
+    isFetched,
+    isFetching: refreshing,
+    refetch,
+  } = useQuery({
+    queryKey: ["forecast", i18n.locale],
+    queryFn: () => fetchForecast(i18n.locale, location),
+    enabled: locationNameFetched,
+  });
+
+  const date = moment().locale(i18n.locale);
 
   let [fontsLoaded] = useFonts({
     DMSans_400Regular,
@@ -57,36 +98,8 @@ export default function App() {
     DMSans_700Bold_Italic,
   });
 
-  const setLocale = () => {
-    const clockStyle = uses24HourClock() ? "HH:mm" : "h:mm a";
-    moment().format(clockStyle);
-    const userLocale = getLanguage().split("-")[0];
-    //If locale isn't in the translations object, it'll default to English
-    const deviceLocal = translations[userLocale] ? userLocale : "en";
-    i18n.locale = deviceLocal;
-    moment.locale(deviceLocal);
-  };
-
-  useEffect(() => {
-    async function prepare() {
-      console.log(getLanguage());
-      try {
-        //Set locale
-        setLocale();
-        //Load Forecast data
-        await loadForecast();
-      } catch (e) {
-        console.warn(e);
-      } finally {
-        // Tell the application to render
-        setAppIsReady(true);
-      }
-    }
-    prepare();
-  }, []);
-
   const onLayoutRootView = useCallback(async () => {
-    if (appIsReady) {
+    if (isFetched) {
       // This tells the splash screen to hide immediately! If we call this after
       // `setAppIsReady`, then we may see a blank screen while the app is
       // loading its initial state and rendering its first pixels. So instead,
@@ -94,23 +107,13 @@ export default function App() {
       // performed layout.
       await SplashScreen.hideAsync();
     }
-  }, [appIsReady]);
-
-  const loadForecast = async () => {
-    setTempScale(await getSelectedTempScale());
-    setRefreshing(true);
-    const fetched = await fetchForecast(i18n.locale);
-    setForecast(fetched?.data);
-    setLocation(fetched?.location.city);
-    setDate(moment());
-    setRefreshing(false);
-  };
+  }, [isFetched]);
 
   const onRefresh = React.useCallback(async () => {
-    loadForecast();
+    refetch();
   }, []);
 
-  if (!fontsLoaded || !appIsReady || !forecast) {
+  if (!fontsLoaded || !forecast || !locationName) {
     return null;
   }
 
@@ -123,9 +126,9 @@ export default function App() {
           }
         >
           <AppStateContext.Provider
-            value={{ forecast, date, tempScale, setTempScale }}
+            value={{ forecast, date, tempScale, updateTempScale }}
           >
-            <AppHeader location={location} />
+            <AppHeader location={locationName} />
             <CurrentWeatherCard
               temp={forecast.current.temp}
               weather={forecast.current.weather[0]}

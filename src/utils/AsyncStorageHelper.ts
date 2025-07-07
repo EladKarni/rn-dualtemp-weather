@@ -6,7 +6,7 @@ export const storeSelectedTempScale = async (value: "C" | "F") => {
     try {
       await AsyncStorage.setItem('@selected_temp_scale', value)
     } catch (e) {
-        console.log("Test: ", e)
+        console.log("Error: ", e)
     }
 }
 
