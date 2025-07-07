@@ -42,7 +42,7 @@ SplashScreen.preventAutoHideAsync();
 
 export default function App() {
   const [forecast, setForecast] = useState<Weather>();
-  const [tempScale, setTempScale] = useState<tempScales>("F");
+  const [tempScale, setTempScale] = useState<"C" | "F">("F");
   const [location, setLocation] = useState<string>("");
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [date, setDate] = useState(moment());
