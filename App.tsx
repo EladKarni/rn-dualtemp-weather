@@ -14,7 +14,6 @@ import HourlyForecast from "./src/components/HourlyForecast/HourlyForecast";
 import AppHeader from "./src/components/AppHeader/AppHeader";
 import DailyForecast from "./src/components/DailyForecast/DailyForecast";
 import { AppStateContext } from "./src/utils/AppStateContext";
-import { getSelectedTempScale } from "./src/utils/AsyncStorageHelper";
 import AppFooter from "./src/components/AppFooter/AppFooter";
 import { i18n } from "./src/localization/i18n";
 import { useQuery } from "@tanstack/react-query";
@@ -37,14 +36,15 @@ import {
 import { fetchLocale } from "./src/utils/fetchLocale";
 import { fetchReverseGeocoding } from "./src/utils/fetchReverseGeocoding";
 import { fetchGPSLocation } from "./src/utils/fetchUserLocation";
+import { getAsyncStorage } from "./src/utils/AsyncStorageHelper";
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
 
 export default function App() {
   const { data: tempScale, refetch: updateTempScale } = useQuery({
-    queryKey: ["tempScale"],
-    queryFn: getSelectedTempScale,
+    queryKey: ["tempScale", "@selected_temp_scale"],
+    queryFn: () => getAsyncStorage("@selected_temp_scale") || "C",
   });
 
   const { data: locale, isSuccess: fetchedLocaleSuccessfully } = useQuery({

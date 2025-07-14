@@ -4,7 +4,7 @@ import { WeatherIconStyles } from "../WeatherIcon/WeatherIcon.Styles";
 import { typography } from "../../Styles/Typography";
 import { palette } from "../../Styles/Palette";
 import { AppStateContext } from "../../utils/AppStateContext";
-import { storeSelectedTempScale } from "../../utils/AsyncStorageHelper";
+import { storeAsyncStorage } from "../../utils/AsyncStorageHelper";
 import { i18n } from "../../localization/i18n";
 
 type AppHeaderPropTypes = {
@@ -18,7 +18,8 @@ const AppHeader = ({ location }: AppHeaderPropTypes) => {
 
   const _onPressHandler = () => {
     const savedTemp = tempScale === "C" ? "F" : "C";
-    tempScale !== undefined && storeSelectedTempScale(savedTemp);
+    tempScale !== undefined &&
+      storeAsyncStorage("@selected_temp_scale", savedTemp);
     setTempScale();
   };
 
