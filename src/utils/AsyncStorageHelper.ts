@@ -2,24 +2,24 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type tempScales = 'C' | 'F'
 
-export const storeSelectedTempScale = async (value: "C" | "F") => {
+export const storeAsyncStorage = async (key: string, value: string) => {
     try {
-      await AsyncStorage.setItem('@selected_temp_scale', value)
+      await AsyncStorage.setItem(key, value)
     } catch (e) {
-        console.log("Error: ", e)
+        console.log("Storing failed: ", e)
     }
 }
 
 
-export const getSelectedTempScale = async () : Promise<'C' | 'F'> => {
-    try {
-      const value: tempScales = await AsyncStorage.getItem('@selected_temp_scale') as tempScales
-      if(value !== null) {
-        return value
-      } else {
-        return "C"
-      }
-    } catch(e) {
-      return "C"
+export const getAsyncStorage = async (key: string) : Promise<string> => {
+  try {
+    const value: string = await AsyncStorage.getItem(key)
+    if(value !== null) {
+      return value
+    } else {
+      return null
     }
+  } catch(e) {
+    console.error("Fetching key failed: ", e)
+  }
 }
