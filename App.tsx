@@ -37,11 +37,14 @@ import { fetchLocale } from "./src/utils/fetchLocale";
 import { fetchReverseGeocoding } from "./src/utils/fetchReverseGeocoding";
 import { fetchGPSLocation } from "./src/utils/fetchUserLocation";
 import { getAsyncStorage } from "./src/utils/AsyncStorageHelper";
+import { useCurrentLocation } from "./src/hooks/useCurrentLocation";
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
 
 export default function App() {
+  const { location, errorMsg } = useCurrentLocation();
+
   const { data: tempScale, refetch: updateTempScale } = useQuery({
     queryKey: ["tempScale", "@selected_temp_scale"],
     queryFn: () => getAsyncStorage("@selected_temp_scale") || "C",
@@ -50,16 +53,6 @@ export default function App() {
   const { data: locale, isSuccess: fetchedLocaleSuccessfully } = useQuery({
     queryKey: ["locale"],
     queryFn: fetchLocale,
-  });
-
-  const {
-    data: location,
-    isSuccess: locationFetched,
-    isError,
-  } = useQuery({
-    queryKey: ["location"],
-    queryFn: async () => await fetchGPSLocation(),
-    enabled: fetchedLocaleSuccessfully,
   });
 
   const { data: locationName, isSuccess: locationNameFetched } = useQuery({
@@ -73,7 +66,7 @@ export default function App() {
         i18n.locale
       );
     },
-    enabled: locationFetched,
+    enabled: !errorMsg && fetchedLocaleSuccessfully,
   });
 
   const {
