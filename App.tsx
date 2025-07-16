@@ -75,9 +75,9 @@ export default function App() {
     isFetching: refreshing,
     refetch,
   } = useQuery({
-    queryKey: ["forecast", i18n.locale],
+    queryKey: ["forecast", i18n.locale, location],
     queryFn: () => fetchForecast(i18n.locale, location),
-    enabled: locationNameFetched,
+    enabled: locationNameFetched && !!location,
   });
 
   const date = moment().locale(i18n.locale);
