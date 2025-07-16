@@ -43,30 +43,16 @@ import { useCurrentLocation } from "./src/hooks/useCurrentLocation";
 SplashScreen.preventAutoHideAsync();
 
 export default function App() {
-  const { location, errorMsg } = useCurrentLocation();
+  const { location, locationName, errorMsg } = useCurrentLocation();
 
   const { data: tempScale, refetch: updateTempScale } = useQuery({
     queryKey: ["tempScale", "@selected_temp_scale"],
-    queryFn: () => getAsyncStorage("@selected_temp_scale") || "C",
+    queryFn: () => getAsyncStorage("@selected_temp_scale"),
   });
 
   const { data: locale, isSuccess: fetchedLocaleSuccessfully } = useQuery({
     queryKey: ["locale"],
     queryFn: fetchLocale,
-  });
-
-  const { data: locationName, isSuccess: locationNameFetched } = useQuery({
-    queryKey: ["locationName", i18n.locale, location],
-    queryFn: async () => {
-      if (!location) return null;
-      return await fetchReverseGeocoding(
-        base_url,
-        location.coords.latitude,
-        location.coords.longitude,
-        i18n.locale
-      );
-    },
-    enabled: !errorMsg && fetchedLocaleSuccessfully,
   });
 
   const {
@@ -77,7 +63,7 @@ export default function App() {
   } = useQuery({
     queryKey: ["forecast", i18n.locale, location],
     queryFn: () => fetchForecast(i18n.locale, location),
-    enabled: locationNameFetched && !!location,
+    enabled: !!location,
   });
 
   const date = moment().locale(i18n.locale);

@@ -17,7 +17,7 @@ const AppHeader = ({ location }: AppHeaderPropTypes) => {
   const setTempScale = context?.updateTempScale;
 
   const _onPressHandler = () => {
-    const savedTemp = tempScale === "C" ? "F" : "C";
+    const savedTemp = tempScale === "F" ? "C" : "F";
     tempScale !== undefined &&
       storeAsyncStorage("@selected_temp_scale", savedTemp);
     setTempScale();
@@ -43,7 +43,9 @@ const AppHeader = ({ location }: AppHeaderPropTypes) => {
         onPress={_onPressHandler}
         style={styles.defaultScaleSwitch}
       >
-        <Text style={styles.selectedScaleText}>{tempScale?.toUpperCase()}</Text>
+        <Text style={styles.selectedScaleText}>
+          {tempScale?.toUpperCase() || "C"}
+        </Text>
       </TouchableOpacity>
     </View>
   );
