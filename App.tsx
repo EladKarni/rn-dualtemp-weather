@@ -7,7 +7,7 @@ import {
   View,
 } from "react-native";
 import * as SplashScreen from "expo-splash-screen";
-import { base_url, fetchForecast } from "./src/utils/fetchWeather";
+import { fetchForecast } from "./src/utils/fetchWeather";
 import CurrentWeatherCard from "./src/components/CurrentWeatherCard/CurrentWeatherCard";
 import { palette } from "./src/Styles/Palette";
 import HourlyForecast from "./src/components/HourlyForecast/HourlyForecast";
@@ -17,12 +17,6 @@ import { AppStateContext } from "./src/utils/AppStateContext";
 import AppFooter from "./src/components/AppFooter/AppFooter";
 import { i18n } from "./src/localization/i18n";
 import { useQuery } from "@tanstack/react-query";
-
-import moment from "moment";
-import "moment/locale/he";
-import "moment/locale/es";
-import "moment/locale/ar";
-import "moment/locale/fr";
 
 import {
   useFonts,
@@ -34,8 +28,6 @@ import {
   DMSans_700Bold_Italic,
 } from "@expo-google-fonts/dm-sans";
 import { fetchLocale } from "./src/utils/fetchLocale";
-import { fetchReverseGeocoding } from "./src/utils/fetchReverseGeocoding";
-import { fetchGPSLocation } from "./src/utils/fetchUserLocation";
 import { getAsyncStorage } from "./src/utils/AsyncStorageHelper";
 import { useCurrentLocation } from "./src/hooks/useCurrentLocation";
 
@@ -50,7 +42,7 @@ export default function App() {
     queryFn: () => getAsyncStorage("@selected_temp_scale"),
   });
 
-  const { data: locale, isSuccess: fetchedLocaleSuccessfully } = useQuery({
+  const { data: date, isSuccess: fetchedLocaleSuccessfully } = useQuery({
     queryKey: ["locale"],
     queryFn: fetchLocale,
   });
@@ -63,10 +55,8 @@ export default function App() {
   } = useQuery({
     queryKey: ["forecast", i18n.locale, location],
     queryFn: () => fetchForecast(i18n.locale, location),
-    enabled: !!location,
+    enabled: !!location && fetchedLocaleSuccessfully,
   });
-
-  const date = moment().locale(i18n.locale);
 
   let [fontsLoaded] = useFonts({
     DMSans_400Regular,
