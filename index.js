@@ -15,4 +15,4 @@ function RootComponent() {
   );
 }
 
-registerRootComponent(RootCompponent);
+registerRootComponent(RootComponent);

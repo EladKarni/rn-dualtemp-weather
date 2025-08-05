@@ -14,7 +14,7 @@ export const getAsyncStorage = async (key: string): Promise<string> => {
     if (value !== null) {
       return value;
     } else {
-      return null;
+      return "";
     }
   } catch (e) {
     console.error("Fetching key failed: ", e);
