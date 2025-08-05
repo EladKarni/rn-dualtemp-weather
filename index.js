@@ -7,7 +7,7 @@ import App from './App';
 
 const queryClient = new QueryClient();
 
-function RootCompponent() {
+function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
         <App />
