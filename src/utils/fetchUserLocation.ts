@@ -3,7 +3,7 @@ import * as Location from 'expo-location';
 export const fetchGPSLocation = async () : Promise<Location.LocationObject> => {
   let { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        return;
+        throw new Error('Location permission not granted');
       }
 
       let location = await Location.getCurrentPositionAsync({});
