@@ -10,9 +10,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#1C1B4D"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "extra": {
       "supportsRTL": true
     },
@@ -36,9 +34,7 @@
           "locationAlwaysAndWhenInUsePermission": "Allow DualTemp Weather to use your location."
         }
       ],
-      [
-        "expo-localization"
-      ]
+      ["expo-localization"]
     ],
     "ios": {
       "supportsTablet": true,
