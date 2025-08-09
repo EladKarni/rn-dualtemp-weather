@@ -1,25 +1,22 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { RefreshControl, SafeAreaView, ScrollView, StyleSheet, View } from 'react-native';
-import * as SplashScreen from 'expo-splash-screen';
-import { fetchForecast } from './src/utils/fetchWeather';
-import CurrentWeatherCard from './src/components/CurrentWeatherCard/CurrentWeatherCard';
-import { Weather } from './src/types/WeatherTypes';
-import { palette } from './src/Styles/Palette';
-import HourlyForecast from './src/components/HourlyForecast/HourlyForecast';
+import React, { useCallback } from "react";
+import {
+  RefreshControl,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  View,
+} from "react-native";
+import * as SplashScreen from "expo-splash-screen";
+import { fetchForecast } from "./src/utils/fetchWeather";
+import CurrentWeatherCard from "./src/components/CurrentWeatherCard/CurrentWeatherCard";
+import { palette } from "./src/Styles/Palette";
+import HourlyForecast from "./src/components/HourlyForecast/HourlyForecast";
 import AppHeader from "./src/components/AppHeader/AppHeader";
 import DailyForecast from "./src/components/DailyForecast/DailyForecast";
 import { AppStateContext } from "./src/utils/AppStateContext";
-import { getSelectedTempScale } from "./src/utils/AsyncStorageHelper";
 import AppFooter from "./src/components/AppFooter/AppFooter";
-import { i18n, translations } from "./src/localization/i18n";
-import { uses24HourClock } from "react-native-localize";
-import { getLanguage } from "react-native-localization-settings";
-
-import moment from "moment";
-import "moment/locale/he";
-import "moment/locale/es";
-import "moment/locale/ar";
-import "moment/locale/fr";
+import { i18n } from "./src/localization/i18n";
+import { useQuery } from "@tanstack/react-query";
 
 import {
   useFonts,
@@ -30,17 +27,36 @@ import {
   DMSans_700Bold,
   DMSans_700Bold_Italic,
 } from "@expo-google-fonts/dm-sans";
+import { fetchLocale } from "./src/utils/fetchLocale";
+import { getAsyncStorage } from "./src/utils/AsyncStorageHelper";
+import { useCurrentLocation } from "./src/hooks/useCurrentLocation";
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
 
 export default function App() {
-  const [forecast, setForecast] = useState<Weather>();
-  const [tempScale, setTempScale] = useState<"C" | "F">("F");
-  const [location, setLocation] = useState<string>("");
-  const [refreshing, setRefreshing] = useState<boolean>(false);
-  const [date, setDate] = useState(moment());
-  const [appIsReady, setAppIsReady] = useState(false);
+  const { location, locationName, errorMsg } = useCurrentLocation();
+
+  const { data: tempScale, refetch: updateTempScale } = useQuery({
+    queryKey: ["tempScale", "@selected_temp_scale"],
+    queryFn: () => getAsyncStorage("@selected_temp_scale"),
+  });
+
+  const { data: date, isSuccess: fetchedLocaleSuccessfully } = useQuery({
+    queryKey: ["locale"],
+    queryFn: fetchLocale,
+  });
+
+  const {
+    data: forecast,
+    isFetched,
+    isFetching: refreshing,
+    refetch,
+  } = useQuery({
+    queryKey: ["forecast", i18n.locale, location],
+    queryFn: () => fetchForecast(i18n.locale, location),
+    enabled: !!location && fetchedLocaleSuccessfully,
+  });
 
   let [fontsLoaded] = useFonts({
     DMSans_400Regular,
@@ -51,36 +67,8 @@ export default function App() {
     DMSans_700Bold_Italic,
   });
 
-  const setLocale = () => {
-    const clockStyle = uses24HourClock() ? "HH:mm" : "h:mm a";
-    moment().format(clockStyle);
-    const userLocale = getLanguage().split("-")[0];
-    //If locale isn't in the translations object, it'll default to English
-    const deviceLocal = translations[userLocale] ? userLocale : "en";
-    i18n.locale = deviceLocal;
-    moment.locale(deviceLocal);
-  };
-
-  useEffect(() => {
-    async function prepare() {
-      console.log(getLanguage());
-      try {
-        //Set locale
-        setLocale();
-        //Load Forecast data
-        await loadForecast();
-      } catch (e) {
-        console.warn(e);
-      } finally {
-        // Tell the application to render
-        setAppIsReady(true);
-      }
-    }
-    prepare();
-  }, []);
-
   const onLayoutRootView = useCallback(async () => {
-    if (appIsReady) {
+    if (isFetched) {
       // This tells the splash screen to hide immediately! If we call this after
       // `setAppIsReady`, then we may see a blank screen while the app is
       // loading its initial state and rendering its first pixels. So instead,
@@ -88,23 +76,13 @@ export default function App() {
       // performed layout.
       await SplashScreen.hideAsync();
     }
-  }, [appIsReady]);
-
-  const loadForecast = async () => {
-    setTempScale(await getSelectedTempScale());
-    setRefreshing(true);
-    const fetched = await fetchForecast(i18n.locale);
-    setForecast(fetched?.data);
-    setLocation(fetched?.location.city);
-    setDate(moment());
-    setRefreshing(false);
-  };
+  }, [isFetched]);
 
   const onRefresh = React.useCallback(async () => {
-    loadForecast();
+    refetch();
   }, []);
 
-  if (!fontsLoaded || !appIsReady || !forecast) {
+  if (!fontsLoaded || !forecast || !locationName) {
     return null;
   }
 
@@ -117,9 +95,9 @@ export default function App() {
           }
         >
           <AppStateContext.Provider
-            value={{ forecast, date, tempScale, setTempScale }}
+            value={{ forecast, date, tempScale, updateTempScale }}
           >
-            <AppHeader location={location} />
+            <AppHeader location={locationName} />
             <CurrentWeatherCard
               temp={forecast.current.temp}
               weather={forecast.current.weather[0]}
@@ -137,11 +115,11 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: palette.primaryDark
+    backgroundColor: palette.primaryDark,
   },
   scrollView: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center'
-  }
+    alignItems: "center",
+    justifyContent: "center",
+  },
 });

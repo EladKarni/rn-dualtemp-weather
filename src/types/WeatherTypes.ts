@@ -89,3 +89,5 @@ export interface FeelsLike {
 	eve: number;
 	morn: number;
 }
+
+export type tempScales = 'C' | 'F'
