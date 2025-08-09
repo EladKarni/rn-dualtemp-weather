@@ -2,7 +2,7 @@ import { Alert } from "react-native";
 import * as Location from "expo-location";
 import { Weather } from "../types/WeatherTypes";
 
-const base_url = `https://open-weather-proxy-pi.vercel.app/api/v1/`;
+export const base_url = `https://open-weather-proxy-pi.vercel.app/api/v1/`;
 
 export const fetchForecast = async (
   locale: string,
