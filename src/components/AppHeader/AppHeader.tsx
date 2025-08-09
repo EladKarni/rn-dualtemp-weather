@@ -1,13 +1,11 @@
-import React, { useContext } from 'react'
-import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native'
-import { WeatherIconStyles } from '../WeatherIcon/WeatherIcon.Styles';
-import { typography } from '../../Styles/Typography';
-import { palette } from '../../Styles/Palette';
-import { AppStateContext } from '../../utils/AppStateContext';
-import { storeSelectedTempScale } from '../../utils/AsyncStorageHelper';
+import React, { useContext } from "react";
+import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
+import { WeatherIconStyles } from "../WeatherIcon/WeatherIcon.Styles";
+import { typography } from "../../Styles/Typography";
+import { palette } from "../../Styles/Palette";
+import { AppStateContext } from "../../utils/AppStateContext";
+import { storeAsyncStorage } from "../../utils/AsyncStorageHelper";
 import { i18n } from "../../localization/i18n";
-import { getLocales } from "expo-localization";
-import { TextDirection } from "../../Styles/TextDirection";
 
 type AppHeaderPropTypes = {
   location: string;
@@ -16,12 +14,13 @@ type AppHeaderPropTypes = {
 const AppHeader = ({ location }: AppHeaderPropTypes) => {
   const context = useContext(AppStateContext);
   const tempScale = context?.tempScale;
-  const setTempScale = context?.setTempScale;
+  const setTempScale = context?.updateTempScale;
 
   const _onPressHandler = () => {
-    const savedTemp = tempScale === "C" ? "F" : "C";
-    setTempScale && setTempScale(tempScale === "C" ? "F" : "C");
-    tempScale !== undefined && storeSelectedTempScale(savedTemp);
+    const savedTemp = tempScale === "F" ? "C" : "F";
+    tempScale !== undefined &&
+      storeAsyncStorage("@selected_temp_scale", savedTemp);
+    setTempScale();
   };
 
   return (
@@ -44,7 +43,9 @@ const AppHeader = ({ location }: AppHeaderPropTypes) => {
         onPress={_onPressHandler}
         style={styles.defaultScaleSwitch}
       >
-        <Text style={styles.selectedScaleText}>{tempScale?.toUpperCase()}</Text>
+        <Text style={styles.selectedScaleText}>
+          {tempScale?.toUpperCase() || "C"}
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -95,4 +96,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default AppHeader
+export default AppHeader;

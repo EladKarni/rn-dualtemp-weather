@@ -7,6 +7,6 @@ export const AppStateContext = createContext<AppStateProviderPropTypes | null>(n
 export type AppStateProviderPropTypes = {
   forecast: Weather | undefined;
   date: Moment;
-  tempScale: 'C' | 'F';
-  setTempScale: Dispatch<SetStateAction<"C" | "F">>;
+  tempScale: string;
+  updateTempScale: () => void;
 }
