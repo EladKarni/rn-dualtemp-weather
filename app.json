@@ -16,6 +16,13 @@
     },
     "plugins": [
       [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow DualTemp Weather to use your location.",
+          "isAndroidBackgroundLocationEnabled": true
+        }
+      ],
+      [
         "expo-build-properties",
         {
           "android": {
@@ -26,12 +33,6 @@
           "ios": {
             "deploymentTarget": "15.1"
           }
-        }
-      ],
-      [
-        "expo-location",
-        {
-          "locationAlwaysAndWhenInUsePermission": "Allow DualTemp Weather to use your location."
         }
       ],
       ["expo-localization"]
