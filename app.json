@@ -35,6 +35,12 @@
           }
         }
       ],
+      [
+        "react-native-localization-settings",
+        {
+          "languages": ["ar", "en", "es", "fr", "he", "zh"]
+        }
+      ],
       ["expo-localization"]
     ],
     "ios": {

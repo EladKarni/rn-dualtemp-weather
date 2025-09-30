@@ -5,8 +5,8 @@ import {
   requestForegroundPermissionsAsync,
   reverseGeocodeAsync,
 } from "expo-location";
-import { useState, useEffect, useRef } from "react";
-import { Alert, AppState, DevSettings, Linking } from "react-native";
+import { useState, useEffect } from "react";
+import { Alert, Linking } from "react-native";
 
 export function useCurrentLocation() {
   const [location, setLocation] = useState<LocationObject | null>(null);
