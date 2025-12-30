@@ -16,6 +16,13 @@
     },
     "plugins": [
       [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow DualTemp Weather to use your location.",
+          "isAndroidBackgroundLocationEnabled": true
+        }
+      ],
+      [
         "expo-build-properties",
         {
           "android": {
@@ -29,9 +36,9 @@
         }
       ],
       [
-        "expo-location",
+        "react-native-localization-settings",
         {
-          "locationAlwaysAndWhenInUsePermission": "Allow DualTemp Weather to use your location."
+          "languages": ["ar", "en", "es", "fr", "he", "zh"]
         }
       ],
       ["expo-localization"]
@@ -50,7 +57,8 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#1C1B4D"
       },
-      "package": "com.ekarni.rndualtempweatherapp"
+      "package": "com.ekarni.rndualtempweatherapp",
+      "permissions": ["ACCESS_BACKGROUND_LOCATION"]
     },
     "updates": {
       "url": "https://u.expo.dev/444bda66-1ab4-4665-ba53-c2b76743a33b"

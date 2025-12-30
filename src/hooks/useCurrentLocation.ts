@@ -5,33 +5,13 @@ import {
   requestForegroundPermissionsAsync,
   reverseGeocodeAsync,
 } from "expo-location";
-import { useState, useEffect, useRef } from "react";
-import { Alert, AppState, DevSettings, Linking } from "react-native";
+import { useState, useEffect } from "react";
+import { Alert, Linking } from "react-native";
 
 export function useCurrentLocation() {
   const [location, setLocation] = useState<LocationObject | null>(null);
   const [locationName, setLocationName] = useState<string>("");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const appState = useRef(AppState.currentState);
-  const [appStateVisible, setAppStateVisible] = useState(appState.current);
-
-  useEffect(() => {
-    const subscription = AppState.addEventListener("change", (nextAppState) => {
-      if (
-        appState.current.match(/inactive|background/) &&
-        nextAppState === "active"
-      ) {
-        DevSettings.reload();
-      }
-
-      appState.current = nextAppState;
-      setAppStateVisible(appState.current);
-    });
-
-    return () => {
-      subscription.remove();
-    };
-  }, []);
 
   useEffect(() => {
     const fetchLocation = async () => {
@@ -55,7 +35,7 @@ export function useCurrentLocation() {
     };
 
     fetchLocation();
-  }, [appStateVisible]);
+  }, []);
 
   return { location, locationName, errorMsg };
 }
@@ -63,7 +43,11 @@ export function useCurrentLocation() {
 const startBackgroundTracking = async () => {
   const { status } = await requestForegroundPermissionsAsync();
   if (status == "granted") {
-    await requestBackgroundPermissionsAsync();
+    try {
+      await requestBackgroundPermissionsAsync();
+    } catch (error) {
+      console.error("Error requesting background permissions:", error);
+    }
   }
   return status;
 };
