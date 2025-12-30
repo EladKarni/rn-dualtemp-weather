@@ -20,4 +20,10 @@ export const en = {
     Min: "Min",
     SpeedInfo: "km/h",
     SpeedInfoImp: "mph",
+    Settings: "Settings",
+    Units: "Units",
+    TemperatureUnit: "Temperature Unit",
+    Celsius: "Celsius",
+    Fahrenheit: "Fahrenheit",
+    Close: "Close",
 }

@@ -20,4 +20,10 @@ export const ar = {
     Min: "دقيقة",
     SpeedInfo: "كم/ساعة",
     SpeedInfoImp: "ميلا في الساعة",
+    Settings: "الإعدادات",
+    Units: "الوحدات",
+    TemperatureUnit: "وحدة درجة الحرارة",
+    Celsius: "مئوية",
+    Fahrenheit: "فهرنهايت",
+    Close: "إغلاق",
 }

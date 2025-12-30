@@ -28,8 +28,8 @@ import {
   DMSans_700Bold_Italic,
 } from "@expo-google-fonts/dm-sans";
 import { fetchLocale } from "./src/utils/fetchLocale";
-import { getAsyncStorage } from "./src/utils/AsyncStorageHelper";
 import { useCurrentLocation } from "./src/hooks/useCurrentLocation";
+import { useSettingsStore } from "./src/store/useSettingsStore";
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
@@ -37,10 +37,7 @@ SplashScreen.preventAutoHideAsync();
 export default function App() {
   const { location, locationName, errorMsg } = useCurrentLocation();
 
-  const { data: tempScale, refetch: updateTempScale } = useQuery({
-    queryKey: ["tempScale", "@selected_temp_scale"],
-    queryFn: () => getAsyncStorage("@selected_temp_scale"),
-  });
+  const tempScale = useSettingsStore((state) => state.tempScale);
 
   const { data: date, isSuccess: fetchedLocaleSuccessfully } = useQuery({
     queryKey: ["locale"],
@@ -95,7 +92,7 @@ export default function App() {
           }
         >
           <AppStateContext.Provider
-            value={{ forecast, date, tempScale, updateTempScale }}
+            value={{ forecast, date, tempScale }}
           >
             <AppHeader location={locationName} />
             <CurrentWeatherCard

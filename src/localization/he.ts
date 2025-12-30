@@ -20,4 +20,10 @@ export const he = {
     Min: "מינימום",
     SpeedInfo: "קמ\"ש",
     SpeedInfoImp: "מי\"ש",
+    Settings: "הגדרות",
+    Units: "יחידות",
+    TemperatureUnit: "יחידת טמפרטורה",
+    Celsius: "צלזיוס",
+    Fahrenheit: "פרנהייט",
+    Close: "סגור",
 }

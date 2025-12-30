@@ -20,4 +20,10 @@ export const zh = {
   Min: "最低",
   SpeedInfo: "千米/小时",
   SpeedInfoImp: "迈",
+  Settings: "设置",
+  Units: "单位",
+  TemperatureUnit: "温度单位",
+  Celsius: "摄氏度",
+  Fahrenheit: "华氏度",
+  Close: "关闭",
 };

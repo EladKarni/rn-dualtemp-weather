@@ -1,27 +1,18 @@
-import React, { useContext } from "react";
+import React, { useState } from "react";
 import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
 import { WeatherIconStyles } from "../WeatherIcon/WeatherIcon.Styles";
 import { typography } from "../../Styles/Typography";
 import { palette } from "../../Styles/Palette";
-import { AppStateContext } from "../../utils/AppStateContext";
-import { storeAsyncStorage } from "../../utils/AsyncStorageHelper";
 import { i18n } from "../../localization/i18n";
+import GearIcon from "../GearIcon/GearIcon";
+import SettingsScreen from "../../screens/SettingsScreen";
 
 type AppHeaderPropTypes = {
   location: string;
 };
 
 const AppHeader = ({ location }: AppHeaderPropTypes) => {
-  const context = useContext(AppStateContext);
-  const tempScale = context?.tempScale;
-  const setTempScale = context?.updateTempScale;
-
-  const _onPressHandler = () => {
-    const savedTemp = tempScale === "F" ? "C" : "F";
-    tempScale !== undefined &&
-      storeAsyncStorage("@selected_temp_scale", savedTemp);
-    setTempScale();
-  };
+  const [settingsVisible, setSettingsVisible] = useState(false);
 
   return (
     <View style={styles.headerContainer}>
@@ -40,13 +31,16 @@ const AppHeader = ({ location }: AppHeaderPropTypes) => {
         </View>
       </View>
       <TouchableOpacity
-        onPress={_onPressHandler}
-        style={styles.defaultScaleSwitch}
+        onPress={() => setSettingsVisible(true)}
+        style={styles.settingsButton}
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
       >
-        <Text style={styles.selectedScaleText}>
-          {tempScale?.toUpperCase() || "C"}
-        </Text>
+        <GearIcon size={28} color={palette.primaryLight} />
       </TouchableOpacity>
+      <SettingsScreen
+        visible={settingsVisible}
+        onClose={() => setSettingsVisible(false)}
+      />
     </View>
   );
 };
@@ -78,21 +72,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  defaultScaleSwitch: {
+  settingsButton: {
     position: "absolute",
-    borderColor: palette.primaryLight,
-    borderWidth: 5,
-    borderRadius: 15,
-    paddingVertical: 5,
-    width: 50,
     top: 4,
     right: 20,
-  },
-  selectedScaleText: {
-    color: palette.textColor,
-    fontWeight: "bold",
-    fontSize: 26,
-    textAlign: "center",
+    padding: 8,
   },
 });
 

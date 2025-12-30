@@ -20,4 +20,10 @@ export const es = {
     Max: "Maximo",
     SpeedInfo: "km/h",
     SpeedInfoImp: "mph",
+    Settings: "Ajustes",
+    Units: "Unidades",
+    TemperatureUnit: "Unidad de Temperatura",
+    Celsius: "Celsius",
+    Fahrenheit: "Fahrenheit",
+    Close: "Cerrar",
 }
