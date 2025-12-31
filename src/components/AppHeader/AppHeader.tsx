@@ -9,9 +9,11 @@ import SettingsScreen from "../../screens/SettingsScreen";
 
 type AppHeaderPropTypes = {
   location: string;
+  onLocationPress: () => void;
+  hasMultipleLocations?: boolean;
 };
 
-const AppHeader = ({ location }: AppHeaderPropTypes) => {
+const AppHeader = ({ location, onLocationPress, hasMultipleLocations = false }: AppHeaderPropTypes) => {
   const [settingsVisible, setSettingsVisible] = useState(false);
 
   return (
@@ -20,7 +22,12 @@ const AppHeader = ({ location }: AppHeaderPropTypes) => {
         <Text style={[typography.headerText, styles.containerHeaderText]}>
           {i18n.t("Title")}
         </Text>
-        <View style={[styles.locationHeader]}>
+        <TouchableOpacity
+          onPress={onLocationPress}
+          style={[styles.locationHeader]}
+          hitSlop={{ top: 5, bottom: 5, left: 5, right: 5 }}
+          disabled={!hasMultipleLocations}
+        >
           <Text style={[typography.headerText, styles.locationText]}>
             {location}
           </Text>
@@ -28,7 +35,10 @@ const AppHeader = ({ location }: AppHeaderPropTypes) => {
             source={require("../../../assets/Images/locationIcon.png")}
             style={WeatherIconStyles.iconTiny}
           />
-        </View>
+          {hasMultipleLocations && (
+            <Text style={styles.dropdownArrow}>▼</Text>
+          )}
+        </TouchableOpacity>
       </View>
       <TouchableOpacity
         onPress={() => setSettingsVisible(true)}
@@ -71,6 +81,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     justifyContent: "center",
     alignItems: "center",
+  },
+  dropdownArrow: {
+    fontSize: 10,
+    color: palette.highlightColor,
+    marginLeft: 5,
   },
   settingsButton: {
     position: "absolute",

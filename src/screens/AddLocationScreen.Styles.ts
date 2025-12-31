@@ -20,15 +20,15 @@ export const styles = StyleSheet.create({
     borderTopRightRadius: 20,
     paddingTop: 20,
     paddingBottom: 40,
-    minHeight: "50%",
-    maxHeight: "80%",
+    minHeight: "70%",
+    maxHeight: "90%",
   },
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
     paddingHorizontal: 20,
-    paddingBottom: 20,
+    paddingBottom: 15,
     borderBottomWidth: 1,
     borderBottomColor: palette.primaryLight,
   },
@@ -45,56 +45,74 @@ export const styles = StyleSheet.create({
     color: palette.textColor,
     fontWeight: "300",
   },
-  content: {
-    paddingVertical: 20,
-    paddingHorizontal: 0,
-  },
-  section: {
-    marginBottom: 30,
-  },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: palette.highlightColor,
+  searchContainer: {
     paddingHorizontal: 20,
-    marginBottom: 12,
-    textTransform: "uppercase",
-    letterSpacing: 1,
+    paddingVertical: 15,
   },
-  locationItem: {
+  searchInput: {
+    backgroundColor: palette.primaryLight,
+    borderRadius: 10,
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+    fontSize: 16,
+    color: palette.textColor,
+    borderWidth: 1,
+    borderColor: palette.highlightColor,
+  },
+  content: {
+    flex: 1,
+    paddingTop: 10,
+  },
+  resultsList: {
+    flex: 1,
+    paddingHorizontal: 20,
+  },
+  cityItem: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: palette.primaryLight,
+    paddingVertical: 15,
+    paddingHorizontal: 15,
+    marginBottom: 10,
+    backgroundColor: palette.primaryLight,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "rgba(74, 144, 226, 0.2)",
   },
-  locationItemInfo: {
+  cityInfo: {
     flex: 1,
   },
-  locationItemName: {
+  cityName: {
     fontSize: 16,
+    fontWeight: "600",
     color: palette.textColor,
+    marginBottom: 4,
   },
-  deleteIcon: {
-    fontSize: 18,
+  cityDetails: {
+    fontSize: 14,
+    color: "#999",
   },
-  addLocationButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 20,
+  addIcon: {
+    fontSize: 28,
+    color: palette.highlightColor,
+    fontWeight: "300",
+    marginLeft: 10,
+  },
+  emptyState: {
+    flex: 1,
+    justifyContent: "center",
     alignItems: "center",
+    paddingVertical: 40,
+  },
+  emptyStateText: {
+    fontSize: 16,
+    color: "#999",
+    textAlign: "center",
     marginTop: 10,
   },
-  addLocationButtonDisabled: {
-    opacity: 0.5,
-  },
-  addLocationButtonText: {
+  errorText: {
     fontSize: 16,
-    color: palette.highlightColor,
-    fontWeight: "600",
-  },
-  addLocationButtonTextDisabled: {
-    color: "#999",
+    color: "#ff6b6b",
+    textAlign: "center",
   },
 });

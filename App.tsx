@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   RefreshControl,
   SafeAreaView,
@@ -7,6 +7,7 @@ import {
   View,
 } from "react-native";
 import * as SplashScreen from "expo-splash-screen";
+import * as Location from "expo-location";
 import { fetchForecast } from "./src/utils/fetchWeather";
 import CurrentWeatherCard from "./src/components/CurrentWeatherCard/CurrentWeatherCard";
 import { palette } from "./src/Styles/Palette";
@@ -28,21 +29,59 @@ import {
   DMSans_700Bold_Italic,
 } from "@expo-google-fonts/dm-sans";
 import { fetchLocale } from "./src/utils/fetchLocale";
-import { useCurrentLocation } from "./src/hooks/useCurrentLocation";
 import { useSettingsStore } from "./src/store/useSettingsStore";
+import { useLocationStore } from "./src/store/useLocationStore";
+import { useLanguageStore } from "./src/store/useLanguageStore";
+import LocationDropdown from "./src/components/LocationDropdown/LocationDropdown";
+import AddLocationScreen from "./src/screens/AddLocationScreen";
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
 
 export default function App() {
-  const { location, locationName, errorMsg } = useCurrentLocation();
+  const [locationDropdownVisible, setLocationDropdownVisible] = useState(false);
+  const [addLocationVisible, setAddLocationVisible] = useState(false);
 
   const tempScale = useSettingsStore((state) => state.tempScale);
+  const savedLocations = useLocationStore((state) => state.savedLocations);
+  const activeLocationId = useLocationStore((state) => state.activeLocationId);
+  const updateGPSLocation = useLocationStore((state) => state.updateGPSLocation);
+  const selectedLanguage = useLanguageStore((state) => state.selectedLanguage);
+
+  // Derive active location from savedLocations and activeLocationId
+  const activeLocation = savedLocations.find(loc => loc.id === activeLocationId);
 
   const { data: date, isSuccess: fetchedLocaleSuccessfully } = useQuery({
-    queryKey: ["locale"],
+    queryKey: ["locale", selectedLanguage],
     queryFn: fetchLocale,
   });
+
+  // Fetch GPS location on mount and update store
+  useEffect(() => {
+    const fetchGPS = async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== "granted") {
+          console.warn("Location permission not granted");
+          return;
+        }
+
+        const location = await Location.getCurrentPositionAsync({});
+        const locationInfo = await Location.reverseGeocodeAsync(location.coords);
+        const name = locationInfo[0]?.city || locationInfo[0]?.country || "Current Location";
+
+        updateGPSLocation(
+          location.coords.latitude,
+          location.coords.longitude,
+          name
+        );
+      } catch (error) {
+        console.error("Error fetching GPS location:", error);
+      }
+    };
+
+    fetchGPS();
+  }, []);
 
   const {
     data: forecast,
@@ -50,9 +89,9 @@ export default function App() {
     isFetching: refreshing,
     refetch,
   } = useQuery({
-    queryKey: ["forecast", i18n.locale, location],
-    queryFn: () => fetchForecast(i18n.locale, location),
-    enabled: !!location && fetchedLocaleSuccessfully,
+    queryKey: ["forecast", i18n.locale, activeLocation?.id],
+    queryFn: () => fetchForecast(i18n.locale, activeLocation?.latitude || 0, activeLocation?.longitude || 0),
+    enabled: !!activeLocation && fetchedLocaleSuccessfully,
   });
 
   let [fontsLoaded] = useFonts({
@@ -79,7 +118,7 @@ export default function App() {
     refetch();
   }, []);
 
-  if (!fontsLoaded || !forecast || !locationName) {
+  if (!fontsLoaded || !forecast || !activeLocation || !date) {
     return null;
   }
 
@@ -94,7 +133,11 @@ export default function App() {
           <AppStateContext.Provider
             value={{ forecast, date, tempScale }}
           >
-            <AppHeader location={locationName} />
+            <AppHeader
+              location={activeLocation.name}
+              onLocationPress={() => setLocationDropdownVisible(true)}
+              hasMultipleLocations={savedLocations.length > 1}
+            />
             <CurrentWeatherCard
               temp={forecast.current.temp}
               weather={forecast.current.weather[0]}
@@ -105,6 +148,17 @@ export default function App() {
           <AppFooter />
         </ScrollView>
       </View>
+
+      <LocationDropdown
+        visible={locationDropdownVisible}
+        onClose={() => setLocationDropdownVisible(false)}
+        onAddLocation={() => setAddLocationVisible(true)}
+      />
+
+      <AddLocationScreen
+        visible={addLocationVisible}
+        onClose={() => setAddLocationVisible(false)}
+      />
     </SafeAreaView>
   );
 }
