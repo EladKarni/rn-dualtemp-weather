@@ -1,20 +1,19 @@
-import React, { useState } from "react";
+import React from "react";
 import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
 import { WeatherIconStyles } from "../WeatherIcon/WeatherIcon.Styles";
 import { typography } from "../../Styles/Typography";
 import { palette } from "../../Styles/Palette";
 import { i18n } from "../../localization/i18n";
 import GearIcon from "../GearIcon/GearIcon";
-import SettingsScreen from "../../screens/SettingsScreen";
 
 type AppHeaderPropTypes = {
   location: string;
   onLocationPress: () => void;
   hasMultipleLocations?: boolean;
+  onSettingsPress: () => void;
 };
 
-const AppHeader = ({ location, onLocationPress, hasMultipleLocations = false }: AppHeaderPropTypes) => {
-  const [settingsVisible, setSettingsVisible] = useState(false);
+const AppHeader = ({ location, onLocationPress, hasMultipleLocations = false, onSettingsPress }: AppHeaderPropTypes) => {
 
   return (
     <View style={styles.headerContainer}>
@@ -26,7 +25,6 @@ const AppHeader = ({ location, onLocationPress, hasMultipleLocations = false }: 
           onPress={onLocationPress}
           style={[styles.locationHeader]}
           hitSlop={{ top: 5, bottom: 5, left: 5, right: 5 }}
-          disabled={!hasMultipleLocations}
         >
           <Text style={[typography.headerText, styles.locationText]}>
             {location}
@@ -41,16 +39,12 @@ const AppHeader = ({ location, onLocationPress, hasMultipleLocations = false }: 
         </TouchableOpacity>
       </View>
       <TouchableOpacity
-        onPress={() => setSettingsVisible(true)}
+        onPress={onSettingsPress}
         style={styles.settingsButton}
         hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
       >
         <GearIcon size={28} color={palette.primaryLight} />
       </TouchableOpacity>
-      <SettingsScreen
-        visible={settingsVisible}
-        onClose={() => setSettingsVisible(false)}
-      />
     </View>
   );
 };

@@ -3,20 +3,20 @@ import { View, Text, TouchableOpacity } from "react-native";
 import { useLanguageStore } from "../../store/useLanguageStore";
 import { styles } from "./LanguageSelector.Styles";
 
-const languages = [
-  { code: null, name: "Auto-detect", nativeName: "Auto-detect" },
-  { code: "en", name: "English", nativeName: "English" },
-  { code: "es", name: "Spanish", nativeName: "Español" },
-  { code: "fr", name: "French", nativeName: "Français" },
-  { code: "ar", name: "Arabic", nativeName: "العربية" },
-  { code: "he", name: "Hebrew", nativeName: "עברית" },
-  { code: "zh", name: "Chinese", nativeName: "简体中文" },
-];
-
 export const LanguageSelector = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const selectedLanguage = useLanguageStore((state) => state.selectedLanguage);
   const setLanguage = useLanguageStore((state) => state.setLanguage);
+
+  const languages = [
+    { code: null, name: "Auto-detect", nativeName: "Auto-detect" },
+    { code: "en", name: "English", nativeName: "English" },
+    { code: "es", name: "Spanish", nativeName: "Español" },
+    { code: "fr", name: "French", nativeName: "Français" },
+    { code: "ar", name: "Arabic", nativeName: "العربية" },
+    { code: "he", name: "Hebrew", nativeName: "עברית" },
+    { code: "zh", name: "Chinese", nativeName: "简体中文" },
+  ];
 
   const handleLanguageSelect = (code: string | null) => {
     setLanguage(code);

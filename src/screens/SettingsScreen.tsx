@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import {
   Modal,
   View,
@@ -17,16 +17,13 @@ import SettingItem from "../components/SettingItem/SettingItem";
 import { TempUnitSelector } from "../components/TempUnitSelector/TempUnitSelector";
 import { LanguageSelector } from "../components/LanguageSelector/LanguageSelector";
 import { useLocationStore } from "../store/useLocationStore";
-import AddLocationScreen from "./AddLocationScreen";
-
 type SettingsScreenProps = {
   visible: boolean;
   onClose: () => void;
+  onAddLocationPress: () => void;
 };
 
-const SettingsScreen = ({ visible, onClose }: SettingsScreenProps) => {
-  const [modalVisible, setModalVisible] = useState(visible);
-  const [addLocationVisible, setAddLocationVisible] = useState(false);
+const SettingsScreen = ({ visible, onClose, onAddLocationPress }: SettingsScreenProps) => {
   const slideAnim = useRef(new Animated.Value(300)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
 
@@ -36,7 +33,6 @@ const SettingsScreen = ({ visible, onClose }: SettingsScreenProps) => {
 
   useEffect(() => {
     if (visible) {
-      setModalVisible(true);
       Animated.parallel([
         Animated.timing(fadeAnim, {
           toValue: 1,
@@ -62,15 +58,13 @@ const SettingsScreen = ({ visible, onClose }: SettingsScreenProps) => {
           duration: 250,
           useNativeDriver: true,
         }),
-      ]).start(() => {
-        setModalVisible(false);
-      });
+      ]).start();
     }
   }, [visible]);
 
   return (
     <Modal
-      visible={modalVisible}
+      visible={visible}
       transparent={true}
       animationType="none"
       onRequestClose={onClose}
@@ -157,7 +151,7 @@ const SettingsScreen = ({ visible, onClose }: SettingsScreenProps) => {
                 ]}
                 onPress={() => {
                   if (canAddMoreLocations) {
-                    setAddLocationVisible(true);
+                    onAddLocationPress();
                   }
                 }}
                 disabled={!canAddMoreLocations}
@@ -177,11 +171,6 @@ const SettingsScreen = ({ visible, onClose }: SettingsScreenProps) => {
           </ScrollView>
         </Animated.View>
       </KeyboardAvoidingView>
-
-      <AddLocationScreen
-        visible={addLocationVisible}
-        onClose={() => setAddLocationVisible(false)}
-      />
     </Modal>
   );
 };

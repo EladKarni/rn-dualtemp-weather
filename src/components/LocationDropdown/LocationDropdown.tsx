@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import {
   Modal,
   View,
@@ -24,7 +24,6 @@ const LocationDropdown = ({
   onClose,
   onAddLocation,
 }: LocationDropdownProps) => {
-  const [modalVisible, setModalVisible] = useState(visible);
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(-20)).current;
 
@@ -36,7 +35,6 @@ const LocationDropdown = ({
 
   useEffect(() => {
     if (visible) {
-      setModalVisible(true);
       Animated.parallel([
         Animated.timing(fadeAnim, {
           toValue: 1,
@@ -61,9 +59,7 @@ const LocationDropdown = ({
           duration: 150,
           useNativeDriver: true,
         }),
-      ]).start(() => {
-        setModalVisible(false);
-      });
+      ]).start();
     }
   }, [visible]);
 
@@ -132,7 +128,7 @@ const LocationDropdown = ({
 
   return (
     <Modal
-      visible={modalVisible}
+      visible={visible}
       transparent={true}
       animationType="none"
       onRequestClose={onClose}

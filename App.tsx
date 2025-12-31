@@ -1,11 +1,13 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect } from "react";
 import {
   RefreshControl,
   SafeAreaView,
   ScrollView,
   StyleSheet,
   View,
+  AppState,
 } from "react-native";
+
 import * as SplashScreen from "expo-splash-screen";
 import * as Location from "expo-location";
 import { fetchForecast } from "./src/utils/fetchWeather";
@@ -32,21 +34,27 @@ import { fetchLocale } from "./src/utils/fetchLocale";
 import { useSettingsStore } from "./src/store/useSettingsStore";
 import { useLocationStore } from "./src/store/useLocationStore";
 import { useLanguageStore } from "./src/store/useLanguageStore";
+import { useModalStore } from "./src/store/useModalStore";
 import LocationDropdown from "./src/components/LocationDropdown/LocationDropdown";
 import AddLocationScreen from "./src/screens/AddLocationScreen";
+import SettingsScreen from "./src/screens/SettingsScreen";
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
 
 export default function App() {
-  const [locationDropdownVisible, setLocationDropdownVisible] = useState(false);
-  const [addLocationVisible, setAddLocationVisible] = useState(false);
-
   const tempScale = useSettingsStore((state) => state.tempScale);
   const savedLocations = useLocationStore((state) => state.savedLocations);
   const activeLocationId = useLocationStore((state) => state.activeLocationId);
   const updateGPSLocation = useLocationStore((state) => state.updateGPSLocation);
   const selectedLanguage = useLanguageStore((state) => state.selectedLanguage);
+
+  // Modal state management
+  const activeModal = useModalStore((state) => state.activeModal);
+  const openLocationDropdown = useModalStore((state) => state.openLocationDropdown);
+  const openSettings = useModalStore((state) => state.openSettings);
+  const openAddLocation = useModalStore((state) => state.openAddLocation);
+  const closeModal = useModalStore((state) => state.closeModal);
 
   // Derive active location from savedLocations and activeLocationId
   const activeLocation = savedLocations.find(loc => loc.id === activeLocationId);
@@ -68,7 +76,15 @@ export default function App() {
 
         const location = await Location.getCurrentPositionAsync({});
         const locationInfo = await Location.reverseGeocodeAsync(location.coords);
-        const name = locationInfo[0]?.city || locationInfo[0]?.country || "Current Location";
+
+        // Extract clean city/town name, avoiding full address strings
+        const info = locationInfo[0];
+        let name = info?.city || info?.subregion || info?.district || info?.region || info?.country || "Current Location";
+
+        // If the city name contains commas, extract just the first part
+        if (name.includes(',')) {
+          name = name.split(',')[0].trim();
+        }
 
         updateGPSLocation(
           location.coords.latitude,
@@ -81,6 +97,24 @@ export default function App() {
     };
 
     fetchGPS();
+  }, []);
+
+  // Reset all modals on mount for clean state
+  useEffect(() => {
+    closeModal();
+  }, []);
+
+  // Close modals when app backgrounds
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextAppState) => {
+      if (nextAppState === 'background') {
+        closeModal();
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
   }, []);
 
   const {
@@ -134,9 +168,10 @@ export default function App() {
             value={{ forecast, date, tempScale }}
           >
             <AppHeader
-              location={activeLocation.name}
-              onLocationPress={() => setLocationDropdownVisible(true)}
-              hasMultipleLocations={savedLocations.length > 1}
+              location={activeLocation?.name || "Loading..."}
+              onLocationPress={openLocationDropdown}
+              hasMultipleLocations={savedLocations.length > 0}
+              onSettingsPress={openSettings}
             />
             <CurrentWeatherCard
               temp={forecast.current.temp}
@@ -150,14 +185,20 @@ export default function App() {
       </View>
 
       <LocationDropdown
-        visible={locationDropdownVisible}
-        onClose={() => setLocationDropdownVisible(false)}
-        onAddLocation={() => setAddLocationVisible(true)}
+        visible={activeModal === 'location'}
+        onClose={closeModal}
+        onAddLocation={openAddLocation}
+      />
+
+      <SettingsScreen
+        visible={activeModal === 'settings'}
+        onClose={closeModal}
+        onAddLocationPress={openAddLocation}
       />
 
       <AddLocationScreen
-        visible={addLocationVisible}
-        onClose={() => setAddLocationVisible(false)}
+        visible={activeModal === 'addLocation'}
+        onClose={closeModal}
       />
     </SafeAreaView>
   );

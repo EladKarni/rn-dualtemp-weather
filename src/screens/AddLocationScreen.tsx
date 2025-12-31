@@ -23,7 +23,6 @@ type AddLocationScreenProps = {
 };
 
 const AddLocationScreen = ({ visible, onClose }: AddLocationScreenProps) => {
-  const [modalVisible, setModalVisible] = useState(visible);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<CityResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -37,7 +36,6 @@ const AddLocationScreen = ({ visible, onClose }: AddLocationScreenProps) => {
 
   useEffect(() => {
     if (visible) {
-      setModalVisible(true);
       Animated.parallel([
         Animated.timing(fadeAnim, {
           toValue: 1,
@@ -63,12 +61,11 @@ const AddLocationScreen = ({ visible, onClose }: AddLocationScreenProps) => {
           duration: 250,
           useNativeDriver: true,
         }),
-      ]).start(() => {
-        setModalVisible(false);
-        setSearchQuery("");
-        setSearchResults([]);
-        setError(null);
-      });
+      ]).start();
+      // Clean up search state when closing
+      setSearchQuery("");
+      setSearchResults([]);
+      setError(null);
     }
   }, [visible]);
 
@@ -193,7 +190,7 @@ const AddLocationScreen = ({ visible, onClose }: AddLocationScreenProps) => {
 
   return (
     <Modal
-      visible={modalVisible}
+      visible={visible}
       transparent={true}
       animationType="none"
       onRequestClose={onClose}
