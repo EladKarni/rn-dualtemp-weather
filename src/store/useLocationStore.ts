@@ -91,7 +91,10 @@ export const useLocationStore = create<LocationState>()(
       },
 
       setActiveLocation: (id) => {
+        console.log('[LocationStore] setActiveLocation called with id:', id);
+        console.log('[LocationStore] Current activeLocationId before set:', get().activeLocationId);
         set({ activeLocationId: id });
+        console.log('[LocationStore] activeLocationId after set:', get().activeLocationId);
       },
 
       updateGPSLocation: (latitude, longitude, name) => {

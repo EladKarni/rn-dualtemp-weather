@@ -126,6 +126,9 @@ export default function App() {
     queryKey: ["forecast", i18n.locale, activeLocation?.id],
     queryFn: () => fetchForecast(i18n.locale, activeLocation?.latitude || 0, activeLocation?.longitude || 0),
     enabled: !!activeLocation && fetchedLocaleSuccessfully,
+    placeholderData: (previousData) => previousData, // Keeps old data visible during location switch
+    staleTime: 1000 * 60 * 30, // 30 minutes - data is considered fresh for this long
+    gcTime: 1000 * 60 * 60, // 1 hour - keep unused data in cache for this long
   });
 
   let [fontsLoaded] = useFonts({
