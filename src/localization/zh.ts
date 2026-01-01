@@ -45,4 +45,9 @@ export const zh = {
   Language: "语言",
   AppLanguage: "应用语言",
   AutoDetect: "自动检测（设备语言）",
+  // Error messages
+  Error: "错误",
+  Retry: "重试",
+  OpenSettings: "打开设置",
+  OK: "确定",
 };

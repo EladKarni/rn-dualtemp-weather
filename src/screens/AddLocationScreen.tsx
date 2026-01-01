@@ -16,6 +16,9 @@ import { i18n } from "../localization/i18n";
 import { styles } from "./AddLocationScreen.Styles";
 import { CityResult, searchCities, formatLocationName } from "../utils/geocoding";
 import { useLocationStore } from "../store/useLocationStore";
+import { logger } from "../utils/logger";
+import { AppError, toAppError } from "../utils/errors";
+import { ErrorBanner } from "../components/ErrorAlert/ErrorBanner";
 
 type AddLocationScreenProps = {
   visible: boolean;
@@ -26,7 +29,7 @@ const AddLocationScreen = ({ visible, onClose }: AddLocationScreenProps) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<CityResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<AppError | null>(null);
   const slideAnim = useRef(new Animated.Value(300)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -87,12 +90,11 @@ const AddLocationScreen = ({ visible, onClose }: AddLocationScreenProps) => {
       try {
         const results = await searchCities(searchQuery);
         setSearchResults(results);
-        if (results.length === 0) {
-          setError(i18n.t("NoResults"));
-        }
+        setError(null); // Clear any previous errors
       } catch (err) {
-        console.error("Search error:", err);
-        setError(i18n.t("SearchError"));
+        const appError = toAppError(err);
+        logger.error("Search error:", err);
+        setError(appError);
         setSearchResults([]);
       } finally {
         setIsSearching(false);
@@ -163,9 +165,18 @@ const AddLocationScreen = ({ visible, onClose }: AddLocationScreenProps) => {
 
     if (error) {
       return (
-        <View style={styles.emptyState}>
-          <Text style={styles.errorText}>{error}</Text>
-        </View>
+        <ErrorBanner
+          error={error}
+          onRetry={() => {
+            setError(null);
+            setIsSearching(true);
+            // Trigger search again by re-setting the query
+            const currentQuery = searchQuery;
+            setSearchQuery("");
+            setTimeout(() => setSearchQuery(currentQuery), 0);
+          }}
+          onDismiss={() => setError(null)}
+        />
       );
     }
 

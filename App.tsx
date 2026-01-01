@@ -6,6 +6,8 @@ import {
   StyleSheet,
   View,
   AppState,
+  Text,
+  TouchableOpacity,
 } from "react-native";
 
 import * as SplashScreen from "expo-splash-screen";
@@ -20,6 +22,7 @@ import { AppStateContext } from "./src/utils/AppStateContext";
 import AppFooter from "./src/components/AppFooter/AppFooter";
 import { i18n } from "./src/localization/i18n";
 import { useQuery } from "@tanstack/react-query";
+import { parseLocationName } from "./src/utils/locationNameParser";
 
 import {
   useFonts,
@@ -38,6 +41,15 @@ import { useModalStore } from "./src/store/useModalStore";
 import LocationDropdown from "./src/components/LocationDropdown/LocationDropdown";
 import AddLocationScreen from "./src/screens/AddLocationScreen";
 import SettingsScreen from "./src/screens/SettingsScreen";
+import { logger } from "./src/utils/logger";
+import {
+  PermissionDeniedError,
+  LocationUnavailableError,
+  PositionTimeoutError,
+  toAppError,
+  AppError
+} from "./src/utils/errors";
+import { showErrorAlert, openDeviceSettings } from "./src/components/ErrorAlert/ErrorAlert";
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
@@ -59,6 +71,9 @@ export default function App() {
   // Derive active location from savedLocations and activeLocationId
   const activeLocation = savedLocations.find(loc => loc.id === activeLocationId);
 
+  // GPS error state
+  const [gpsError, setGpsError] = React.useState<AppError | null>(null);
+
   const { data: date, isSuccess: fetchedLocaleSuccessfully } = useQuery({
     queryKey: ["locale", selectedLanguage],
     queryFn: fetchLocale,
@@ -69,21 +84,34 @@ export default function App() {
     const fetchGPS = async () => {
       try {
         const { status } = await Location.requestForegroundPermissionsAsync();
+
         if (status !== "granted") {
-          console.warn("Location permission not granted");
+          const error = new PermissionDeniedError();
+          setGpsError(error);
+
+          showErrorAlert({
+            error,
+            onOpenSettings: openDeviceSettings,
+            onDismiss: () => setGpsError(null),
+          });
+
           return;
         }
 
-        const location = await Location.getCurrentPositionAsync({});
-        const locationInfo = await Location.reverseGeocodeAsync(location.coords);
+        const location = await Location.getCurrentPositionAsync({
+          accuracy: Location.Accuracy.Balanced,
+        });
 
-        // Extract clean city/town name, avoiding full address strings
-        const info = locationInfo[0];
-        let name = info?.city || info?.subregion || info?.district || info?.region || info?.country || "Current Location";
-
-        // If the city name contains commas, extract just the first part
-        if (name.includes(',')) {
-          name = name.split(',')[0].trim();
+        // Get clean location name using Expo's reverse geocoding with smart parsing
+        let name = 'Current Location';
+        try {
+          const locationInfo = await Location.reverseGeocodeAsync(location.coords);
+          name = parseLocationName(locationInfo);
+          logger.debug('Location name parsed:', name);
+        } catch (geocodeError) {
+          // Fallback to generic name if reverse geocoding fails
+          logger.warn('Reverse geocoding failed, using fallback:', geocodeError);
+          name = 'Current Location';
         }
 
         updateGPSLocation(
@@ -91,8 +119,35 @@ export default function App() {
           location.coords.longitude,
           name
         );
-      } catch (error) {
-        console.error("Error fetching GPS location:", error);
+
+        logger.debug('GPS location updated:', {
+          lat: location.coords.latitude,
+          lon: location.coords.longitude,
+          name,
+        });
+
+        setGpsError(null); // Clear any previous errors
+
+      } catch (error: any) {
+        let appError: AppError;
+
+        // Map specific location errors
+        if (error.code === 'E_LOCATION_UNAVAILABLE') {
+          appError = new LocationUnavailableError();
+        } else if (error.code === 'E_LOCATION_TIMEOUT') {
+          appError = new PositionTimeoutError();
+        } else {
+          appError = toAppError(error);
+        }
+
+        setGpsError(appError);
+        logger.error("Error fetching GPS location:", error);
+
+        showErrorAlert({
+          error: appError,
+          onRetry: fetchGPS,
+          onDismiss: () => setGpsError(null),
+        });
       }
     };
 
@@ -122,14 +177,44 @@ export default function App() {
     isFetched,
     isFetching: refreshing,
     refetch,
+    error: forecastError,
+    isError: hasForecastError,
+    failureCount,
   } = useQuery({
     queryKey: ["forecast", i18n.locale, activeLocation?.id],
-    queryFn: () => fetchForecast(i18n.locale, activeLocation?.latitude || 0, activeLocation?.longitude || 0),
+    queryFn: async () => {
+      logger.debug('Fetching forecast for:', {
+        locale: i18n.locale,
+        lat: activeLocation?.latitude,
+        lon: activeLocation?.longitude,
+        locationId: activeLocation?.id,
+      });
+      const result = await fetchForecast(i18n.locale, activeLocation?.latitude || 0, activeLocation?.longitude || 0);
+      logger.debug('Forecast fetched:', !!result);
+      return result;
+    },
     enabled: !!activeLocation && fetchedLocaleSuccessfully,
     placeholderData: (previousData) => previousData, // Keeps old data visible during location switch
     staleTime: 1000 * 60 * 30, // 30 minutes - data is considered fresh for this long
     gcTime: 1000 * 60 * 60, // 1 hour - keep unused data in cache for this long
+    retry: 1, // Only retry once instead of 3 times (faster error display)
   });
+
+  // Log forecast errors and query state
+  React.useEffect(() => {
+    logger.debug('Forecast query state:', {
+      enabled: !!activeLocation && fetchedLocaleSuccessfully,
+      hasActiveLocation: !!activeLocation,
+      fetchedLocaleSuccessfully,
+      hasForecast: !!forecast,
+      isFetching: refreshing,
+      hasForecastError,
+    });
+  }, [activeLocation, fetchedLocaleSuccessfully, forecast, refreshing, hasForecastError]);
+
+  if (hasForecastError) {
+    logger.error('Forecast query error:', forecastError);
+  }
 
   let [fontsLoaded] = useFonts({
     DMSans_400Regular,
@@ -155,8 +240,72 @@ export default function App() {
     refetch();
   }, []);
 
-  if (!fontsLoaded || !forecast || !activeLocation || !date) {
-    return null;
+  // Show loading state while essential resources load (location and date only)
+  // Fonts can load in the background - don't block on them
+  const essentialResourcesLoading = !activeLocation || !date;
+
+  if (essentialResourcesLoading) {
+    logger.debug('Waiting for essential resources:', {
+      fontsLoaded,
+      hasActiveLocation: !!activeLocation,
+      hasDate: !!date,
+    });
+    return null; // Keep splash screen for essential resources
+  }
+
+  // Log font loading status but don't block
+  if (!fontsLoaded) {
+    logger.debug('Fonts still loading, but continuing to render...');
+  }
+
+  // If weather is loading (first fetch or retry), show a loading screen
+  if (refreshing && !forecast && !hasForecastError) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.errorContainer}>
+          <AppHeader
+            location={activeLocation?.name || "Loading..."}
+            onLocationPress={openLocationDropdown}
+            hasMultipleLocations={savedLocations.length > 0}
+            onSettingsPress={openSettings}
+          />
+          <View style={styles.errorContent}>
+            <Text style={styles.loadingTitle}>Loading Weather...</Text>
+            <Text style={styles.loadingMessage}>
+              Fetching forecast for {activeLocation?.name}
+            </Text>
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // If there's a forecast error and no cached data, show error screen
+  if (hasForecastError && !forecast) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.errorContainer}>
+          <AppHeader
+            location={activeLocation?.name || "Loading..."}
+            onLocationPress={openLocationDropdown}
+            hasMultipleLocations={savedLocations.length > 0}
+            onSettingsPress={openSettings}
+          />
+          <View style={styles.errorContent}>
+            <Text style={styles.errorTitle}>Unable to Load Weather</Text>
+            <Text style={styles.errorMessage}>
+              {forecastError?.message || 'Could not fetch weather data. Please try again.'}
+            </Text>
+            <TouchableOpacity
+              style={styles.retryButton}
+              onPress={() => refetch()}
+            >
+              <Text style={styles.retryButtonText}>Retry</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </SafeAreaView>
+    );
   }
 
   return (
@@ -216,5 +365,51 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
+  },
+  errorContainer: {
+    flex: 1,
+  },
+  errorContent: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  errorTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: palette.textColor,
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  errorMessage: {
+    fontSize: 16,
+    color: palette.highlightColor,
+    textAlign: 'center',
+    marginBottom: 24,
+    paddingHorizontal: 20,
+  },
+  retryButton: {
+    backgroundColor: palette.primaryColor,
+    paddingVertical: 12,
+    paddingHorizontal: 32,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: palette.textColor,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  loadingTitle: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: palette.textColor,
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  loadingMessage: {
+    fontSize: 14,
+    color: palette.highlightColor,
+    textAlign: 'center',
   },
 });

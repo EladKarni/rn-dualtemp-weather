@@ -45,4 +45,9 @@ export const he = {
     Language: "שפה",
     AppLanguage: "שפת האפליקציה",
     AutoDetect: "זיהוי אוטומטי (שפת המכשיר)",
+    // Error messages
+    Error: "שגיאה",
+    Retry: "נסה שוב",
+    OpenSettings: "פתח הגדרות",
+    OK: "אישור",
 }

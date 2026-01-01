@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { logger } from "../utils/logger";
 
 export interface SavedLocation {
   id: string;
@@ -38,7 +39,7 @@ export const useLocationStore = create<LocationState>()(
         // Check if we've reached the limit (excluding GPS location)
         const nonGPSLocations = state.savedLocations.filter(loc => !loc.isGPS);
         if (nonGPSLocations.length >= MAX_SAVED_LOCATIONS) {
-          console.warn("Maximum locations reached");
+          logger.warn("Maximum locations reached");
           return;
         }
 
@@ -50,7 +51,7 @@ export const useLocationStore = create<LocationState>()(
         });
 
         if (isDuplicate) {
-          console.warn("Location already saved");
+          logger.warn("Location already saved");
           return;
         }
 
@@ -71,7 +72,7 @@ export const useLocationStore = create<LocationState>()(
 
         // Prevent removing GPS location
         if (id === GPS_LOCATION_ID) {
-          console.warn("Cannot remove GPS location");
+          logger.warn("Cannot remove GPS location");
           return;
         }
 
@@ -91,10 +92,11 @@ export const useLocationStore = create<LocationState>()(
       },
 
       setActiveLocation: (id) => {
-        console.log('[LocationStore] setActiveLocation called with id:', id);
-        console.log('[LocationStore] Current activeLocationId before set:', get().activeLocationId);
+        logger.trace('LocationStore.setActiveLocation', {
+          newId: id,
+          currentId: get().activeLocationId
+        });
         set({ activeLocationId: id });
-        console.log('[LocationStore] activeLocationId after set:', get().activeLocationId);
       },
 
       updateGPSLocation: (latitude, longitude, name) => {

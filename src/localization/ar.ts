@@ -45,4 +45,9 @@ export const ar = {
     Language: "اللغة",
     AppLanguage: "لغة التطبيق",
     AutoDetect: "الكشف التلقائي (لغة الجهاز)",
+    // Error messages
+    Error: "خطأ",
+    Retry: "إعادة المحاولة",
+    OpenSettings: "فتح الإعدادات",
+    OK: "موافق",
 }

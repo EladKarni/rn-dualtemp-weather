@@ -45,4 +45,9 @@ export const fr = {
     Language: "Langue",
     AppLanguage: "Langue de l'Application",
     AutoDetect: "Détection Automatique (Langue de l'Appareil)",
+    // Error messages
+    Error: "Erreur",
+    Retry: "Réessayer",
+    OpenSettings: "Ouvrir les Paramètres",
+    OK: "OK",
 }

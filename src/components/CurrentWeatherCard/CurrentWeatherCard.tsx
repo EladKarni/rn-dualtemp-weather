@@ -11,6 +11,7 @@ import CardHeader from '../CardHeader/CardHeader';
 import CardFooter from '../CardFooter/CardFooter';
 import DualTempText from '../TempText/DualTempText';
 import { useLocationStore } from '../../store/useLocationStore';
+import { logger } from '../../utils/logger';
 
 type CurrentWeatherPropsType = {
     temp: number;
@@ -47,7 +48,7 @@ const CurrentWeather = ({ temp, weather }: CurrentWeatherPropsType) => {
 
     // Reset pan position when location changes (fixes second swipe issue)
     useEffect(() => {
-        console.log('[CurrentWeather] activeLocationId changed to:', activeLocationId);
+        logger.debug('CurrentWeather: activeLocationId changed to:', activeLocationId);
         // Only reset if not currently animating (prevents mid-animation flicker)
         if (!isTransitioning) {
             pan.setValue({ x: 0, y: 0 });
@@ -58,17 +59,17 @@ const CurrentWeather = ({ temp, weather }: CurrentWeatherPropsType) => {
         // Get FRESH values from ref instead of closure
         const { savedLocations: freshLocations, activeLocationId: freshActiveId, setActiveLocation: freshSetActive } = storeRef.current;
 
-        console.log('handleSwipe called:', direction);
-        console.log('savedLocations count:', freshLocations.length);
+        logger.group(`CurrentWeather.handleSwipe(${direction})`);
+        logger.debug('Locations count:', freshLocations.length);
 
         const freshCurrentIndex = freshLocations.findIndex(loc => loc.id === freshActiveId);
         const freshHasMultiple = freshLocations.length > 1;
 
-        console.log('currentIndex:', freshCurrentIndex);
-        console.log('Current activeLocationId (FRESH):', freshActiveId);
+        logger.debug('Current index:', freshCurrentIndex);
+        logger.debug('Active location:', freshActiveId);
 
         if (!freshHasMultiple) {
-            console.log('Only one location - showing bounce animation');
+            logger.debug('Single location - showing bounce animation');
             // Bounce animation if only one location
             Animated.sequence([
                 Animated.timing(pan, {
@@ -81,6 +82,7 @@ const CurrentWeather = ({ temp, weather }: CurrentWeatherPropsType) => {
                     useNativeDriver: true,
                 }),
             ]).start();
+            logger.groupEnd();
             return;
         }
 
@@ -92,8 +94,8 @@ const CurrentWeather = ({ temp, weather }: CurrentWeatherPropsType) => {
 
         const nextLocation = freshLocations[nextIndex];
 
-        console.log('nextIndex:', nextIndex);
-        console.log('nextLocation:', nextLocation);
+        logger.debug('Next index:', nextIndex);
+        logger.debug('Next location:', nextLocation);
 
         // Step 1: Animate card off screen
         Animated.timing(pan, {
@@ -101,7 +103,7 @@ const CurrentWeather = ({ temp, weather }: CurrentWeatherPropsType) => {
             duration: 250,
             useNativeDriver: true,
         }).start(() => {
-            console.log('Animation complete - changing location to:', nextLocation.id);
+            logger.debug('Animation complete - changing location to:', nextLocation.id);
             // Step 2: Change location AFTER animation completes (use fresh ref)
             freshSetActive(nextLocation.id);
 
@@ -116,8 +118,9 @@ const CurrentWeather = ({ temp, weather }: CurrentWeatherPropsType) => {
                 friction: 10,    // Controlled deceleration
                 useNativeDriver: true,
             }).start(() => {
-                console.log('Slide in complete');
+                logger.debug('Slide in complete');
                 setIsTransitioning(false); // Allow next swipe
+                logger.groupEnd();
             });
         });
     };
