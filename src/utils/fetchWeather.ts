@@ -1,5 +1,4 @@
 import { Alert } from "react-native";
-import * as Sentry from "@sentry/react-native";
 import { Weather } from "../types/WeatherTypes";
 import { logger } from "./logger";
 import {
@@ -50,22 +49,18 @@ export const fetchForecast = async (
         );
       }
 
-      // Send to Sentry with context
-      Sentry.captureException(error, {
+      // Send to Sentry via centralized logger
+      logger.exception(error, {
         tags: {
           error_type: 'weather_api_error',
         },
-        contexts: {
-          api: {
-            url,
-            status: response.status,
-            message: data.message,
-          },
-          location: {
-            latitude,
-            longitude,
-            locale,
-          },
+        extra: {
+          api_url: url,
+          api_status: response.status,
+          api_message: data.message,
+          latitude,
+          longitude,
+          locale,
         },
       });
 
@@ -79,16 +74,14 @@ export const fetchForecast = async (
 
     // Send network/unexpected errors to Sentry (API errors already sent above)
     if (!(e instanceof AuthenticationError || e instanceof RateLimitError || e instanceof ServerError)) {
-      Sentry.captureException(e, {
+      logger.exception(e, {
         tags: {
           error_type: 'weather_fetch_network_error',
         },
-        contexts: {
-          location: {
-            latitude,
-            longitude,
-            locale,
-          },
+        extra: {
+          latitude,
+          longitude,
+          locale,
         },
       });
     }
