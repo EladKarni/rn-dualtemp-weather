@@ -210,10 +210,10 @@ export function toAppError(error: unknown): AppError {
       return new TimeoutError();
     }
     if (error.message.includes('network')) {
-      return new NetworkError(error.message);
+      return new NetworkError('Network error occurred');
     }
 
-    // Generic fallback
+    // Generic fallback - use error.message for internal logging only
     return new AppError(
       error.message,
       'An unexpected error occurred. Please try again.',

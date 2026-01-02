@@ -27,7 +27,7 @@ const AppHeader = ({ location, onLocationPress, hasMultipleLocations = false, on
           hitSlop={{ top: 5, bottom: 5, left: 5, right: 5 }}
         >
           <Text style={[typography.headerText, styles.locationText]}>
-            {location}
+            {location.split(",")[0]}
           </Text>
           <Image
             source={require("../../../assets/Images/locationIcon.png")}

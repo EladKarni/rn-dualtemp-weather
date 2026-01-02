@@ -1,29 +1,6 @@
-import React, { useCallback, useEffect, useState } from "react";
-import {
-  RefreshControl,
-  SafeAreaView,
-  ScrollView,
-  StyleSheet,
-  View,
-  AppState,
-  Text,
-  TouchableOpacity,
-} from "react-native";
-
-import * as SplashScreen from "expo-splash-screen";
-import * as Location from "expo-location";
-import { fetchForecast } from "./src/utils/fetchWeather";
-import CurrentWeatherCard from "./src/components/CurrentWeatherCard/CurrentWeatherCard";
-import { palette } from "./src/Styles/Palette";
-import HourlyForecast from "./src/components/HourlyForecast/HourlyForecast";
-import AppHeader from "./src/components/AppHeader/AppHeader";
-import DailyForecast from "./src/components/DailyForecast/DailyForecast";
-import { AppStateContext } from "./src/utils/AppStateContext";
-import AppFooter from "./src/components/AppFooter/AppFooter";
-import { i18n } from "./src/localization/i18n";
+import React from "react";
+import { SafeAreaView, ScrollView, RefreshControl, StyleSheet } from "react-native";
 import { useQuery } from "@tanstack/react-query";
-import { parseLocationName } from "./src/utils/locationNameParser";
-
 import {
   useFonts,
   DMSans_400Regular,
@@ -33,152 +10,62 @@ import {
   DMSans_700Bold,
   DMSans_700Bold_Italic,
 } from "@expo-google-fonts/dm-sans";
+
+import { palette } from "./src/Styles/Palette";
 import { fetchLocale } from "./src/utils/fetchLocale";
+import { logger } from "./src/utils/logger";
+import { toAppError } from "./src/utils/errors";
+
+// Stores
 import { useSettingsStore } from "./src/store/useSettingsStore";
 import { useLocationStore } from "./src/store/useLocationStore";
 import { useLanguageStore } from "./src/store/useLanguageStore";
 import { useModalStore } from "./src/store/useModalStore";
+
+// Custom hooks
+import { useGPSLocation } from "./src/hooks/useGPSLocation";
+import { useForecastQuery } from "./src/hooks/useForecastQuery";
+import { useAppLifecycle } from "./src/hooks/useAppLifecycle";
+import { useSplashScreen } from "./src/hooks/useSplashScreen";
+import { useWeatherLoadingState } from "./src/hooks/useWeatherLoadingState";
+
+// Screens
+import LoadingScreen from "./src/screens/LoadingScreen";
+import ErrorScreen from "./src/screens/ErrorScreen";
+import SkeletonScreen from "./src/screens/SkeletonScreen";
+import WeatherScreen from "./src/screens/WeatherScreen";
 import LocationDropdown from "./src/components/LocationDropdown/LocationDropdown";
 import AddLocationScreen from "./src/screens/AddLocationScreen";
 import SettingsScreen from "./src/screens/SettingsScreen";
-import { logger } from "./src/utils/logger";
-import {
-  PermissionDeniedError,
-  LocationUnavailableError,
-  PositionTimeoutError,
-  toAppError,
-  AppError
-} from "./src/utils/errors";
-import { showErrorAlert, openDeviceSettings } from "./src/components/ErrorAlert/ErrorAlert";
-import { WeatherLoadingSkeleton } from "./src/components/LoadingSkeleton/LoadingSkeleton";
-import { CachedWeatherDisplay } from "./src/components/CachedWeatherDisplay/CachedWeatherDisplay";
 
-// Keep the splash screen visible while we fetch resources
-SplashScreen.preventAutoHideAsync();
+// Components
+import AppHeader from "./src/components/AppHeader/AppHeader";
+import { CachedWeatherDisplay } from "./src/components/CachedWeatherDisplay/CachedWeatherDisplay";
+import { AppStateContext } from "./src/utils/AppStateContext";
+import AppFooter from "./src/components/AppFooter/AppFooter";
 
 export default function App() {
+  // Store state
   const tempScale = useSettingsStore((state) => state.tempScale);
   const savedLocations = useLocationStore((state) => state.savedLocations);
   const activeLocationId = useLocationStore((state) => state.activeLocationId);
-  const updateGPSLocation = useLocationStore((state) => state.updateGPSLocation);
   const selectedLanguage = useLanguageStore((state) => state.selectedLanguage);
-
-  // Modal state management
   const activeModal = useModalStore((state) => state.activeModal);
   const openLocationDropdown = useModalStore((state) => state.openLocationDropdown);
   const openSettings = useModalStore((state) => state.openSettings);
   const openAddLocation = useModalStore((state) => state.openAddLocation);
-  const closeModal = useModalStore((state) => state.closeModal);
 
-  // Derive active location from savedLocations and activeLocationId
   const activeLocation = savedLocations.find(loc => loc.id === activeLocationId);
 
-  // GPS error state
-  const [gpsError, setGpsError] = React.useState<AppError | null>(null);
-
-  // Progressive loading timeout state
-  const [showSkeleton, setShowSkeleton] = useState(false);
-  const [showErrorScreen, setShowErrorScreen] = useState(false);
-  const [dismissedError, setDismissedError] = useState<string | null>(null);
-  const [lastUpdated, setLastUpdated] = useState<Date | undefined>();
-
+  // Locale/date query
   const { data: date, isSuccess: fetchedLocaleSuccessfully } = useQuery({
     queryKey: ["locale", selectedLanguage],
     queryFn: fetchLocale,
   });
 
-  // Fetch GPS location on mount and update store
-  useEffect(() => {
-    const fetchGPS = async () => {
-      try {
-        const { status } = await Location.requestForegroundPermissionsAsync();
-
-        if (status !== "granted") {
-          const error = new PermissionDeniedError();
-          setGpsError(error);
-
-          showErrorAlert({
-            error,
-            onOpenSettings: openDeviceSettings,
-            onDismiss: () => setGpsError(null),
-          });
-
-          return;
-        }
-
-        const location = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Balanced,
-        });
-
-        // Get clean location name using Expo's reverse geocoding with smart parsing
-        let name = 'Current Location';
-        try {
-          const locationInfo = await Location.reverseGeocodeAsync(location.coords);
-          name = parseLocationName(locationInfo);
-          logger.debug('Location name parsed:', name);
-        } catch (geocodeError) {
-          // Fallback to generic name if reverse geocoding fails
-          logger.warn('Reverse geocoding failed, using fallback:', geocodeError);
-          name = 'Current Location';
-        }
-
-        updateGPSLocation(
-          location.coords.latitude,
-          location.coords.longitude,
-          name
-        );
-
-        logger.debug('GPS location updated:', {
-          lat: location.coords.latitude,
-          lon: location.coords.longitude,
-          name,
-        });
-
-        setGpsError(null); // Clear any previous errors
-
-      } catch (error: any) {
-        let appError: AppError;
-
-        // Map specific location errors
-        if (error.code === 'E_LOCATION_UNAVAILABLE') {
-          appError = new LocationUnavailableError();
-        } else if (error.code === 'E_LOCATION_TIMEOUT') {
-          appError = new PositionTimeoutError();
-        } else {
-          appError = toAppError(error);
-        }
-
-        setGpsError(appError);
-        logger.error("Error fetching GPS location:", error);
-
-        showErrorAlert({
-          error: appError,
-          onRetry: fetchGPS,
-          onDismiss: () => setGpsError(null),
-        });
-      }
-    };
-
-    fetchGPS();
-  }, []);
-
-  // Reset all modals on mount for clean state
-  useEffect(() => {
-    closeModal();
-  }, []);
-
-  // Close modals when app backgrounds
-  useEffect(() => {
-    const subscription = AppState.addEventListener('change', (nextAppState) => {
-      if (nextAppState === 'background') {
-        closeModal();
-      }
-    });
-
-    return () => {
-      subscription.remove();
-    };
-  }, []);
+  // Custom hooks
+  useGPSLocation();
+  useAppLifecycle();
 
   const {
     data: forecast,
@@ -187,28 +74,34 @@ export default function App() {
     refetch,
     error: forecastError,
     isError: hasForecastError,
-    failureCount,
-  } = useQuery({
-    queryKey: ["forecast", i18n.locale, activeLocation?.id],
-    queryFn: async () => {
-      logger.debug('Fetching forecast for:', {
-        locale: i18n.locale,
-        lat: activeLocation?.latitude,
-        lon: activeLocation?.longitude,
-        locationId: activeLocation?.id,
-      });
-      const result = await fetchForecast(i18n.locale, activeLocation?.latitude || 0, activeLocation?.longitude || 0);
-      logger.debug('Forecast fetched:', !!result);
-      return result;
-    },
-    enabled: !!activeLocation && fetchedLocaleSuccessfully,
-    placeholderData: (previousData) => previousData, // Keeps old data visible during location switch
-    staleTime: 1000 * 60 * 30, // 30 minutes - data is considered fresh for this long
-    gcTime: 1000 * 60 * 60, // 1 hour - keep unused data in cache for this long
-    retry: 1, // Only retry once instead of 3 times (faster error display)
+  } = useForecastQuery(activeLocation, fetchedLocaleSuccessfully);
+
+  const { splashTimeoutExpired, onLayoutRootView } = useSplashScreen(isFetched);
+
+  const {
+    showSkeleton,
+    showErrorScreen,
+    dismissedError,
+    setDismissedError,
+    lastUpdated,
+  } = useWeatherLoadingState(
+    splashTimeoutExpired,
+    refreshing,
+    forecast,
+    hasForecastError
+  );
+
+  // Font loading
+  let [fontsLoaded] = useFonts({
+    DMSans_400Regular,
+    DMSans_400Regular_Italic,
+    DMSans_500Medium,
+    DMSans_500Medium_Italic,
+    DMSans_700Bold,
+    DMSans_700Bold_Italic,
   });
 
-  // Log forecast errors and query state
+  // Log query state for debugging
   React.useEffect(() => {
     logger.debug('Forecast query state:', {
       enabled: !!activeLocation && fetchedLocaleSuccessfully,
@@ -224,140 +117,93 @@ export default function App() {
     logger.error('Forecast query error:', forecastError);
   }
 
-  let [fontsLoaded] = useFonts({
-    DMSans_400Regular,
-    DMSans_400Regular_Italic,
-    DMSans_500Medium,
-    DMSans_500Medium_Italic,
-    DMSans_700Bold,
-    DMSans_700Bold_Italic,
-  });
-
-  const onLayoutRootView = useCallback(async () => {
-    if (isFetched) {
-      // This tells the splash screen to hide immediately! If we call this after
-      // `setAppIsReady`, then we may see a blank screen while the app is
-      // loading its initial state and rendering its first pixels. So instead,
-      // we hide the splash screen once we know the root view has already
-      // performed layout.
-      await SplashScreen.hideAsync();
-    }
-  }, [isFetched]);
-
-  const onRefresh = React.useCallback(async () => {
+  const onRefresh = React.useCallback(() => {
     refetch();
-  }, []);
+  }, [refetch]);
 
-  // Show loading state while essential resources load (location and date only)
-  // Fonts can load in the background - don't block on them
+  // Common props for screens
+  const screenProps = {
+    locationName: activeLocation?.name || "Loading...",
+    location: activeLocation?.name || "Loading...",
+    onLocationPress: openLocationDropdown,
+    hasMultipleLocations: savedLocations.length > 0,
+    onSettingsPress: openSettings,
+  };
+
   const essentialResourcesLoading = !activeLocation || !date;
 
-  if (essentialResourcesLoading) {
-    logger.debug('Waiting for essential resources:', {
+  // Block on splash screen if timeout hasn't expired AND resources not ready
+  if (!splashTimeoutExpired && essentialResourcesLoading) {
+    logger.debug('Waiting for essential resources (max 3s):', {
       fontsLoaded,
       hasActiveLocation: !!activeLocation,
       hasDate: !!date,
     });
-    return null; // Keep splash screen for essential resources
+    return null;
   }
 
-  // Log font loading status but don't block
+  // Log warnings for missing resources after timeout
+  if (splashTimeoutExpired && !activeLocation) {
+    logger.warn('Location not available after 3s timeout, showing error UI');
+  }
+
+  if (splashTimeoutExpired && !date) {
+    logger.warn('Date/locale not available after 3s timeout, continuing anyway');
+  }
+
   if (!fontsLoaded) {
     logger.debug('Fonts still loading, but continuing to render...');
   }
 
-  // If weather is loading (first fetch or retry), show a loading screen
+  // Debug: Log render decision
+  logger.debug('Render decision point:', {
+    splashTimeoutExpired,
+    activeLocation: !!activeLocation,
+    date: !!date,
+    forecast: !!forecast,
+    refreshing,
+    hasForecastError,
+    showSkeleton,
+    showErrorScreen,
+    fontsLoaded,
+    essentialResourcesLoading,
+  });
+
+  // CRITICAL: After splash timeout, ALWAYS show something
+  if (splashTimeoutExpired && essentialResourcesLoading) {
+    logger.warn('Splash timeout expired but resources still loading - showing skeleton');
+    return <SkeletonScreen {...screenProps} />;
+  }
+
+  // Render: Loading (still fetching, no error)
   if (refreshing && !forecast && !hasForecastError) {
+    logger.debug('Rendering: LoadingScreen (refreshing, no forecast, no error)');
+    return <LoadingScreen {...screenProps} />;
+  }
+
+  // Render: Skeleton (after timeout, still loading or error without screen flag)
+  if (showSkeleton && !showErrorScreen) {
+    logger.debug('Rendering: SkeletonScreen (showSkeleton=true)');
+    return <SkeletonScreen {...screenProps} />;
+  }
+
+  // Render: Error screen (after timeout with error)
+  if (showErrorScreen && hasForecastError && !forecast) {
+    logger.debug('Rendering: ErrorScreen (showErrorScreen=true, has error)');
+    const appError = forecastError ? toAppError(forecastError) : null;
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.errorContainer}>
-          <AppHeader
-            location={activeLocation?.name || "Loading..."}
-            onLocationPress={openLocationDropdown}
-            hasMultipleLocations={savedLocations.length > 0}
-            onSettingsPress={openSettings}
-          />
-          <View style={styles.errorContent}>
-            <Text style={styles.loadingTitle}>Loading Weather...</Text>
-            <Text style={styles.loadingMessage}>
-              Fetching forecast for {activeLocation?.name}
-            </Text>
-          </View>
-        </View>
-      </SafeAreaView>
+      <ErrorScreen
+        {...screenProps}
+        errorMessage={appError?.userMessage}
+        onRetry={() => refetch()}
+      />
     );
   }
 
-  // Progressive loading states for first-time fetch with no cached data
-  if ((!forecast || hasForecastError) && !showErrorScreen) {
-    // Show skeleton after 3 seconds
-    if (showSkeleton) {
-      return (
-        <SafeAreaView style={styles.container}>
-          <ScrollView>
-            <AppHeader
-              location={activeLocation?.name || "Loading..."}
-              onLocationPress={openLocationDropdown}
-              hasMultipleLocations={savedLocations.length > 0}
-              onSettingsPress={openSettings}
-            />
-            <WeatherLoadingSkeleton />
-          </ScrollView>
-        </SafeAreaView>
-      );
-    }
-    
-    // Show error screen after 6 seconds total
-    if (showErrorScreen) {
-      return (
-        <SafeAreaView style={styles.container}>
-          <View style={styles.errorContainer}>
-            <AppHeader
-              location={activeLocation?.name || "Loading..."}
-              onLocationPress={openLocationDropdown}
-              hasMultipleLocations={savedLocations.length > 0}
-              onSettingsPress={openSettings}
-            />
-            <View style={styles.errorContent}>
-              <Text style={styles.errorTitle}>Unable to Load Weather</Text>
-              <Text style={styles.errorMessage}>
-                Unable to fetch weather data. Please check your connection and try again.
-              </Text>
-              <TouchableOpacity
-                style={styles.retryButton}
-                onPress={() => refetch()}
-              >
-                <Text style={styles.retryButtonText}>Retry</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </SafeAreaView>
-      );
-    }
-    
-    // Initial loading screen (first 3 seconds)
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.errorContainer}>
-          <AppHeader
-            location={activeLocation?.name || "Loading..."}
-            onLocationPress={openLocationDropdown}
-            hasMultipleLocations={savedLocations.length > 0}
-            onSettingsPress={openSettings}
-          />
-          <View style={styles.errorContent}>
-            <Text style={styles.loadingTitle}>Loading Weather...</Text>
-            <Text style={styles.loadingMessage}>
-              Fetching forecast for {activeLocation?.name}
-            </Text>
-          </View>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
-  // If there's cached data with an error, show cached data with error overlay
+  // Render: Cached data with error overlay
   if (hasForecastError && forecast && !dismissedError) {
+    logger.debug('Rendering: CachedWeatherDisplay (has error but also has cached forecast)');
+
     const appError = forecastError ? toAppError(forecastError) : null;
     return (
       <SafeAreaView style={styles.container}>
@@ -366,15 +212,8 @@ export default function App() {
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
         >
-          <AppStateContext.Provider
-            value={{ forecast, date, tempScale }}
-          >
-            <AppHeader
-              location={activeLocation?.name || "Loading..."}
-              onLocationPress={openLocationDropdown}
-              hasMultipleLocations={savedLocations.length > 0}
-              onSettingsPress={openSettings}
-            />
+          <AppStateContext.Provider value={{ forecast, date, tempScale }}>
+            <AppHeader {...screenProps} />
             <CachedWeatherDisplay
               forecast={forecast}
               error={appError}
@@ -390,120 +229,48 @@ export default function App() {
     );
   }
 
-  // If there's a forecast error and no cached data, show progressive loading during timeout
-  if (hasForecastError && !forecast) {
-    // Show error screen after 6-second timeout
-    if (!showErrorScreen) {
-      // During the 6-second timeout, show progressive loading states
-      if (showSkeleton) {
-        return (
-          <SafeAreaView style={styles.container}>
-            <ScrollView>
-              <AppHeader
-                location={activeLocation?.name || "Loading..."}
-                onLocationPress={openLocationDropdown}
-                hasMultipleLocations={savedLocations.length > 0}
-                onSettingsPress={openSettings}
-              />
-              <WeatherLoadingSkeleton />
-            </ScrollView>
-          </SafeAreaView>
-        );
-      }
-      
-      // Initial loading screen (first 3 seconds)
-      return (
-        <SafeAreaView style={styles.container}>
-          <View style={styles.errorContainer}>
-            <AppHeader
-              location={activeLocation?.name || "Loading..."}
-              onLocationPress={openLocationDropdown}
-              hasMultipleLocations={savedLocations.length > 0}
-              onSettingsPress={openSettings}
-            />
-            <View style={styles.errorContent}>
-              <Text style={styles.loadingTitle}>Loading Weather...</Text>
-              <Text style={styles.loadingMessage}>
-                Fetching forecast for {activeLocation?.name}
-              </Text>
-            </View>
-          </View>
-        </SafeAreaView>
-      );
-    }
-    
-    // Show error screen after 6 seconds total
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.errorContainer}>
-          <AppHeader
-            location={activeLocation?.name || "Loading..."}
-            onLocationPress={openLocationDropdown}
-            hasMultipleLocations={savedLocations.length > 0}
-            onSettingsPress={openSettings}
-          />
-          <View style={styles.errorContent}>
-            <Text style={styles.errorTitle}>Unable to Load Weather</Text>
-            <Text style={styles.errorMessage}>
-              {forecastError?.message || 'Could not fetch weather data. Please try again.'}
-            </Text>
-            <TouchableOpacity
-              style={styles.retryButton}
-              onPress={() => refetch()}
-            >
-              <Text style={styles.retryButtonText}>Retry</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </SafeAreaView>
-    );
+  // Fallback: Missing forecast or date
+  if (!forecast || !date) {
+    logger.warn('Rendering: Fallback SkeletonScreen (missing forecast or date)', {
+      activeLocation: !!activeLocation,
+      date: !!date,
+      forecast: !!forecast,
+      hasForecastError,
+    });
+    return <SkeletonScreen {...screenProps} />;
   }
 
+  // Render: Success - Main weather screen
+  logger.debug('Rendering: WeatherScreen (success - have forecast and date)');
   return (
-    <SafeAreaView style={styles.container}>
-      <View onLayout={onLayoutRootView}>
-        <ScrollView
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-        >
-          <AppStateContext.Provider
-            value={{ forecast, date, tempScale }}
-          >
-            <AppHeader
-              location={activeLocation?.name || "Loading..."}
-              onLocationPress={openLocationDropdown}
-              hasMultipleLocations={savedLocations.length > 0}
-              onSettingsPress={openSettings}
-            />
-            <CurrentWeatherCard
-              temp={forecast.current.temp}
-              weather={forecast.current.weather[0]}
-            />
-            <HourlyForecast hourlyForecast={forecast.hourly?.slice(0, 24)} />
-            <DailyForecast dailyForecast={forecast.daily} />
-          </AppStateContext.Provider>
-          <AppFooter />
-        </ScrollView>
-      </View>
+    <>
+      <WeatherScreen
+        forecast={forecast}
+        date={date}
+        tempScale={tempScale}
+        {...screenProps}
+        refreshing={refreshing}
+        onRefresh={onRefresh}
+        onLayoutRootView={onLayoutRootView}
+      />
 
       <LocationDropdown
         visible={activeModal === 'location'}
-        onClose={closeModal}
+        onClose={() => useModalStore.getState().closeModal()}
         onAddLocation={openAddLocation}
       />
 
       <SettingsScreen
         visible={activeModal === 'settings'}
-        onClose={closeModal}
+        onClose={() => useModalStore.getState().closeModal()}
         onAddLocationPress={openAddLocation}
       />
 
       <AddLocationScreen
         visible={activeModal === 'addLocation'}
-        onClose={closeModal}
+        onClose={() => useModalStore.getState().closeModal()}
       />
-    </SafeAreaView>
+    </>
   );
 }
 
@@ -511,56 +278,5 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: palette.primaryDark,
-  },
-  scrollView: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  errorContainer: {
-    flex: 1,
-  },
-  errorContent: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  errorTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: palette.textColor,
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  errorMessage: {
-    fontSize: 16,
-    color: palette.highlightColor,
-    textAlign: 'center',
-    marginBottom: 24,
-    paddingHorizontal: 20,
-  },
-  retryButton: {
-    backgroundColor: palette.primaryColor,
-    paddingVertical: 12,
-    paddingHorizontal: 32,
-    borderRadius: 8,
-  },
-  retryButtonText: {
-    color: palette.textColor,
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  loadingTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: palette.textColor,
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  loadingMessage: {
-    fontSize: 14,
-    color: palette.highlightColor,
-    textAlign: 'center',
   },
 });
