@@ -30,7 +30,8 @@ const HourlyForecastItem = ({
   wind,
   percType,
 }: HourlyForecastItemProps) => {
-  const { tempScale } = useContext(AppStateContext);
+  const context = useContext(AppStateContext);
+  const tempScale = context?.tempScale ?? 'C';
   const wind_speed =
     tempScale === "C"
       ? `${(wind * 3.6).toFixed(0)}`

@@ -9,13 +9,17 @@ import { i18n } from "../../localization/i18n";
 const CardHeader = () => {
   const context = useContext(AppStateContext);
 
+  if (!context) {
+    return null;
+  }
+
   return (
     <View style={cardHeaderStyles.cardHeader}>
       <Text style={[typography.headerText, cardHeaderStyles.todayText]}>
         {i18n.t("Today")}
       </Text>
       <Text style={[typography.headerText, cardHeaderStyles.dateText]}>
-        {context.date.format("LL")}
+        {context.date?.format("LL") ?? ""}
       </Text>
     </View>
   );

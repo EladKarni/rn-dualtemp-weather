@@ -65,11 +65,14 @@ function App() {
 
   const activeLocation = savedLocations.find(loc => loc.id === activeLocationId);
 
-  // Locale/date query
-  const { data: date, isSuccess: fetchedLocaleSuccessfully } = useQuery({
+  // Locale/date query - fetch locale settings but create fresh moment object
+  const { isSuccess: fetchedLocaleSuccessfully } = useQuery({
     queryKey: ["locale", selectedLanguage],
     queryFn: fetchLocale,
   });
+
+  // Create a fresh moment object for the current date (React Query serializes objects, stripping methods)
+  const date = React.useMemo(() => fetchLocale(), [fetchedLocaleSuccessfully]);
 
   // Custom hooks
   useGPSLocation();
@@ -148,7 +151,7 @@ function App() {
     locationLoadingStates,
   };
 
-  const essentialResourcesLoading = !activeLocation || !date;
+  const essentialResourcesLoading = !activeLocation;
 
   // Block on splash screen if timeout hasn't expired AND resources not ready
   if (!splashTimeoutExpired && essentialResourcesLoading) {
@@ -232,8 +235,8 @@ function App() {
   }
 
   // FALLBACK STATE: Safety net for missing data (should rarely execute)
-  // Shows skeleton screen if forecast or date is unexpectedly missing
-  if (!forecast || !date) {
+  // Shows skeleton screen if forecast is unexpectedly missing
+  if (!forecast) {
     return <SkeletonScreen {...screenProps} />;
   }
 
