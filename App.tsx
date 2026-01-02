@@ -289,7 +289,7 @@ export default function App() {
   }
 
   // Progressive loading states for first-time fetch with no cached data
-  if (refreshing && !forecast && !hasForecastError) {
+  if ((!forecast || hasForecastError) && !showErrorScreen) {
     // Show skeleton after 3 seconds
     if (showSkeleton) {
       return (
@@ -390,8 +390,49 @@ export default function App() {
     );
   }
 
-  // If there's a forecast error and no cached data, show error screen after timeout
+  // If there's a forecast error and no cached data, show progressive loading during timeout
   if (hasForecastError && !forecast) {
+    // Show error screen after 6-second timeout
+    if (!showErrorScreen) {
+      // During the 6-second timeout, show progressive loading states
+      if (showSkeleton) {
+        return (
+          <SafeAreaView style={styles.container}>
+            <ScrollView>
+              <AppHeader
+                location={activeLocation?.name || "Loading..."}
+                onLocationPress={openLocationDropdown}
+                hasMultipleLocations={savedLocations.length > 0}
+                onSettingsPress={openSettings}
+              />
+              <WeatherLoadingSkeleton />
+            </ScrollView>
+          </SafeAreaView>
+        );
+      }
+      
+      // Initial loading screen (first 3 seconds)
+      return (
+        <SafeAreaView style={styles.container}>
+          <View style={styles.errorContainer}>
+            <AppHeader
+              location={activeLocation?.name || "Loading..."}
+              onLocationPress={openLocationDropdown}
+              hasMultipleLocations={savedLocations.length > 0}
+              onSettingsPress={openSettings}
+            />
+            <View style={styles.errorContent}>
+              <Text style={styles.loadingTitle}>Loading Weather...</Text>
+              <Text style={styles.loadingMessage}>
+                Fetching forecast for {activeLocation?.name}
+              </Text>
+            </View>
+          </View>
+        </SafeAreaView>
+      );
+    }
+    
+    // Show error screen after 6 seconds total
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.errorContainer}>
