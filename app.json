@@ -10,7 +10,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#1C1B4D"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "extra": {
       "supportsRTL": true
     },
@@ -38,10 +40,27 @@
       [
         "react-native-localization-settings",
         {
-          "languages": ["ar", "en", "es", "fr", "he", "zh"]
+          "languages": [
+            "ar",
+            "en",
+            "es",
+            "fr",
+            "he",
+            "zh"
+          ]
         }
       ],
-      ["expo-localization"]
+      [
+        "expo-localization"
+      ],
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "project": "react-native",
+          "organization": "ek-solutions"
+        }
+      ]
     ],
     "ios": {
       "supportsTablet": true,
@@ -58,7 +77,9 @@
         "backgroundColor": "#1C1B4D"
       },
       "package": "com.ekarni.rndualtempweatherapp",
-      "permissions": ["ACCESS_BACKGROUND_LOCATION"]
+      "permissions": [
+        "ACCESS_BACKGROUND_LOCATION"
+      ]
     },
     "updates": {
       "url": "https://u.expo.dev/444bda66-1ab4-4665-ba53-c2b76743a33b"

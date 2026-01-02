@@ -9,10 +9,28 @@ import {
   DMSans_700Bold,
   DMSans_700Bold_Italic,
 } from "@expo-google-fonts/dm-sans";
+import * as Sentry from "@sentry/react-native";
+import Constants from "expo-constants";
 
 import { fetchLocale } from "./src/utils/fetchLocale";
 import { logger } from "./src/utils/logger";
 import { toAppError } from "./src/utils/errors";
+
+// Initialize Sentry - only if DSN is provided
+const sentryDsn = Constants.expoConfig?.extra?.sentryDsn;
+if (sentryDsn) {
+  Sentry.init({
+    dsn: sentryDsn,
+    debug: __DEV__, // Enable debug mode in development
+    tracesSampleRate: 1.0, // Adjust in production (0.2 = 20% of transactions)
+    enabled: !__DEV__, // Only send events in production builds
+  });
+  if (__DEV__) {
+    logger.info('Sentry initialized (dev mode - events disabled)');
+  }
+} else if (__DEV__) {
+  logger.info('Sentry not initialized: No DSN provided. Set EXPO_PUBLIC_SENTRY_DSN environment variable to enable.');
+}
 
 // Stores
 import { useSettingsStore } from "./src/store/useSettingsStore";
@@ -34,7 +52,7 @@ import SkeletonScreen from "./src/screens/SkeletonScreen";
 import CachedWeatherErrorScreen from "./src/screens/CachedWeatherErrorScreen";
 import MainWeatherWithModals from "./src/screens/MainWeatherWithModals";
 
-export default function App() {
+function App() {
   // Store state
   const tempScale = useSettingsStore((state) => state.tempScale);
   const savedLocations = useLocationStore((state) => state.savedLocations);
@@ -237,3 +255,5 @@ export default function App() {
     />
   );
 }
+
+export default Sentry.wrap(App);

@@ -39,6 +39,7 @@ const styles = StyleSheet.create({
     display: "flex",
     flexDirection: "row",
     justifyContent: "center",
+    alignItems: "center",
   },
   mainHeaderTitle: {
     position: "relative",
@@ -67,7 +68,6 @@ const styles = StyleSheet.create({
   },
   settingsButton: {
     position: "absolute",
-    top: 4,
     right: 20,
     padding: 8,
   },

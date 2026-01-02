@@ -28,3 +28,5 @@ ios/
 
 # Play Store
 serviceKey.json
+
+.env.local

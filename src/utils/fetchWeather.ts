@@ -1,4 +1,5 @@
 import { Alert } from "react-native";
+import * as Sentry from "@sentry/react-native";
 import { Weather } from "../types/WeatherTypes";
 import { logger } from "./logger";
 import {
@@ -35,24 +36,62 @@ export const fetchForecast = async (
         (data.message && data.message.includes("401")) ||
         (data.message && data.message.includes("Unauthorized"));
 
+      let error: Error;
       if (isAuthError) {
-        throw new AuthenticationError();
+        error = new AuthenticationError();
       } else if (response.status === 429) {
-        throw new RateLimitError(data.retryAfter);
+        error = new RateLimitError(data.retryAfter);
       } else if (response.status >= 500) {
-        throw new ServerError(response.status);
+        error = new ServerError(response.status);
       } else {
         // Generic error for other status codes
-        throw toAppError(
+        error = toAppError(
           new Error(data.message || `Weather API returned ${response.status}`)
         );
       }
+
+      // Send to Sentry with context
+      Sentry.captureException(error, {
+        tags: {
+          error_type: 'weather_api_error',
+        },
+        contexts: {
+          api: {
+            url,
+            status: response.status,
+            message: data.message,
+          },
+          location: {
+            latitude,
+            longitude,
+            locale,
+          },
+        },
+      });
+
+      throw error;
     }
 
     logger.debug("Weather data received successfully");
     return data as Weather;
   } catch (e: any) {
     logger.error("Error fetching weather data:", e);
+
+    // Send network/unexpected errors to Sentry (API errors already sent above)
+    if (!(e instanceof AuthenticationError || e instanceof RateLimitError || e instanceof ServerError)) {
+      Sentry.captureException(e, {
+        tags: {
+          error_type: 'weather_fetch_network_error',
+        },
+        contexts: {
+          location: {
+            latitude,
+            longitude,
+            locale,
+          },
+        },
+      });
+    }
 
     // Re-throw so React Query marks this as an error state
     throw e;
