@@ -2,12 +2,18 @@ import React from 'react';
 import { SafeAreaView, View, Text, StyleSheet } from 'react-native';
 import AppHeader from '../components/AppHeader/AppHeader';
 import { palette } from '../Styles/Palette';
+import type { SavedLocation } from '../store/useLocationStore';
+import type { LocationWeatherState } from '../hooks/useMultiLocationWeather';
 
 interface LoadingScreenProps {
   locationName: string;
   onLocationPress: () => void;
   hasMultipleLocations: boolean;
   onSettingsPress: () => void;
+  savedLocations: SavedLocation[];
+  activeLocationId: string | null;
+  onLocationSelect: (id: string) => void;
+  locationLoadingStates: Map<string, LocationWeatherState>;
 }
 
 export default function LoadingScreen({
@@ -15,6 +21,10 @@ export default function LoadingScreen({
   onLocationPress,
   hasMultipleLocations,
   onSettingsPress,
+  savedLocations,
+  activeLocationId,
+  onLocationSelect,
+  locationLoadingStates,
 }: LoadingScreenProps) {
   return (
     <SafeAreaView style={styles.container}>
@@ -24,6 +34,10 @@ export default function LoadingScreen({
           onLocationPress={onLocationPress}
           hasMultipleLocations={hasMultipleLocations}
           onSettingsPress={onSettingsPress}
+          savedLocations={savedLocations}
+          activeLocationId={activeLocationId}
+          onLocationSelect={onLocationSelect}
+          locationLoadingStates={locationLoadingStates}
         />
         <View style={styles.errorContent}>
           <Text style={styles.loadingTitle}>Loading Weather...</Text>

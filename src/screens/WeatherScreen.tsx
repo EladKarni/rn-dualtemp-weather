@@ -1,7 +1,6 @@
 import React from 'react';
 import { SafeAreaView, ScrollView, View, RefreshControl, StyleSheet } from 'react-native';
 import AppHeader from '../components/AppHeader/AppHeader';
-import LocationPills from '../components/LocationPills/LocationPills';
 import CurrentWeatherDisplay from '../components/CurrentWeatherCard/CurrentWeatherDisplay';
 import HourlyForecast from '../components/HourlyForecast/HourlyForecast';
 import DailyForecast from '../components/DailyForecast/DailyForecast';
@@ -68,10 +67,6 @@ export default function WeatherScreen({
               onLocationPress={onLocationPress}
               hasMultipleLocations={hasMultipleLocations}
               onSettingsPress={onSettingsPress}
-            />
-
-            {/* Horizontal scrollable location pills */}
-            <LocationPills
               savedLocations={savedLocations}
               activeLocationId={activeLocationId}
               onLocationSelect={onLocationSelect}

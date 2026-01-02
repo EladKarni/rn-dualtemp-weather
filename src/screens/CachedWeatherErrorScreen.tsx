@@ -8,6 +8,8 @@ import { palette } from '../Styles/Palette';
 import type { Weather } from '../types/WeatherTypes';
 import type { AppError } from '../utils/errors';
 import type { Moment } from 'moment';
+import type { SavedLocation } from '../store/useLocationStore';
+import type { LocationWeatherState } from '../hooks/useMultiLocationWeather';
 
 interface CachedWeatherErrorScreenProps {
   forecast: Weather;
@@ -23,6 +25,10 @@ interface CachedWeatherErrorScreenProps {
   onLocationPress: () => void;
   hasMultipleLocations: boolean;
   onSettingsPress: () => void;
+  savedLocations: SavedLocation[];
+  activeLocationId: string | null;
+  onLocationSelect: (id: string) => void;
+  locationLoadingStates: Map<string, LocationWeatherState>;
 }
 
 /**
@@ -43,6 +49,10 @@ export default function CachedWeatherErrorScreen({
   onLocationPress,
   hasMultipleLocations,
   onSettingsPress,
+  savedLocations,
+  activeLocationId,
+  onLocationSelect,
+  locationLoadingStates,
 }: CachedWeatherErrorScreenProps) {
   return (
     <SafeAreaView style={styles.container}>
@@ -57,6 +67,10 @@ export default function CachedWeatherErrorScreen({
             onLocationPress={onLocationPress}
             hasMultipleLocations={hasMultipleLocations}
             onSettingsPress={onSettingsPress}
+            savedLocations={savedLocations}
+            activeLocationId={activeLocationId}
+            onLocationSelect={onLocationSelect}
+            locationLoadingStates={locationLoadingStates}
           />
           <CachedWeatherDisplay
             forecast={forecast}

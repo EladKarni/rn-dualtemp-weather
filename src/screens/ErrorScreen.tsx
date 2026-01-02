@@ -2,6 +2,8 @@ import React from 'react';
 import { SafeAreaView, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import AppHeader from '../components/AppHeader/AppHeader';
 import { palette } from '../Styles/Palette';
+import type { SavedLocation } from '../store/useLocationStore';
+import type { LocationWeatherState } from '../hooks/useMultiLocationWeather';
 
 interface ErrorScreenProps {
   locationName: string;
@@ -10,6 +12,10 @@ interface ErrorScreenProps {
   onSettingsPress: () => void;
   errorMessage?: string;
   onRetry: () => void;
+  savedLocations: SavedLocation[];
+  activeLocationId: string | null;
+  onLocationSelect: (id: string) => void;
+  locationLoadingStates: Map<string, LocationWeatherState>;
 }
 
 export default function ErrorScreen({
@@ -19,6 +25,10 @@ export default function ErrorScreen({
   onSettingsPress,
   errorMessage = 'Unable to fetch weather data. Please check your connection and try again.',
   onRetry,
+  savedLocations,
+  activeLocationId,
+  onLocationSelect,
+  locationLoadingStates,
 }: ErrorScreenProps) {
   return (
     <SafeAreaView style={styles.container}>
@@ -28,6 +38,10 @@ export default function ErrorScreen({
           onLocationPress={onLocationPress}
           hasMultipleLocations={hasMultipleLocations}
           onSettingsPress={onSettingsPress}
+          savedLocations={savedLocations}
+          activeLocationId={activeLocationId}
+          onLocationSelect={onLocationSelect}
+          locationLoadingStates={locationLoadingStates}
         />
         <View style={styles.errorContent}>
           <Text style={styles.errorTitle}>Unable to Load Weather</Text>

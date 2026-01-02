@@ -90,12 +90,11 @@ const LocationPills = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginHorizontal: 20,
-    marginTop: 20,
-    marginBottom: 20,
+    width: '100%',
   },
   pillsContainer: {
-    paddingVertical: 8,
+    paddingVertical: 4,
+    paddingHorizontal: 10,
   },
 });
 

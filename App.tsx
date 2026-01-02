@@ -142,6 +142,10 @@ function App() {
     onLocationPress: openLocationDropdown,
     hasMultipleLocations: savedLocations.length > 0,
     onSettingsPress: openSettings,
+    savedLocations,
+    activeLocationId: activeLocation?.id || null,
+    onLocationSelect: setActiveLocation,
+    locationLoadingStates,
   };
 
   const essentialResourcesLoading = !activeLocation || !date;

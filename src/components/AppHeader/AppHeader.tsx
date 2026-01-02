@@ -1,27 +1,42 @@
 import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { typography } from "../../Styles/Typography";
+import { View, StyleSheet, TouchableOpacity } from "react-native";
 import { palette } from "../../Styles/Palette";
-import { i18n } from "../../localization/i18n";
 import GearIcon from "../GearIcon/GearIcon";
+import LocationPills from "../LocationPills/LocationPills";
+import type { SavedLocation } from "../../store/useLocationStore";
+import type { LocationWeatherState } from "../../hooks/useMultiLocationWeather";
 
 type AppHeaderPropTypes = {
   location: string;
   onLocationPress: () => void;
   hasMultipleLocations?: boolean;
   onSettingsPress: () => void;
+  savedLocations: SavedLocation[];
+  activeLocationId: string | null;
+  locationLoadingStates: Map<string, LocationWeatherState>;
+  onLocationSelect: (id: string) => void;
 };
 
-const AppHeader = ({ onSettingsPress }: AppHeaderPropTypes) => {
-
+const AppHeader = ({
+  onSettingsPress,
+  savedLocations,
+  activeLocationId,
+  locationLoadingStates,
+  onLocationSelect,
+}: AppHeaderPropTypes) => {
   return (
     <View style={styles.headerContainer}>
-      <View style={styles.mainHeaderTitle}>
-        <Text style={[typography.headerText, styles.containerHeaderText]}>
-          {i18n.t("Title")}
-        </Text>
-        {/* Location pills now show location info, so we removed the redundant location display here */}
+      {/* Location pills centered */}
+      <View style={styles.locationPillsWrapper}>
+        <LocationPills
+          savedLocations={savedLocations}
+          activeLocationId={activeLocationId}
+          onLocationSelect={onLocationSelect}
+          locationLoadingStates={locationLoadingStates}
+        />
       </View>
+
+      {/* Settings gear icon on the right */}
       <TouchableOpacity
         onPress={onSettingsPress}
         style={styles.settingsButton}
@@ -40,31 +55,13 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
+    paddingTop: 10,
+    paddingBottom: 15,
   },
-  mainHeaderTitle: {
-    position: "relative",
-  },
-  containerHeaderText: {
-    fontSize: 20,
-    textAlign: "center",
-  },
-  locationText: {
-    paddingHorizontal: 5,
-  },
-  locationHeader: {
-    display: "flex",
-    flexDirection: "row",
-    margin: "auto",
-    height: 30,
-    marginBottom: 15,
-    paddingHorizontal: 10,
+  locationPillsWrapper: {
+    flex: 1,
     justifyContent: "center",
     alignItems: "center",
-  },
-  dropdownArrow: {
-    fontSize: 10,
-    color: palette.highlightColor,
-    marginLeft: 5,
   },
   settingsButton: {
     position: "absolute",
