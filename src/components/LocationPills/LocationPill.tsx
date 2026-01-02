@@ -16,7 +16,7 @@ interface LocationPillProps {
  */
 const LocationPill = ({ location, isActive, hasData, onPress }: LocationPillProps) => {
   // Display location name with "(GPS)" appended for GPS location
-  const displayName = location.isGPS ? `${location.name} (GPS)` : location.name;
+  const displayName = location.isGPS ? `${location.name} (GPS)` : location.name.split(',')[0];
 
   return (
     <Pressable

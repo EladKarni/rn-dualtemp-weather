@@ -126,8 +126,6 @@ const AddLocationScreen = ({ visible, onClose }: AddLocationScreenProps) => {
   };
 
   const renderCityItem = ({ item }: { item: CityResult }) => {
-    const displayName = formatLocationName(item.name, item.state, item.country);
-
     return (
       <TouchableOpacity
         style={styles.cityItem}

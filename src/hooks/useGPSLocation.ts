@@ -43,7 +43,7 @@ export function useGPSLocation() {
         });
 
         // Get clean location name using Expo's reverse geocoding with smart parsing
-        let name = 'Current Location';
+        let name: string;
         try {
           const locationInfo = await Location.reverseGeocodeAsync(location.coords);
           name = parseLocationName(locationInfo);

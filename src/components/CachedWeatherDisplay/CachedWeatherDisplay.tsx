@@ -6,7 +6,6 @@ import { WeatherErrorBanner } from '../ErrorAlert/WeatherErrorBanner';
 import CurrentWeatherCard from '../CurrentWeatherCard/CurrentWeatherCard';
 import HourlyForecast from '../HourlyForecast/HourlyForecast';
 import DailyForecast from '../DailyForecast/DailyForecast';
-import { AppStateContext } from '../../utils/AppStateContext';
 
 interface CachedWeatherDisplayProps {
   forecast?: Weather;
