@@ -8,7 +8,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   Animated,
-  Alert,
   ScrollView,
 } from "react-native";
 import { i18n } from "../localization/i18n";
@@ -16,6 +15,7 @@ import { styles } from "./SettingsScreen.Styles";
 import SettingItem from "../components/SettingItem/SettingItem";
 import { TempUnitSelector } from "../components/TempUnitSelector/TempUnitSelector";
 import { LanguageSelector } from "../components/LanguageSelector/LanguageSelector";
+import { LocationList } from "../components/Settings/LocationList";
 import { useLocationStore } from "../store/useLocationStore";
 type SettingsScreenProps = {
   visible: boolean;
@@ -113,60 +113,12 @@ const SettingsScreen = ({ visible, onClose, onAddLocationPress }: SettingsScreen
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>{i18n.t("Locations")}</Text>
 
-              {savedLocations.map((location) => (
-                <View key={location.id} style={styles.locationItem}>
-                  <View style={styles.locationItemInfo}>
-                    <Text style={styles.locationItemName}>
-                      {location.isGPS ? `📍 ${i18n.t("CurrentLocation")}` : location.name}
-                    </Text>
-                  </View>
-                  {!location.isGPS && (
-                    <TouchableOpacity
-                      onPress={() => {
-                        Alert.alert(
-                          i18n.t("DeleteLocation"),
-                          `${i18n.t("DeleteLocationConfirm")} ${location.name}?`,
-                          [
-                            { text: i18n.t("Cancel"), style: "cancel" },
-                            {
-                              text: i18n.t("Delete"),
-                              style: "destructive",
-                              onPress: () => removeLocation(location.id),
-                            },
-                          ]
-                        );
-                      }}
-                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-                    >
-                      <Text style={styles.deleteIcon}>🗑️</Text>
-                    </TouchableOpacity>
-                  )}
-                </View>
-              ))}
-
-              <TouchableOpacity
-                style={[
-                  styles.addLocationButton,
-                  !canAddMoreLocations && styles.addLocationButtonDisabled,
-                ]}
-                onPress={() => {
-                  if (canAddMoreLocations) {
-                    onAddLocationPress();
-                  }
-                }}
-                disabled={!canAddMoreLocations}
-              >
-                <Text
-                  style={[
-                    styles.addLocationButtonText,
-                    !canAddMoreLocations && styles.addLocationButtonTextDisabled,
-                  ]}
-                >
-                  + {i18n.t("AddLocation")}
-                  {!canAddMoreLocations &&
-                    ` (${savedLocations.filter((loc) => !loc.isGPS).length}/5)`}
-                </Text>
-              </TouchableOpacity>
+              <LocationList
+                savedLocations={savedLocations}
+                onRemoveLocation={removeLocation}
+                canAddMoreLocations={canAddMoreLocations}
+                onAddLocationPress={onAddLocationPress}
+              />
             </View>
           </ScrollView>
         </Animated.View>

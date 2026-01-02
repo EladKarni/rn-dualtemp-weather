@@ -9,8 +9,6 @@ import {
   Platform,
   Animated,
   TextInput,
-  FlatList,
-  ActivityIndicator,
 } from "react-native";
 import { i18n } from "../localization/i18n";
 import { styles } from "./AddLocationScreen.Styles";
@@ -18,7 +16,7 @@ import { CityResult, searchCities, formatLocationName } from "../utils/geocoding
 import { useLocationStore } from "../store/useLocationStore";
 import { logger } from "../utils/logger";
 import { AppError, toAppError } from "../utils/errors";
-import { ErrorBanner } from "../components/ErrorAlert/ErrorBanner";
+import { AddLocationContent } from "../components/AddLocation/AddLocationContent";
 
 type AddLocationScreenProps = {
   visible: boolean;
@@ -125,76 +123,13 @@ const AddLocationScreen = ({ visible, onClose }: AddLocationScreenProps) => {
     onClose();
   };
 
-  const renderCityItem = ({ item }: { item: CityResult }) => {
-    return (
-      <TouchableOpacity
-        style={styles.cityItem}
-        onPress={() => handleSelectCity(item)}
-      >
-        <View style={styles.cityInfo}>
-          <Text style={styles.cityName}>{item.name}</Text>
-          <Text style={styles.cityDetails}>
-            {item.state ? `${item.state}, ` : ""}
-            {item.country}
-          </Text>
-        </View>
-        <Text style={styles.addIcon}>+</Text>
-      </TouchableOpacity>
-    );
-  };
-
-  const renderContent = () => {
-    if (searchQuery.trim().length < 3) {
-      return (
-        <View style={styles.emptyState}>
-          <Text style={styles.emptyStateText}>{i18n.t("StartTyping")}</Text>
-        </View>
-      );
-    }
-
-    if (isSearching) {
-      return (
-        <View style={styles.emptyState}>
-          <ActivityIndicator size="large" color="#4A90E2" />
-          <Text style={styles.emptyStateText}>{i18n.t("Searching")}</Text>
-        </View>
-      );
-    }
-
-    if (error) {
-      return (
-        <ErrorBanner
-          error={error}
-          onRetry={() => {
-            setError(null);
-            setIsSearching(true);
-            // Trigger search again by re-setting the query
-            const currentQuery = searchQuery;
-            setSearchQuery("");
-            setTimeout(() => setSearchQuery(currentQuery), 0);
-          }}
-          onDismiss={() => setError(null)}
-        />
-      );
-    }
-
-    if (searchResults.length === 0) {
-      return (
-        <View style={styles.emptyState}>
-          <Text style={styles.emptyStateText}>{i18n.t("NoResults")}</Text>
-        </View>
-      );
-    }
-
-    return (
-      <FlatList
-        data={searchResults}
-        renderItem={renderCityItem}
-        keyExtractor={(item, index) => `${item.name}-${item.country}-${index}`}
-        style={styles.resultsList}
-        keyboardShouldPersistTaps="handled"
-      />
-    );
+  const handleRetry = () => {
+    setError(null);
+    setIsSearching(true);
+    // Trigger search again by re-setting the query
+    const currentQuery = searchQuery;
+    setSearchQuery("");
+    setTimeout(() => setSearchQuery(currentQuery), 0);
   };
 
   return (
@@ -243,7 +178,17 @@ const AddLocationScreen = ({ visible, onClose }: AddLocationScreenProps) => {
             />
           </View>
 
-          <View style={styles.content}>{renderContent()}</View>
+          <View style={styles.content}>
+            <AddLocationContent
+              searchQuery={searchQuery}
+              isSearching={isSearching}
+              error={error}
+              searchResults={searchResults}
+              onCitySelect={handleSelectCity}
+              onRetry={handleRetry}
+              onDismissError={() => setError(null)}
+            />
+          </View>
         </Animated.View>
       </KeyboardAvoidingView>
     </Modal>

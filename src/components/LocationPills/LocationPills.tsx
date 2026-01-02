@@ -91,6 +91,7 @@ const LocationPills = ({
 const styles = StyleSheet.create({
   container: {
     width: '100%',
+    paddingTop: 8,
   },
   pillsContainer: {
     paddingVertical: 4,
