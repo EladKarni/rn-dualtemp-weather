@@ -131,8 +131,9 @@ const CurrentWeather = ({ temp, weather }: CurrentWeatherPropsType) => {
                 if (isTransitioning) return false; // Prevent swipe during transition
                 return Math.abs(gestureState.dx) > Math.abs(gestureState.dy) && Math.abs(gestureState.dx) > 5;
             },
-            onPanResponderGrant: () => {
-                pan.setOffset({ x: pan.x._value, y: 0 });
+            onPanResponderGrant: (_, gestureState) => {
+                pan.setOffset({ x: gestureState.dx, y: 0 });
+                pan.setValue({ x: 0, y: 0 });
             },
             onPanResponderMove: Animated.event(
                 [null, { dx: pan.x }],

@@ -152,6 +152,18 @@ export class BadRequestError extends ApiError {
   }
 }
 
+export class AuthenticationError extends ApiError {
+  constructor() {
+    super(
+      'Weather service authentication failed',
+      401,
+      'Weather service is temporarily unavailable. Please try again later.'
+    );
+    this.code = 'AUTHENTICATION_ERROR';
+    this.recoverable = false; // No retry for 401 errors
+  }
+}
+
 /**
  * User input errors
  */

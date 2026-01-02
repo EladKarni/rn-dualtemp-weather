@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   RefreshControl,
   SafeAreaView,
@@ -50,6 +50,8 @@ import {
   AppError
 } from "./src/utils/errors";
 import { showErrorAlert, openDeviceSettings } from "./src/components/ErrorAlert/ErrorAlert";
+import { WeatherLoadingSkeleton } from "./src/components/LoadingSkeleton/LoadingSkeleton";
+import { CachedWeatherDisplay } from "./src/components/CachedWeatherDisplay/CachedWeatherDisplay";
 
 // Keep the splash screen visible while we fetch resources
 SplashScreen.preventAutoHideAsync();
@@ -73,6 +75,12 @@ export default function App() {
 
   // GPS error state
   const [gpsError, setGpsError] = React.useState<AppError | null>(null);
+
+  // Progressive loading timeout state
+  const [showSkeleton, setShowSkeleton] = useState(false);
+  const [showErrorScreen, setShowErrorScreen] = useState(false);
+  const [dismissedError, setDismissedError] = useState<string | null>(null);
+  const [lastUpdated, setLastUpdated] = useState<Date | undefined>();
 
   const { data: date, isSuccess: fetchedLocaleSuccessfully } = useQuery({
     queryKey: ["locale", selectedLanguage],
@@ -280,7 +288,109 @@ export default function App() {
     );
   }
 
-  // If there's a forecast error and no cached data, show error screen
+  // Progressive loading states for first-time fetch with no cached data
+  if (refreshing && !forecast && !hasForecastError) {
+    // Show skeleton after 3 seconds
+    if (showSkeleton) {
+      return (
+        <SafeAreaView style={styles.container}>
+          <ScrollView>
+            <AppHeader
+              location={activeLocation?.name || "Loading..."}
+              onLocationPress={openLocationDropdown}
+              hasMultipleLocations={savedLocations.length > 0}
+              onSettingsPress={openSettings}
+            />
+            <WeatherLoadingSkeleton />
+          </ScrollView>
+        </SafeAreaView>
+      );
+    }
+    
+    // Show error screen after 6 seconds total
+    if (showErrorScreen) {
+      return (
+        <SafeAreaView style={styles.container}>
+          <View style={styles.errorContainer}>
+            <AppHeader
+              location={activeLocation?.name || "Loading..."}
+              onLocationPress={openLocationDropdown}
+              hasMultipleLocations={savedLocations.length > 0}
+              onSettingsPress={openSettings}
+            />
+            <View style={styles.errorContent}>
+              <Text style={styles.errorTitle}>Unable to Load Weather</Text>
+              <Text style={styles.errorMessage}>
+                Unable to fetch weather data. Please check your connection and try again.
+              </Text>
+              <TouchableOpacity
+                style={styles.retryButton}
+                onPress={() => refetch()}
+              >
+                <Text style={styles.retryButtonText}>Retry</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </SafeAreaView>
+      );
+    }
+    
+    // Initial loading screen (first 3 seconds)
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.errorContainer}>
+          <AppHeader
+            location={activeLocation?.name || "Loading..."}
+            onLocationPress={openLocationDropdown}
+            hasMultipleLocations={savedLocations.length > 0}
+            onSettingsPress={openSettings}
+          />
+          <View style={styles.errorContent}>
+            <Text style={styles.loadingTitle}>Loading Weather...</Text>
+            <Text style={styles.loadingMessage}>
+              Fetching forecast for {activeLocation?.name}
+            </Text>
+          </View>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // If there's cached data with an error, show cached data with error overlay
+  if (hasForecastError && forecast && !dismissedError) {
+    const appError = forecastError ? toAppError(forecastError) : null;
+    return (
+      <SafeAreaView style={styles.container}>
+        <ScrollView
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+        >
+          <AppStateContext.Provider
+            value={{ forecast, date, tempScale }}
+          >
+            <AppHeader
+              location={activeLocation?.name || "Loading..."}
+              onLocationPress={openLocationDropdown}
+              hasMultipleLocations={savedLocations.length > 0}
+              onSettingsPress={openSettings}
+            />
+            <CachedWeatherDisplay
+              forecast={forecast}
+              error={appError}
+              onRetry={() => refetch()}
+              onDismissError={() => setDismissedError('dismissed')}
+              lastUpdated={lastUpdated}
+              tempScale={tempScale}
+            />
+          </AppStateContext.Provider>
+          <AppFooter />
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
+  // If there's a forecast error and no cached data, show error screen after timeout
   if (hasForecastError && !forecast) {
     return (
       <SafeAreaView style={styles.container}>

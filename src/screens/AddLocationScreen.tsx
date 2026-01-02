@@ -110,7 +110,7 @@ const AddLocationScreen = ({ visible, onClose }: AddLocationScreenProps) => {
 
   const handleSelectCity = (city: CityResult) => {
     if (!canAddMoreLocations) {
-      setError(i18n.t("MaxLocationsReached"));
+      setError(toAppError(new Error(i18n.t("MaxLocationsReached"))));
       return;
     }
 

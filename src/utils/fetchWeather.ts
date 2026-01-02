@@ -1,6 +1,7 @@
 import { Alert } from "react-native";
 import { Weather } from "../types/WeatherTypes";
 import { logger } from "./logger";
+import { AuthenticationError, RateLimitError, ServerError, toAppError } from "./errors";
 
 export const base_url = `https://open-weather-proxy-pi.vercel.app/api/v1/`;
 
@@ -20,8 +21,22 @@ export const fetchForecast = async (
     if (!response.ok) {
       logger.error('Weather API error:', { status: response.status, message: data.message });
 
-      // Throw error instead of returning null so React Query can handle it properly
-      throw new Error(data.message || `Weather API returned ${response.status}`);
+      // Convert HTTP status codes to appropriate error types
+      // Check for 401 in message (proxy might return 500 but message contains 401 info)
+      const isAuthError = response.status === 401 || 
+                        (data.message && data.message.includes('401')) ||
+                        (data.message && data.message.includes('Unauthorized'));
+
+      if (isAuthError) {
+        throw new AuthenticationError();
+      } else if (response.status === 429) {
+        throw new RateLimitError(data.retryAfter);
+      } else if (response.status >= 500) {
+        throw new ServerError(response.status);
+      } else {
+        // Generic error for other status codes
+        throw toAppError(new Error(data.message || `Weather API returned ${response.status}`));
+      }
     }
 
     logger.debug('Weather data received successfully');
