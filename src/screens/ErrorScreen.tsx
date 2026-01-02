@@ -35,6 +35,10 @@ export default function ErrorScreen({
           <TouchableOpacity style={styles.retryButton} onPress={onRetry}>
             <Text style={styles.retryButtonText}>Retry</Text>
           </TouchableOpacity>
+          <Text style={styles.supportText}>
+            If this happens often, please contact support at{'\n'}
+            <Text style={styles.supportEmail}>{process.env.EXPO_PUBLIC_SUPPORT_EMAIL || 'support@eladkarni.solutions'}</Text>
+          </Text>
         </View>
       </View>
     </SafeAreaView>
@@ -79,5 +83,16 @@ const styles = StyleSheet.create({
     color: palette.textColor,
     fontSize: 16,
     fontWeight: '600',
+  },
+  supportText: {
+    fontSize: 12,
+    color: palette.highlightColor,
+    textAlign: 'center',
+    marginTop: 32,
+    opacity: 0.7,
+  },
+  supportEmail: {
+    color: palette.primaryColor,
+    fontWeight: '500',
   },
 });

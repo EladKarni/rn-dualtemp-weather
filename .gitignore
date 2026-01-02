@@ -11,6 +11,10 @@ npm-debug.*
 web-build/
 api-gcs.*
 
+# Environment variables
+.env.local
+.env*.local
+
 # Native Code
 android/
 ios/

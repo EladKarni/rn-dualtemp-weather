@@ -20,7 +20,7 @@ export function useSplashScreen(isFetched: boolean) {
       setSplashTimeoutExpired(true);
       // Hide splash screen after timeout, regardless of what we're rendering
       await SplashScreen.hideAsync();
-    }, 3000);
+    }, parseInt(process.env.EXPO_PUBLIC_SPLASH_TIMEOUT_MS || '3000', 10));
 
     return () => clearTimeout(timer);
   }, []);

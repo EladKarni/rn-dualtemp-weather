@@ -21,11 +21,11 @@ export const WeatherErrorBanner: React.FC<WeatherErrorBannerProps> = ({
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffMins = Math.floor(diffMs / 60000);
-    
+
     if (diffMins < 1) return i18n.t('JustNow') || 'Just now';
     if (diffMins === 1) return i18n.t('OneMinuteAgo') || '1 minute ago';
     if (diffMins < 60) return i18n.t('XMinutesAgo', { count: diffMins }) || `${diffMins} minutes ago`;
-    
+
     const diffHours = Math.floor(diffMins / 60);
     if (diffHours === 1) return i18n.t('OneHourAgo') || '1 hour ago';
     return i18n.t('XHoursAgo', { count: diffHours }) || `${diffHours} hours ago`;
@@ -33,12 +33,12 @@ export const WeatherErrorBanner: React.FC<WeatherErrorBannerProps> = ({
 
   const getErrorMessage = (): string => {
     let message = error.userMessage;
-    
+
     if (lastUpdated) {
-      message += '. ' + i18n.t('LastUpdated', { time: getTimeAgoText(lastUpdated) }) || 
-                 `. Last updated ${getTimeAgoText(lastUpdated)}`;
+      message += '. ' + i18n.t('LastUpdated', { time: getTimeAgoText(lastUpdated) }) ||
+        `. Last updated ${getTimeAgoText(lastUpdated)}`;
     }
-    
+
     return message;
   };
 
@@ -46,7 +46,12 @@ export const WeatherErrorBanner: React.FC<WeatherErrorBannerProps> = ({
     <View style={styles.container}>
       <View style={styles.content}>
         <Text style={styles.icon}>⚠️</Text>
-        <Text style={styles.message}>{getErrorMessage()}</Text>
+        <View style={styles.messageContainer}>
+          <Text style={styles.message}>{getErrorMessage()}</Text>
+          <Text style={styles.supportText}>
+            If this happens often, contact {process.env.EXPO_PUBLIC_SUPPORT_EMAIL || 'support@eladkarni.solutions'} for help.
+          </Text>
+        </View>
       </View>
       <View style={styles.actions}>
         {error.recoverable && onRetry && (
@@ -83,11 +88,19 @@ const styles = StyleSheet.create({
     marginRight: 10,
     marginTop: 2,
   },
-  message: {
+  messageContainer: {
     flex: 1,
+  },
+  message: {
     color: palette.textColor,
     fontSize: 14,
     lineHeight: 20,
+  },
+  supportText: {
+    fontSize: 11,
+    color: palette.highlightColor,
+    marginTop: 6,
+    opacity: 0.6,
   },
   actions: {
     flexDirection: 'row',
