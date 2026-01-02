@@ -22,7 +22,7 @@ import { useModalStore } from "./src/store/useModalStore";
 
 // Custom hooks
 import { useGPSLocation } from "./src/hooks/useGPSLocation";
-import { useForecastQuery } from "./src/hooks/useForecastQuery";
+import { useMultiLocationWeather } from "./src/hooks/useMultiLocationWeather";
 import { useAppLifecycle } from "./src/hooks/useAppLifecycle";
 import { useSplashScreen } from "./src/hooks/useSplashScreen";
 import { useWeatherLoadingState } from "./src/hooks/useWeatherLoadingState";
@@ -58,13 +58,20 @@ export default function App() {
   useAppLifecycle();
 
   const {
-    data: forecast,
+    activeWeather: forecast,
     isFetched,
     isFetching: refreshing,
     refetch,
     error: forecastError,
     isError: hasForecastError,
-  } = useForecastQuery(activeLocation, fetchedLocaleSuccessfully);
+    locationLoadingStates,
+  } = useMultiLocationWeather(savedLocations, activeLocationId, fetchedLocaleSuccessfully);
+
+  const setActiveLocation = useLocationStore((state) => state.setActiveLocation);
+
+  const handleLocationSelect = React.useCallback((locationId: string) => {
+    setActiveLocation(locationId);
+  }, [setActiveLocation]);
 
   const { splashTimeoutExpired, onLayoutRootView } = useSplashScreen(isFetched);
 
@@ -221,6 +228,11 @@ export default function App() {
       activeModal={activeModal}
       closeModal={() => useModalStore.getState().closeModal()}
       openAddLocation={openAddLocation}
+      fetchedLocaleSuccessfully={fetchedLocaleSuccessfully}
+      savedLocations={savedLocations}
+      activeLocationId={activeLocationId}
+      locationLoadingStates={locationLoadingStates}
+      onLocationSelect={handleLocationSelect}
       {...screenProps}
     />
   );

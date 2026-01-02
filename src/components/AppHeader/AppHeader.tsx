@@ -1,6 +1,5 @@
 import React from "react";
-import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
-import { WeatherIconStyles } from "../WeatherIcon/WeatherIcon.Styles";
+import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { typography } from "../../Styles/Typography";
 import { palette } from "../../Styles/Palette";
 import { i18n } from "../../localization/i18n";
@@ -13,7 +12,7 @@ type AppHeaderPropTypes = {
   onSettingsPress: () => void;
 };
 
-const AppHeader = ({ location, onLocationPress, hasMultipleLocations = false, onSettingsPress }: AppHeaderPropTypes) => {
+const AppHeader = ({ onSettingsPress }: AppHeaderPropTypes) => {
 
   return (
     <View style={styles.headerContainer}>
@@ -21,22 +20,7 @@ const AppHeader = ({ location, onLocationPress, hasMultipleLocations = false, on
         <Text style={[typography.headerText, styles.containerHeaderText]}>
           {i18n.t("Title")}
         </Text>
-        <TouchableOpacity
-          onPress={onLocationPress}
-          style={[styles.locationHeader]}
-          hitSlop={{ top: 5, bottom: 5, left: 5, right: 5 }}
-        >
-          <Text style={[typography.headerText, styles.locationText]}>
-            {location.split(",")[0]}
-          </Text>
-          <Image
-            source={require("../../../assets/Images/locationIcon.png")}
-            style={WeatherIconStyles.iconTiny}
-          />
-          {hasMultipleLocations && (
-            <Text style={styles.dropdownArrow}>▼</Text>
-          )}
-        </TouchableOpacity>
+        {/* Location pills now show location info, so we removed the redundant location display here */}
       </View>
       <TouchableOpacity
         onPress={onSettingsPress}

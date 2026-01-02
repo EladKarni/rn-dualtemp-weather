@@ -5,6 +5,8 @@ import SettingsScreen from './SettingsScreen';
 import AddLocationScreen from './AddLocationScreen';
 import type { Weather } from '../types/WeatherTypes';
 import type { Moment } from 'moment';
+import type { SavedLocation } from '../store/useLocationStore';
+import type { LocationWeatherState } from '../hooks/useMultiLocationWeather';
 
 interface MainWeatherWithModalsProps {
   forecast: Weather;
@@ -20,6 +22,11 @@ interface MainWeatherWithModalsProps {
   onLocationPress: () => void;
   hasMultipleLocations: boolean;
   onSettingsPress: () => void;
+  fetchedLocaleSuccessfully: boolean;
+  savedLocations: SavedLocation[];
+  activeLocationId: string | null;
+  locationLoadingStates: Map<string, LocationWeatherState>;
+  onLocationSelect: (id: string) => void;
 }
 
 /**
@@ -40,6 +47,11 @@ export default function MainWeatherWithModals({
   onLocationPress,
   hasMultipleLocations,
   onSettingsPress,
+  fetchedLocaleSuccessfully,
+  savedLocations,
+  activeLocationId,
+  locationLoadingStates,
+  onLocationSelect,
 }: MainWeatherWithModalsProps) {
   return (
     <>
@@ -54,6 +66,11 @@ export default function MainWeatherWithModals({
         refreshing={refreshing}
         onRefresh={onRefresh}
         onLayoutRootView={onLayoutRootView}
+        fetchedLocaleSuccessfully={fetchedLocaleSuccessfully}
+        savedLocations={savedLocations}
+        activeLocationId={activeLocationId}
+        locationLoadingStates={locationLoadingStates}
+        onLocationSelect={onLocationSelect}
       />
 
       <LocationDropdown
