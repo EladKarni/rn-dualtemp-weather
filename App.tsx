@@ -1,5 +1,4 @@
 import React from "react";
-import { SafeAreaView, ScrollView, RefreshControl, StyleSheet } from "react-native";
 import { useQuery } from "@tanstack/react-query";
 import {
   useFonts,
@@ -11,7 +10,6 @@ import {
   DMSans_700Bold_Italic,
 } from "@expo-google-fonts/dm-sans";
 
-import { palette } from "./src/Styles/Palette";
 import { fetchLocale } from "./src/utils/fetchLocale";
 import { logger } from "./src/utils/logger";
 import { toAppError } from "./src/utils/errors";
@@ -33,16 +31,9 @@ import { useWeatherLoadingState } from "./src/hooks/useWeatherLoadingState";
 import LoadingScreen from "./src/screens/LoadingScreen";
 import ErrorScreen from "./src/screens/ErrorScreen";
 import SkeletonScreen from "./src/screens/SkeletonScreen";
-import WeatherScreen from "./src/screens/WeatherScreen";
-import LocationDropdown from "./src/components/LocationDropdown/LocationDropdown";
-import AddLocationScreen from "./src/screens/AddLocationScreen";
-import SettingsScreen from "./src/screens/SettingsScreen";
+import CachedWeatherErrorScreen from "./src/screens/CachedWeatherErrorScreen";
+import MainWeatherWithModals from "./src/screens/MainWeatherWithModals";
 
-// Components
-import AppHeader from "./src/components/AppHeader/AppHeader";
-import { CachedWeatherDisplay } from "./src/components/CachedWeatherDisplay/CachedWeatherDisplay";
-import { AppStateContext } from "./src/utils/AppStateContext";
-import AppFooter from "./src/components/AppFooter/AppFooter";
 
 export default function App() {
   // Store state
@@ -169,25 +160,34 @@ export default function App() {
     essentialResourcesLoading,
   });
 
-  // CRITICAL: After splash timeout, ALWAYS show something
+  // ============================================================================
+  // RENDER DECISION TREE
+  // After 3-second splash timeout, we always render one of the screens below
+  // ============================================================================
+
+  // CRITICAL SAFETY CHECK: Timeout expired but essential resources still loading
+  // Prevents indefinite splash screen by showing skeleton after 3 seconds
   if (splashTimeoutExpired && essentialResourcesLoading) {
     logger.warn('Splash timeout expired but resources still loading - showing skeleton');
     return <SkeletonScreen {...screenProps} />;
   }
 
-  // Render: Loading (still fetching, no error)
+  // LOADING STATE: Initial fetch in progress (before timeout expires)
+  // Shows loading spinner when actively fetching forecast data
   if (refreshing && !forecast && !hasForecastError) {
     logger.debug('Rendering: LoadingScreen (refreshing, no forecast, no error)');
     return <LoadingScreen {...screenProps} />;
   }
 
-  // Render: Skeleton (after timeout, still loading or error without screen flag)
+  // LOADING STATE: Post-timeout loading (skeleton with placeholder UI)
+  // Shows skeleton placeholders when data is still loading after splash timeout
   if (showSkeleton && !showErrorScreen) {
     logger.debug('Rendering: SkeletonScreen (showSkeleton=true)');
     return <SkeletonScreen {...screenProps} />;
   }
 
-  // Render: Error screen (after timeout with error)
+  // ERROR STATE: Network/API error with no cached data
+  // Shows full error screen with retry button when forecast fetch fails
   if (showErrorScreen && hasForecastError && !forecast) {
     logger.debug('Rendering: ErrorScreen (showErrorScreen=true, has error)');
     const appError = forecastError ? toAppError(forecastError) : null;
@@ -200,36 +200,30 @@ export default function App() {
     );
   }
 
-  // Render: Cached data with error overlay
+  // ERROR STATE: Network/API error with cached data available
+  // Shows cached weather data with error banner overlay - best user experience
   if (hasForecastError && forecast && !dismissedError) {
     logger.debug('Rendering: CachedWeatherDisplay (has error but also has cached forecast)');
 
     const appError = forecastError ? toAppError(forecastError) : null;
     return (
-      <SafeAreaView style={styles.container}>
-        <ScrollView
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-          }
-        >
-          <AppStateContext.Provider value={{ forecast, date, tempScale }}>
-            <AppHeader {...screenProps} />
-            <CachedWeatherDisplay
-              forecast={forecast}
-              error={appError}
-              onRetry={() => refetch()}
-              onDismissError={() => setDismissedError('dismissed')}
-              lastUpdated={lastUpdated}
-              tempScale={tempScale}
-            />
-          </AppStateContext.Provider>
-          <AppFooter />
-        </ScrollView>
-      </SafeAreaView>
+      <CachedWeatherErrorScreen
+        forecast={forecast}
+        date={date}
+        tempScale={tempScale}
+        appError={appError}
+        onRetry={() => refetch()}
+        onDismissError={() => setDismissedError('dismissed')}
+        lastUpdated={lastUpdated}
+        refreshing={refreshing}
+        onRefresh={onRefresh}
+        {...screenProps}
+      />
     );
   }
 
-  // Fallback: Missing forecast or date
+  // FALLBACK STATE: Safety net for missing data (should rarely execute)
+  // Shows skeleton screen if forecast or date is unexpectedly missing
   if (!forecast || !date) {
     logger.warn('Rendering: Fallback SkeletonScreen (missing forecast or date)', {
       activeLocation: !!activeLocation,
@@ -240,43 +234,21 @@ export default function App() {
     return <SkeletonScreen {...screenProps} />;
   }
 
-  // Render: Success - Main weather screen
+  // SUCCESS STATE: All data loaded successfully
+  // Shows full weather screen with location/settings/add location modals
   logger.debug('Rendering: WeatherScreen (success - have forecast and date)');
   return (
-    <>
-      <WeatherScreen
-        forecast={forecast}
-        date={date}
-        tempScale={tempScale}
-        {...screenProps}
-        refreshing={refreshing}
-        onRefresh={onRefresh}
-        onLayoutRootView={onLayoutRootView}
-      />
-
-      <LocationDropdown
-        visible={activeModal === 'location'}
-        onClose={() => useModalStore.getState().closeModal()}
-        onAddLocation={openAddLocation}
-      />
-
-      <SettingsScreen
-        visible={activeModal === 'settings'}
-        onClose={() => useModalStore.getState().closeModal()}
-        onAddLocationPress={openAddLocation}
-      />
-
-      <AddLocationScreen
-        visible={activeModal === 'addLocation'}
-        onClose={() => useModalStore.getState().closeModal()}
-      />
-    </>
+    <MainWeatherWithModals
+      forecast={forecast}
+      date={date}
+      tempScale={tempScale}
+      refreshing={refreshing}
+      onRefresh={onRefresh}
+      onLayoutRootView={onLayoutRootView}
+      activeModal={activeModal}
+      closeModal={() => useModalStore.getState().closeModal()}
+      openAddLocation={openAddLocation}
+      {...screenProps}
+    />
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: palette.primaryDark,
-  },
-});
