@@ -7,8 +7,6 @@ import type { LocationWeatherState } from '../hooks/useMultiLocationWeather';
 
 interface LoadingScreenProps {
   locationName: string;
-  onLocationPress: () => void;
-  hasMultipleLocations: boolean;
   onSettingsPress: () => void;
   savedLocations: SavedLocation[];
   activeLocationId: string | null;
@@ -18,8 +16,6 @@ interface LoadingScreenProps {
 
 export default function LoadingScreen({
   locationName,
-  onLocationPress,
-  hasMultipleLocations,
   onSettingsPress,
   savedLocations,
   activeLocationId,
@@ -30,9 +26,6 @@ export default function LoadingScreen({
     <SafeAreaView style={styles.container}>
       <View style={styles.errorContainer}>
         <AppHeader
-          location={locationName}
-          onLocationPress={onLocationPress}
-          hasMultipleLocations={hasMultipleLocations}
           onSettingsPress={onSettingsPress}
           savedLocations={savedLocations}
           activeLocationId={activeLocationId}

@@ -1,8 +1,9 @@
 import React, { useCallback, useRef, useEffect } from 'react';
-import { View, FlatList, StyleSheet } from 'react-native';
+import { View, FlatList, StyleSheet, Dimensions } from 'react-native';
 import LocationPill from './LocationPill';
 import type { SavedLocation } from '../../store/useLocationStore';
 import type { LocationWeatherState } from '../../hooks/useMultiLocationWeather';
+import { useLanguageStore } from '../../store/useLanguageStore';
 
 interface LocationPillsProps {
   savedLocations: SavedLocation[];
@@ -22,11 +23,32 @@ const LocationPills = ({
   locationLoadingStates,
 }: LocationPillsProps) => {
   const flatListRef = useRef<FlatList<SavedLocation>>(null);
+  const isRTL = useLanguageStore((state) => state.isRTL);
 
   const renderPill = useCallback(
-    ({ item }: { item: SavedLocation }) => {
+    ({ item, index }: { item: SavedLocation; index: number }) => {
       const loadingState = locationLoadingStates.get(item.id);
       const hasData = loadingState?.hasCurrentWeather || false;
+      
+      // RTL-aware fade effect
+      const screenWidth = Dimensions.get('window').width;
+      const fadeZone = 60;
+      const fadeStart = screenWidth - fadeZone;
+
+      const pillWidth = 100;
+      const estimatedPosition = index * pillWidth + 40;
+
+      let opacity = 1;
+      // In RTL, fade pills on the LEFT side; in LTR, fade on RIGHT side
+      const shouldFade = isRTL
+        ? estimatedPosition < fadeZone
+        : estimatedPosition > fadeStart;
+
+      if (shouldFade) {
+        opacity = isRTL
+          ? Math.max(0.3, estimatedPosition / fadeZone)
+          : Math.max(0.3, 1 - (estimatedPosition - fadeStart) / fadeZone);
+      }
 
       return (
         <LocationPill
@@ -34,10 +56,11 @@ const LocationPills = ({
           isActive={item.id === activeLocationId}
           hasData={hasData}
           onPress={() => onLocationSelect(item.id)}
+          opacity={opacity}
         />
       );
     },
-    [activeLocationId, locationLoadingStates, onLocationSelect]
+    [activeLocationId, locationLoadingStates, onLocationSelect, isRTL]
   );
 
   const keyExtractor = useCallback((item: SavedLocation) => item.id, []);
@@ -57,8 +80,8 @@ const LocationPills = ({
     }
   }, [activeLocationId, savedLocations]);
 
-  // Don't show pills if only one location
-  if (savedLocations.length <= 1) {
+  // Don't show pills if no locations
+  if (savedLocations.length === 0) {
     return null;
   }
 
@@ -67,6 +90,7 @@ const LocationPills = ({
       <FlatList
         ref={flatListRef}
         horizontal
+        inverted={isRTL}
         data={savedLocations}
         renderItem={renderPill}
         keyExtractor={keyExtractor}
@@ -95,7 +119,6 @@ const styles = StyleSheet.create({
   },
   pillsContainer: {
     paddingVertical: 4,
-    paddingHorizontal: 10,
   },
 });
 

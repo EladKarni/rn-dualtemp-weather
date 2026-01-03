@@ -1,5 +1,6 @@
 import React from "react";
-import { useQuery } from "@tanstack/react-query";
+import { QueryErrorResetBoundary } from "@tanstack/react-query";
+
 import {
   useFonts,
   DMSans_400Regular,
@@ -12,7 +13,6 @@ import {
 import * as Sentry from "@sentry/react-native";
 import Constants from "expo-constants";
 
-import { fetchLocale } from "./src/utils/fetchLocale";
 import { logger } from "./src/utils/logger";
 import { toAppError } from "./src/utils/errors";
 
@@ -22,7 +22,6 @@ if (sentryDsn) {
   Sentry.init({
     dsn: sentryDsn,
     debug: __DEV__, // Enable debug mode in development
-    tracesSampleRate: 1.0, // Adjust in production (0.2 = 20% of transactions)
     enabled: !__DEV__, // Only send events in production builds
   });
   if (__DEV__) {
@@ -35,7 +34,6 @@ if (sentryDsn) {
 // Stores
 import { useSettingsStore } from "./src/store/useSettingsStore";
 import { useLocationStore } from "./src/store/useLocationStore";
-import { useLanguageStore } from "./src/store/useLanguageStore";
 import { useModalStore } from "./src/store/useModalStore";
 
 // Custom hooks
@@ -44,20 +42,26 @@ import { useMultiLocationWeather } from "./src/hooks/useMultiLocationWeather";
 import { useAppLifecycle } from "./src/hooks/useAppLifecycle";
 import { useSplashScreen } from "./src/hooks/useSplashScreen";
 import { useWeatherLoadingState } from "./src/hooks/useWeatherLoadingState";
+import { useLocaleQuery } from "./src/hooks/useLocaleQuery";
+import { useScreenProps } from "./src/hooks/useScreenProps";
+import { useRenderDecision } from "./src/hooks/useRenderDecision";
 
 // Screens
 import LoadingScreen from "./src/screens/LoadingScreen";
 import ErrorScreen from "./src/screens/ErrorScreen";
 import SkeletonScreen from "./src/screens/SkeletonScreen";
-import CachedWeatherErrorScreen from "./src/screens/CachedWeatherErrorScreen";
 import MainWeatherWithModals from "./src/screens/MainWeatherWithModals";
 
+// Error Boundary
+import ErrorBoundary from "./src/components/ErrorBoundary/ErrorBoundary";
+
 function App() {
+
+
   // Store state
   const tempScale = useSettingsStore((state) => state.tempScale);
   const savedLocations = useLocationStore((state) => state.savedLocations);
   const activeLocationId = useLocationStore((state) => state.activeLocationId);
-  const selectedLanguage = useLanguageStore((state) => state.selectedLanguage);
   const activeModal = useModalStore((state) => state.activeModal);
   const openLocationDropdown = useModalStore((state) => state.openLocationDropdown);
   const openSettings = useModalStore((state) => state.openSettings);
@@ -65,14 +69,14 @@ function App() {
 
   const activeLocation = savedLocations.find(loc => loc.id === activeLocationId);
 
-  // Locale/date query - fetch locale settings but create fresh moment object
-  const { isSuccess: fetchedLocaleSuccessfully } = useQuery({
-    queryKey: ["locale", selectedLanguage],
-    queryFn: fetchLocale,
-  });
-
-  // Create a fresh moment object for the current date (React Query serializes objects, stripping methods)
-  const date = React.useMemo(() => fetchLocale(), [fetchedLocaleSuccessfully]);
+  // Locale/date query - fetch locale settings and create moment object
+  // NOTE: Locale is now managed by useLanguageStore (single source of truth)
+  const {
+    fetchedLocaleSuccessfully,
+    localeData,
+    isLocaleLoading,
+    date,
+  } = useLocaleQuery();
 
   // Custom hooks
   useGPSLocation();
@@ -86,7 +90,7 @@ function App() {
     error: forecastError,
     isError: hasForecastError,
     locationLoadingStates,
-  } = useMultiLocationWeather(savedLocations, activeLocationId, fetchedLocaleSuccessfully);
+  } = useMultiLocationWeather(savedLocations, activeLocationId, fetchedLocaleSuccessfully && !isLocaleLoading);
 
   const setActiveLocation = useLocationStore((state) => state.setActiveLocation);
 
@@ -122,14 +126,16 @@ function App() {
   // Log query state for debugging
   React.useEffect(() => {
     logger.debug('Forecast query state:', {
-      enabled: !!activeLocation && fetchedLocaleSuccessfully,
+      enabled: !!activeLocation && fetchedLocaleSuccessfully && !isLocaleLoading,
       hasActiveLocation: !!activeLocation,
       fetchedLocaleSuccessfully,
+      isLocaleLoading,
       hasForecast: !!forecast,
       isFetching: refreshing,
       hasForecastError,
+      localeData: localeData?.locale,
     });
-  }, [activeLocation, fetchedLocaleSuccessfully, forecast, refreshing, hasForecastError]);
+  }, [activeLocation, fetchedLocaleSuccessfully, isLocaleLoading, forecast, refreshing, hasForecastError, localeData]);
 
   if (hasForecastError) {
     logger.error('Forecast query error:', forecastError);
@@ -140,126 +146,114 @@ function App() {
   }, [refetch]);
 
   // Common props for all screen components
-  const screenProps = {
-    locationName: activeLocation?.name || "Loading...",
-    onLocationPress: openLocationDropdown,
-    hasMultipleLocations: savedLocations.length > 0,
-    onSettingsPress: openSettings,
+  const screenProps = useScreenProps({
+    activeLocation,
     savedLocations,
-    activeLocationId: activeLocation?.id || null,
-    onLocationSelect: setActiveLocation,
+    openLocationDropdown,
+    openSettings,
+    setActiveLocation,
     locationLoadingStates,
-  };
+  });
 
-  const essentialResourcesLoading = !activeLocation;
+  // Render decision logic - determines when to block on splash and logs state
+  const { essentialResourcesLoading, shouldBlockOnSplash } = useRenderDecision({
+    splashTimeoutExpired,
+    activeLocation,
+    date,
+    forecast,
+    refreshing,
+    hasForecastError,
+    isLocaleLoading,
+    fetchedLocaleSuccessfully,
+    localeData,
+    fontsLoaded,
+  });
 
   // Block on splash screen if timeout hasn't expired AND resources not ready
-  if (!splashTimeoutExpired && essentialResourcesLoading) {
-    logger.debug('Waiting for essential resources (max 3s):', {
-      fontsLoaded,
-      hasActiveLocation: !!activeLocation,
-      hasDate: !!date,
-    });
+  if (shouldBlockOnSplash) {
     return null;
   }
 
-  // Log render decision state and any warnings for missing resources
-  const logLevel = (splashTimeoutExpired && essentialResourcesLoading) ? 'warn' : 'debug';
-  logger[logLevel]('Render decision point:', {
-    splashTimeoutExpired,
-    activeLocation: !!activeLocation,
-    date: !!date,
-    forecast: !!forecast,
-    refreshing,
-    hasForecastError,
-    showSkeleton,
-    showErrorScreen,
-    fontsLoaded,
-    essentialResourcesLoading,
-  });
+  // ============================================================================
+  // RENDER DECISION TREE - WRAPPED WITH ERROR BOUNDARY
+  // After 3-second splash timeout, we always render one of the screens below
+  // All screens are wrapped with ErrorBoundary to catch render errors
+  // ============================================================================
 
   // ============================================================================
   // RENDER DECISION TREE
-  // After 3-second splash timeout, we always render one of the screens below
+  // All components are wrapped with ErrorBoundary to catch render errors
   // ============================================================================
 
-  // CRITICAL SAFETY CHECK: Timeout expired but essential resources still loading
-  // Prevents indefinite splash screen by showing skeleton after 3 seconds
-  if (splashTimeoutExpired && essentialResourcesLoading) {
-    return <SkeletonScreen {...screenProps} />;
-  }
-
-  // LOADING STATE: Initial fetch in progress (before timeout expires)
-  // Shows loading spinner when actively fetching forecast data
-  if (refreshing && !forecast && !hasForecastError) {
-    return <LoadingScreen {...screenProps} />;
-  }
-
-  // LOADING STATE: Post-timeout loading (skeleton with placeholder UI)
-  // Shows skeleton placeholders when data is still loading after splash timeout
-  if (showSkeleton && !showErrorScreen) {
-    return <SkeletonScreen {...screenProps} />;
-  }
-
-  // ERROR STATE: Network/API error with no cached data
-  // Shows full error screen with retry button when forecast fetch fails
-  if (showErrorScreen && hasForecastError && !forecast) {
-    const appError = forecastError ? toAppError(forecastError) : null;
-    return (
-      <ErrorScreen
-        {...screenProps}
-        errorMessage={appError?.userMessage}
-        onRetry={() => refetch()}
-      />
-    );
-  }
-
-  // ERROR STATE: Network/API error with cached data available
-  // Shows cached weather data with error banner overlay - best user experience
-  if (hasForecastError && forecast && !dismissedError) {
-    const appError = forecastError ? toAppError(forecastError) : null;
-    return (
-      <CachedWeatherErrorScreen
-        forecast={forecast}
-        date={date}
-        tempScale={tempScale}
-        appError={appError}
-        onRetry={() => refetch()}
-        onDismissError={() => setDismissedError('dismissed')}
-        lastUpdated={lastUpdated}
-        refreshing={refreshing}
-        onRefresh={onRefresh}
-        {...screenProps}
-      />
-    );
-  }
-
-  // FALLBACK STATE: Safety net for missing data (should rarely execute)
-  // Shows skeleton screen if forecast is unexpectedly missing
-  if (!forecast) {
-    return <SkeletonScreen {...screenProps} />;
-  }
-
-  // SUCCESS STATE: All data loaded successfully
-  // Shows full weather screen with location/settings/add location modals
   return (
-    <MainWeatherWithModals
-      forecast={forecast}
-      date={date}
-      tempScale={tempScale}
-      refreshing={refreshing}
-      onRefresh={onRefresh}
-      onLayoutRootView={onLayoutRootView}
-      activeModal={activeModal}
-      closeModal={() => useModalStore.getState().closeModal()}
-      openAddLocation={openAddLocation}
-      fetchedLocaleSuccessfully={fetchedLocaleSuccessfully}
-      savedLocations={savedLocations}
-      activeLocationId={activeLocationId}
-      locationLoadingStates={locationLoadingStates}
-      onLocationSelect={handleLocationSelect}
-      {...screenProps}
-    />
+    <QueryErrorResetBoundary>
+      {({ reset }) => (
+        <ErrorBoundary
+          fallback={(error, resetError) => (
+            <ErrorScreen
+              {...screenProps}
+              errorMessage={error.message}
+              onRetry={() => {
+                reset(); // Reset React Query state
+                resetError(); // Reset Error Boundary state
+                refetch(); // Refetch weather data
+              }}
+            />
+          )}
+        >
+          {/* CRITICAL SAFETY CHECK: Timeout expired but essential resources still loading */}
+          {splashTimeoutExpired && essentialResourcesLoading && <SkeletonScreen {...screenProps} />}
+
+          {/* LOADING STATE: Initial fetch in progress */}
+          {refreshing && !forecast && !hasForecastError && <LoadingScreen {...screenProps} />}
+
+          {/* LOADING STATE: Post-timeout loading */}
+          {showSkeleton && !showErrorScreen && <SkeletonScreen {...screenProps} />}
+
+          {/* ERROR STATE: Network/API error with no cached data */}
+          {showErrorScreen && hasForecastError && !forecast && (
+            (() => {
+              const appError = forecastError ? toAppError(forecastError) : null;
+              return (
+                <ErrorScreen
+                  {...screenProps}
+                  errorMessage={appError?.userMessage}
+                  onRetry={() => refetch()}
+                />
+              );
+            })()
+          )}
+
+          {/* FALLBACK STATE: Safety net for missing data */}
+          {!forecast && !showErrorScreen && !refreshing && <SkeletonScreen {...screenProps} />}
+
+          {/* SUCCESS STATE: All data loaded successfully (with optional error banner for cached data) */}
+          {forecast && (
+            <MainWeatherWithModals
+              forecast={forecast}
+              date={date}
+              tempScale={tempScale}
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              onLayoutRootView={onLayoutRootView}
+              activeModal={activeModal}
+              closeModal={() => useModalStore.getState().closeModal()}
+              openAddLocation={openAddLocation}
+              fetchedLocaleSuccessfully={fetchedLocaleSuccessfully}
+              savedLocations={savedLocations}
+              activeLocationId={activeLocationId}
+              locationLoadingStates={locationLoadingStates}
+              onLocationSelect={handleLocationSelect}
+              appError={hasForecastError && !dismissedError ? toAppError(forecastError) : null}
+              onRetry={() => refetch()}
+              onDismissError={() => setDismissedError('dismissed')}
+              lastUpdated={lastUpdated}
+              {...screenProps}
+            />
+          )}
+        </ErrorBoundary>
+      )}
+    </QueryErrorResetBoundary>
   );
 }
 

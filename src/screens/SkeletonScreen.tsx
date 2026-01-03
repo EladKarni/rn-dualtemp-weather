@@ -7,9 +7,6 @@ import type { SavedLocation } from '../store/useLocationStore';
 import type { LocationWeatherState } from '../hooks/useMultiLocationWeather';
 
 interface SkeletonScreenProps {
-  locationName: string;
-  onLocationPress: () => void;
-  hasMultipleLocations: boolean;
   onSettingsPress: () => void;
   savedLocations: SavedLocation[];
   activeLocationId: string | null;
@@ -18,9 +15,6 @@ interface SkeletonScreenProps {
 }
 
 export default function SkeletonScreen({
-  locationName,
-  onLocationPress,
-  hasMultipleLocations,
   onSettingsPress,
   savedLocations,
   activeLocationId,
@@ -31,9 +25,6 @@ export default function SkeletonScreen({
     <SafeAreaView style={styles.container}>
       <ScrollView>
         <AppHeader
-          location={locationName}
-          onLocationPress={onLocationPress}
-          hasMultipleLocations={hasMultipleLocations}
           onSettingsPress={onSettingsPress}
           savedLocations={savedLocations}
           activeLocationId={activeLocationId}

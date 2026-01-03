@@ -14,6 +14,7 @@ import { i18n } from "../localization/i18n";
 import { styles } from "./AddLocationScreen.Styles";
 import { CityResult, searchCities, formatLocationName } from "../utils/geocoding";
 import { useLocationStore } from "../store/useLocationStore";
+import { useLanguageStore } from "../store/useLanguageStore";
 import { logger } from "../utils/logger";
 import { AppError, toAppError } from "../utils/errors";
 import { AddLocationContent } from "../components/AddLocation/AddLocationContent";
@@ -31,6 +32,7 @@ const AddLocationScreen = ({ visible, onClose }: AddLocationScreenProps) => {
   const slideAnim = useRef(new Animated.Value(300)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const selectedLanguage = useLanguageStore((state) => state.selectedLanguage);
 
   const addLocation = useLocationStore((state) => state.addLocation);
   const canAddMoreLocations = useLocationStore((state) => state.canAddMoreLocations());
@@ -86,7 +88,8 @@ const AddLocationScreen = ({ visible, onClose }: AddLocationScreenProps) => {
 
     searchTimeoutRef.current = setTimeout(async () => {
       try {
-        const results = await searchCities(searchQuery);
+        const locale = selectedLanguage || 'en';
+        const results = await searchCities(searchQuery, locale);
         setSearchResults(results);
         setError(null); // Clear any previous errors
       } catch (err) {

@@ -9,8 +9,8 @@ import {
   toAppError,
   AppError,
 } from '../utils/errors';
+import { useLanguageStore } from '../store/useLanguageStore';
 import { showErrorAlert, openDeviceSettings } from '../components/ErrorAlert/ErrorAlert';
-import { parseLocationName } from '../utils/locationNameParser';
 
 /**
  * Custom hook to handle GPS location fetching, permissions, and reverse geocoding
@@ -19,6 +19,7 @@ import { parseLocationName } from '../utils/locationNameParser';
 export function useGPSLocation() {
   const updateGPSLocation = useLocationStore((state) => state.updateGPSLocation);
   const [gpsError, setGpsError] = useState<AppError | null>(null);
+  const selectedLanguage = useLanguageStore((state) => state.selectedLanguage);
 
   useEffect(() => {
     const fetchGPS = async () => {
@@ -42,12 +43,12 @@ export function useGPSLocation() {
           accuracy: Location.Accuracy.Balanced,
         });
 
-        // Get clean location name using Expo's reverse geocoding with smart parsing
-        let name: string;
+        // Get clean location name using Expo's reverse geocoding
+        let name: string = 'Current Location';
         try {
           const locationInfo = await Location.reverseGeocodeAsync(location.coords);
-          name = parseLocationName(locationInfo);
-          logger.debug('Location name parsed:', name);
+          name = locationInfo[0]?.city || locationInfo[0]?.name || 'Current Location';
+          logger.debug('Location name from Expo reverse geocoding:', name);
         } catch (geocodeError) {
           // Fallback to generic name if reverse geocoding fails
           logger.warn('Reverse geocoding failed, using fallback:', geocodeError);
@@ -91,7 +92,7 @@ export function useGPSLocation() {
     };
 
     fetchGPS();
-  }, [updateGPSLocation]);
+  }, [updateGPSLocation, selectedLanguage]);
 
   return { gpsError };
 }

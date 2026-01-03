@@ -2,19 +2,24 @@ import React from 'react';
 import { Text, Pressable, StyleSheet, ActivityIndicator } from 'react-native';
 import { palette } from '../../Styles/Palette';
 import type { SavedLocation } from '../../store/useLocationStore';
+import { useLanguageStore } from '../../store/useLanguageStore';
 
 interface LocationPillProps {
   location: SavedLocation;
   isActive: boolean;
   hasData: boolean;
   onPress: () => void;
+  opacity?: number;
 }
 
 /**
  * Individual location pill button
  * Shows location name with active/inactive styling
+ * Memoized to prevent unnecessary re-renders
  */
-const LocationPill = ({ location, isActive, hasData, onPress }: LocationPillProps) => {
+const LocationPill = React.memo(({ location, isActive, hasData, onPress, opacity = 1 }: LocationPillProps) => {
+  const isRTL = useLanguageStore((state) => state.isRTL);
+
   // Display location name with "(GPS)" appended for GPS location
   const displayName = location.isGPS ? `${location.name} (GPS)` : location.name.split(',')[0];
 
@@ -22,8 +27,10 @@ const LocationPill = ({ location, isActive, hasData, onPress }: LocationPillProp
     <Pressable
       style={({ pressed }) => [
         styles.pill,
+        isRTL && styles.pillRTL,
         isActive && styles.pillActive,
         pressed && styles.pillPressed,
+        { opacity },
       ]}
       onPress={onPress}
     >
@@ -34,12 +41,20 @@ const LocationPill = ({ location, isActive, hasData, onPress }: LocationPillProp
         <ActivityIndicator
           size="small"
           color={isActive ? palette.primaryDark : palette.textColor}
-          style={styles.loader}
+          style={[styles.loader, isRTL && styles.loaderRTL]}
         />
       )}
     </Pressable>
   );
-};
+}, (prevProps, nextProps) => {
+  // Return true if props are equal (component should NOT re-render)
+  return (
+    prevProps.location.id === nextProps.location.id &&
+    prevProps.isActive === nextProps.isActive &&
+    prevProps.hasData === nextProps.hasData &&
+    prevProps.opacity === nextProps.opacity
+  );
+});
 
 const styles = StyleSheet.create({
   pill: {
@@ -52,6 +67,11 @@ const styles = StyleSheet.create({
     borderColor: palette.textColor + '60', // 60% opacity border
     flexDirection: 'row',
     alignItems: 'center',
+  },
+  pillRTL: {
+    flexDirection: 'row-reverse',
+    marginRight: 0,
+    marginLeft: 8,
   },
   pillActive: {
     backgroundColor: palette.highlightColor,
@@ -70,6 +90,10 @@ const styles = StyleSheet.create({
   },
   loader: {
     marginLeft: 6,
+  },
+  loaderRTL: {
+    marginLeft: 0,
+    marginRight: 6,
   },
 });
 

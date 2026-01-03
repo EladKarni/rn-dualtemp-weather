@@ -4,6 +4,7 @@ import LocationDropdown from '../components/LocationDropdown/LocationDropdown';
 import SettingsScreen from './SettingsScreen';
 import AddLocationScreen from './AddLocationScreen';
 import type { Weather } from '../types/WeatherTypes';
+import type { AppError } from '../utils/errors';
 import type { Moment } from 'moment';
 import type { SavedLocation } from '../store/useLocationStore';
 import type { LocationWeatherState } from '../hooks/useMultiLocationWeather';
@@ -27,6 +28,10 @@ interface MainWeatherWithModalsProps {
   activeLocationId: string | null;
   locationLoadingStates: Map<string, LocationWeatherState>;
   onLocationSelect: (id: string) => void;
+  appError?: AppError | null;
+  onRetry?: () => void;
+  onDismissError?: () => void;
+  lastUpdated?: Date;
 }
 
 /**
@@ -52,6 +57,10 @@ export default function MainWeatherWithModals({
   activeLocationId,
   locationLoadingStates,
   onLocationSelect,
+  appError,
+  onRetry,
+  onDismissError,
+  lastUpdated,
 }: MainWeatherWithModalsProps) {
   return (
     <>
@@ -59,9 +68,6 @@ export default function MainWeatherWithModals({
         forecast={forecast}
         date={date}
         tempScale={tempScale}
-        locationName={locationName}
-        onLocationPress={onLocationPress}
-        hasMultipleLocations={hasMultipleLocations}
         onSettingsPress={onSettingsPress}
         refreshing={refreshing}
         onRefresh={onRefresh}
@@ -71,6 +77,10 @@ export default function MainWeatherWithModals({
         activeLocationId={activeLocationId}
         locationLoadingStates={locationLoadingStates}
         onLocationSelect={onLocationSelect}
+        appError={appError}
+        onRetry={onRetry}
+        onDismissError={onDismissError}
+        lastUpdated={lastUpdated}
       />
 
       <LocationDropdown
