@@ -8,6 +8,7 @@ import {
   TimeoutError,
   toAppError
 } from "./errors";
+import { fetchWithTimeout, handleFetchError, mapHttpError } from "./httpClient";
 
 export interface CityResult {
   name: string;
@@ -18,59 +19,27 @@ export interface CityResult {
   state?: string;
 }
 
-export const searchCities = async (query: string): Promise<CityResult[]> => {
+export const searchCities = async (query: string, locale: string = 'en'): Promise<CityResult[]> => {
   if (!query || query.trim().length < 3) {
     return [];
   }
 
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
-
-    const response = await fetch(
-      `${base_url}search-cities?q=${encodeURIComponent(query.trim())}&limit=5`,
-      { signal: controller.signal }
+    const response = await fetchWithTimeout(
+      `${base_url}search-cities?q=${encodeURIComponent(query.trim())}&limit=5&lang=${locale}`,
+      10000
     );
 
-    clearTimeout(timeoutId);
-
     if (!response.ok) {
-      // Map HTTP status codes to specific errors
-      if (response.status === 400) {
-        throw new BadRequestError('Invalid search query');
-      }
-      if (response.status >= 500) {
-        throw new ServerError(response.status);
-      }
-
-      throw new ApiError(`Search failed: ${response.status}`, response.status);
+      throw mapHttpError(response.status, 'Invalid search query');
     }
 
     const data = await response.json();
     return data as CityResult[];
 
-  } catch (error: any) {
-    // Handle abort/timeout
-    if (error.name === 'AbortError') {
-      logger.error("Search timeout:", error);
-      throw new TimeoutError();
-    }
-
-    // Handle network errors
-    if (error instanceof TypeError) {
-      logger.error("Network error searching cities:", error);
-      throw new NetworkError('Network request failed');
-    }
-
-    // Re-throw AppErrors as-is
-    if (error instanceof ApiError) {
-      logger.error("API error searching cities:", error);
-      throw error;
-    }
-
-    // Convert unknown errors
-    logger.error("Unknown error searching cities:", error);
-    throw toAppError(error);
+  } catch (error) {
+    logger.error("Error searching cities:", error);
+    handleFetchError(error);
   }
 };
 
@@ -145,7 +114,8 @@ function getCacheKey(lat: number, lon: number): string {
  */
 export const reverseGeocode = async (
   latitude: number,
-  longitude: number
+  longitude: number,
+  locale: string = 'en'
 ): Promise<ReverseGeocodeResult> => {
   const cacheKey = getCacheKey(latitude, longitude);
   const cached = reverseGeocodeCache.get(cacheKey);
@@ -157,25 +127,13 @@ export const reverseGeocode = async (
   }
 
   try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
-
-    const response = await fetch(
-      `${base_url}reverse-geocode?lat=${latitude}&lon=${longitude}`,
-      { signal: controller.signal }
+    const response = await fetchWithTimeout(
+      `${base_url}reverse-geocode?lat=${latitude}&lon=${longitude}&lang=${locale}`,
+      10000
     );
 
-    clearTimeout(timeoutId);
-
     if (!response.ok) {
-      if (response.status === 400) {
-        throw new BadRequestError('Invalid coordinates');
-      }
-      if (response.status >= 500) {
-        throw new ServerError(response.status);
-      }
-
-      throw new ApiError(`Reverse geocode failed: ${response.status}`, response.status);
+      throw mapHttpError(response.status, 'Invalid coordinates');
     }
 
     const data = await response.json();
@@ -207,31 +165,12 @@ export const reverseGeocode = async (
       timestamp: Date.now(),
     });
 
-    logger.debug('Reverse geocode successful:', result.name);
+    logger.debug('Reverse geocode successful:', result.name, 'for locale:', locale);
     return result;
 
-  } catch (error: any) {
-    // Handle abort/timeout
-    if (error.name === 'AbortError') {
-      logger.error("Reverse geocode timeout:", error);
-      throw new TimeoutError();
-    }
-
-    // Handle network errors
-    if (error instanceof TypeError) {
-      logger.error("Network error in reverse geocode:", error);
-      throw new NetworkError('Network request failed');
-    }
-
-    // Re-throw AppErrors as-is
-    if (error instanceof ApiError) {
-      logger.error("API error in reverse geocode:", error);
-      throw error;
-    }
-
-    // Convert unknown errors
-    logger.error("Unknown error in reverse geocode:", error);
-    throw toAppError(error);
+  } catch (error) {
+    logger.error("Error in reverse geocode:", error);
+    handleFetchError(error);
   }
 };
 
