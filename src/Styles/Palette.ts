@@ -1,8 +1,9 @@
 export const palette = {
-  textColor: '#fff',
-  highlightColor: '#EAEAF3',
-  primaryColor: '#3621DC',
-  primaryLight: '#6B58FF',
-  primaryDark: '#1C1B4D',
-  shadowLight: '#715ef5',
+  textColor: "#fff",
+  textColorSecondary: "#a19ad8ff",
+  highlightColor: "#EAEAF3",
+  primaryColor: "#3621dcff",
+  primaryLight: "#6B58FFFF",
+  primaryDark: "#1C1B4DFF",
+  shadowLight: "#715EF5FF",
 };

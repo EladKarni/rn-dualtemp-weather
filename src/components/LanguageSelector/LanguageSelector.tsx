@@ -7,6 +7,7 @@ export const LanguageSelector = () => {
   const [isExpanded, setIsExpanded] = useState(false);
   const selectedLanguage = useLanguageStore((state) => state.selectedLanguage);
   const setLanguage = useLanguageStore((state) => state.setLanguage);
+  const isRTL = useLanguageStore((state) => state.isRTL);
 
   const languages = [
     { code: null, name: "Auto-detect", nativeName: "Auto-detect" },
@@ -28,6 +29,11 @@ export const LanguageSelector = () => {
     return selected ? selected.nativeName : "Auto-detect";
   };
 
+  const getDropdownArrow = () => {
+    // Arrow indicates expand/collapse state - same for all languages
+    return isExpanded ? "▲" : "▼";
+  };
+
   return (
     <View>
       <TouchableOpacity
@@ -36,7 +42,7 @@ export const LanguageSelector = () => {
         activeOpacity={0.7}
       >
         <Text style={styles.dropdownButtonText}>{getSelectedLanguageName()}</Text>
-        <Text style={styles.dropdownArrow}>{isExpanded ? "▲" : "▼"}</Text>
+        <Text style={styles.dropdownArrow}>{getDropdownArrow()}</Text>
       </TouchableOpacity>
 
       {isExpanded && (
@@ -55,7 +61,7 @@ export const LanguageSelector = () => {
                 ]}
                 onPress={() => handleLanguageSelect(lang.code)}
               >
-                <View style={styles.languageInfo}>
+                <View style={[styles.languageInfo, isRTL && styles.languageInfoRTL]}>
                   {isSelected && <Text style={styles.checkmark}>✓</Text>}
                   <Text style={styles.languageName}>{lang.nativeName}</Text>
                 </View>

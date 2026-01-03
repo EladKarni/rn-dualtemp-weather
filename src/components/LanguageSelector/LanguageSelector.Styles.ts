@@ -45,6 +45,9 @@ export const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
+  languageInfoRTL: {
+    flexDirection: "row-reverse",
+  },
   checkmark: {
     fontSize: 16,
     fontWeight: "bold",

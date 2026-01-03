@@ -6,5 +6,10 @@ export const typography = StyleSheet.create({
     fontFamily: 'DMSans_500Medium',
     lineHeight: 29,
     color: palette.textColor,
+  },
+  footerText: {
+    fontFamily: 'DMSans_500Medium',
+    lineHeight: 22,
+    color: palette.textColorSecondary,
   }
 })
