@@ -1,13 +1,5 @@
 import { base_url } from "./fetchWeather";
 import { logger } from "./logger";
-import {
-  ApiError,
-  ServerError,
-  BadRequestError,
-  NetworkError,
-  TimeoutError,
-  toAppError
-} from "./errors";
 import { fetchWithTimeout, handleFetchError, mapHttpError } from "./httpClient";
 
 export interface CityResult {

@@ -1,4 +1,4 @@
-import React from 'react';
+
 import { Alert, Platform, Linking } from 'react-native';
 import { AppError } from '../../utils/errors';
 import { i18n } from '../../localization/i18n';

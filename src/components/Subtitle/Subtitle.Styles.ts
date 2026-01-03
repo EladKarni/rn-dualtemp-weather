@@ -1,6 +1,5 @@
 import { StyleSheet } from "react-native";
 import { palette } from "../../Styles/Palette";
-import Subtitle from "./Subtitle";
 
 export const SubTitleStyles = StyleSheet.create({
   subtitle: {

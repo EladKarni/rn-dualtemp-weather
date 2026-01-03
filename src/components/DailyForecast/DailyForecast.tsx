@@ -4,7 +4,7 @@ import Subtitle from '../Subtitle/Subtitle';
 
 import { View } from 'react-native'
 import { DailyEntity } from '../../types/WeatherTypes';
-import { DailyForecastItemStyles, DailyForecastStyles } from './DailyForecast.Styles';
+import { DailyForecastStyles } from './DailyForecast.Styles';
 import { i18n } from "../../localization/i18n";
 import { useLanguageStore } from '../../store/useLanguageStore';
 
@@ -14,7 +14,6 @@ type DailyForecastProps = {
 
 const DailyForecast = ({ dailyForecast }: DailyForecastProps) => {
   const [currentlySelectedIndex, setCurrentlySelectedIndex] = useState(0)
-  const isRTL = useLanguageStore((state) => state.isRTL)
 
   const setSelectedIndex = (index: number) => {
     index !== currentlySelectedIndex
