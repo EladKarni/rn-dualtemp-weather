@@ -6,9 +6,6 @@ import type { SavedLocation } from '../store/useLocationStore';
 import type { LocationWeatherState } from '../hooks/useMultiLocationWeather';
 
 interface ErrorScreenProps {
-  locationName: string;
-  onLocationPress: () => void;
-  hasMultipleLocations: boolean;
   onSettingsPress: () => void;
   errorMessage?: string;
   onRetry: () => void;
@@ -19,9 +16,6 @@ interface ErrorScreenProps {
 }
 
 export default function ErrorScreen({
-  locationName,
-  onLocationPress,
-  hasMultipleLocations,
   onSettingsPress,
   errorMessage = 'Unable to fetch weather data. Please check your connection and try again.',
   onRetry,
@@ -34,9 +28,6 @@ export default function ErrorScreen({
     <SafeAreaView style={styles.container}>
       <View style={styles.errorContainer}>
         <AppHeader
-          location={locationName}
-          onLocationPress={onLocationPress}
-          hasMultipleLocations={hasMultipleLocations}
           onSettingsPress={onSettingsPress}
           savedLocations={savedLocations}
           activeLocationId={activeLocationId}
