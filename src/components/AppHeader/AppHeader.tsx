@@ -1,51 +1,47 @@
-import React, { useContext } from "react";
-import { View, Text, Image, StyleSheet, TouchableOpacity } from "react-native";
-import { WeatherIconStyles } from "../WeatherIcon/WeatherIcon.Styles";
-import { typography } from "../../Styles/Typography";
+import React from "react";
+import { View, StyleSheet, TouchableOpacity } from "react-native";
 import { palette } from "../../Styles/Palette";
-import { AppStateContext } from "../../utils/AppStateContext";
-import { storeAsyncStorage } from "../../utils/AsyncStorageHelper";
-import { i18n } from "../../localization/i18n";
+import GearIcon from "../GearIcon/GearIcon";
+import LocationPills from "../LocationPills/LocationPills";
+import type { SavedLocation } from "../../store/useLocationStore";
+import type { LocationWeatherState } from "../../hooks/useMultiLocationWeather";
+import { useLanguageStore } from "../../store/useLanguageStore";
 
-type AppHeaderPropTypes = {
-  location: string;
+type AppHeaderProps = {
+  onSettingsPress: () => void;
+  savedLocations: SavedLocation[];
+  activeLocationId: string | null;
+  locationLoadingStates: Map<string, LocationWeatherState>;
+  onLocationSelect: (id: string) => void;
 };
 
-const AppHeader = ({ location }: AppHeaderPropTypes) => {
-  const context = useContext(AppStateContext);
-  const tempScale = context?.tempScale;
-  const setTempScale = context?.updateTempScale;
-
-  const _onPressHandler = () => {
-    const savedTemp = tempScale === "F" ? "C" : "F";
-    tempScale !== undefined &&
-      storeAsyncStorage("@selected_temp_scale", savedTemp);
-    setTempScale();
-  };
+const AppHeader = ({
+  onSettingsPress,
+  savedLocations,
+  activeLocationId,
+  locationLoadingStates,
+  onLocationSelect,
+}: AppHeaderProps) => {
+  const isRTL = useLanguageStore((state) => state.isRTL);
 
   return (
-    <View style={styles.headerContainer}>
-      <View style={styles.mainHeaderTitle}>
-        <Text style={[typography.headerText, styles.containerHeaderText]}>
-          {i18n.t("Title")}
-        </Text>
-        <View style={[styles.locationHeader]}>
-          <Text style={[typography.headerText, styles.locationText]}>
-            {location}
-          </Text>
-          <Image
-            source={require("../../../assets/Images/locationIcon.png")}
-            style={WeatherIconStyles.iconTiny}
-          />
-        </View>
+    <View style={[styles.headerContainer, isRTL && styles.headerContainerRTL]}>
+      <View style={[styles.locationPillsWrapper, isRTL && styles.locationPillsWrapperRTL]}>
+        <LocationPills
+          savedLocations={savedLocations}
+          activeLocationId={activeLocationId}
+          onLocationSelect={onLocationSelect}
+          locationLoadingStates={locationLoadingStates}
+        />
       </View>
+
+      {/* Settings gear icon with dedicated space */}
       <TouchableOpacity
-        onPress={_onPressHandler}
-        style={styles.defaultScaleSwitch}
+        onPress={onSettingsPress}
+        style={[styles.settingsButton, isRTL && styles.settingsButtonRTL]}
+        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
       >
-        <Text style={styles.selectedScaleText}>
-          {tempScale?.toUpperCase() || "C"}
-        </Text>
+        <GearIcon size={28} color={palette.primaryLight} />
       </TouchableOpacity>
     </View>
   );
@@ -57,43 +53,36 @@ const styles = StyleSheet.create({
     display: "flex",
     flexDirection: "row",
     justifyContent: "center",
+    alignItems: "center",
+    paddingTop: 10,
+    paddingBottom: 15,
+    paddingLeft: 20, // Match app margins
   },
-  mainHeaderTitle: {
-    position: "relative",
+  headerContainerRTL: {
+    flexDirection: "row-reverse",
+    paddingLeft: 20, // Give space for gear icon on left in RTL
+    paddingRight: 20, // Match app margins
   },
-  containerHeaderText: {
-    fontSize: 20,
-    textAlign: "center",
-  },
-  locationText: {
-    paddingHorizontal: 5,
-  },
-  locationHeader: {
-    display: "flex",
-    flexDirection: "row",
-    margin: "auto",
-    height: 30,
-    marginBottom: 15,
-    paddingHorizontal: 10,
+  locationPillsWrapper: {
+    flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    paddingRight: 60, // Give space for gear icon
   },
-  defaultScaleSwitch: {
+  locationPillsWrapperRTL: {
+    paddingRight: 0,
+    paddingLeft: 60, // Give space for gear icon on left in RTL
+  },
+  settingsButton: {
     position: "absolute",
-    borderColor: palette.primaryLight,
-    borderWidth: 5,
-    borderRadius: 15,
-    paddingVertical: 5,
-    width: 50,
-    top: 4,
     right: 20,
+    paddingHorizontal: 8,
   },
-  selectedScaleText: {
-    color: palette.textColor,
-    fontWeight: "bold",
-    fontSize: 26,
-    textAlign: "center",
+  settingsButtonRTL: {
+    right: undefined,
+    left: 20,
   },
+
 });
 
 export default AppHeader;

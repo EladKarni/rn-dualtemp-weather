@@ -1,4 +1,5 @@
 import * as Location from 'expo-location';
+import { logger } from './logger';
 
 export const fetchGPSLocation = async () : Promise<Location.LocationObject> => {
   let { status } = await Location.requestForegroundPermissionsAsync();
@@ -7,6 +8,6 @@ export const fetchGPSLocation = async () : Promise<Location.LocationObject> => {
       }
 
       let location = await Location.getCurrentPositionAsync({});
-      console.log(location, "Location fetched");
+      logger.debug("Location fetched:", location);
       return location;
 };

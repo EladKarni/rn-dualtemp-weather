@@ -17,6 +17,7 @@ const DailyExpandedFeelInfo = ({ temp, label }: DailyExpandedFeelInfoPropTypes) 
                     temp={temp}
                     tempStyleC={TempTextStyleTypes.DAILY}
                     degree
+                    divider
                 />
             </View>
         </View>

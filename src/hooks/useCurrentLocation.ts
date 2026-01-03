@@ -7,6 +7,7 @@ import {
 } from "expo-location";
 import { useState, useEffect } from "react";
 import { Alert, Linking } from "react-native";
+import { logger } from "../utils/logger";
 
 export function useCurrentLocation() {
   const [location, setLocation] = useState<LocationObject | null>(null);
@@ -46,7 +47,7 @@ const startBackgroundTracking = async () => {
     try {
       await requestBackgroundPermissionsAsync();
     } catch (error) {
-      console.error("Error requesting background permissions:", error);
+      logger.error("Error requesting background permissions:", error);
     }
   }
   return status;

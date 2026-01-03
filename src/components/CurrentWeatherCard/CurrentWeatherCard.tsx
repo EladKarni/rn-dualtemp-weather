@@ -10,30 +10,35 @@ import { CurrentWeatherStyles } from './CurrentWeatherCard.Styles'
 import CardHeader from '../CardHeader/CardHeader';
 import CardFooter from '../CardFooter/CardFooter';
 import DualTempText from '../TempText/DualTempText';
+import { useLanguageStore } from '../../store/useLanguageStore';
 
-type CurrentWeatherPropsType = {
+type CurrentWeatherProps = {
     temp: number;
     weather: WeatherEntity;
 }
 
-const CurrentWeather = ({ temp, weather }: CurrentWeatherPropsType) => {
+const CurrentWeatherCard = ({ temp, weather }: CurrentWeatherProps) => {
+    const isRTL = useLanguageStore(state => state.isRTL);
+
     return (
-        <Card cardType={CardStyleTypes.MAIN} >
-            <CardHeader />
-            <View style={CurrentWeatherStyles.mainArea}>
-                <WeatherIcon icon={displayWeatherIcon(weather?.icon)} iconSize={IconSizeTypes.LARGE} disc={weather.description} />
-                <View style={CurrentWeatherStyles.tempArea}>
-                    <DualTempText
-                        temp={temp}
-                        tempStyleC={TempTextStyleTypes.MAIN}
-                        tempStyleF={TempTextStyleTypes.SECONDARY}
-                        degree
-                    />
+        <>
+            <Card cardType={CardStyleTypes.MAIN} >
+                <CardHeader />
+                <View style={[CurrentWeatherStyles.mainArea, isRTL && CurrentWeatherStyles.mainAreaRTL]}>
+                    <WeatherIcon icon={displayWeatherIcon(weather?.icon)} iconSize={IconSizeTypes.LARGE} disc={weather.description} />
+                    <View style={CurrentWeatherStyles.tempArea}>
+                        <DualTempText
+                            temp={temp}
+                            tempStyleC={TempTextStyleTypes.MAIN}
+                            tempStyleF={TempTextStyleTypes.SECONDARY}
+                            degree
+                        />
+                    </View>
                 </View>
-            </View>
-            <CardFooter />
-        </Card>
+                <CardFooter />
+            </Card>
+        </>
     )
 };
 
-export default CurrentWeather;
+export default CurrentWeatherCard;

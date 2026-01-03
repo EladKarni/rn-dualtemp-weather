@@ -8,5 +8,4 @@ export type AppStateProviderPropTypes = {
   forecast: Weather | undefined;
   date: Moment;
   tempScale: string;
-  updateTempScale: () => void;
 }
