@@ -3,13 +3,14 @@ import { View, Text, TouchableOpacity } from 'react-native'
 import { DailyEntity } from '../../types/WeatherTypes';
 import { DailyForecastItemStyles } from './DailyForecast.Styles';
 import Card, { CardStyleTypes } from '../Card/Card';
-import moment from 'moment'
 import WeatherIcon, { IconSizeTypes } from '../WeatherIcon/WeatherIcon';
 import { displayWeatherIcon } from '../../utils/Images';
-import TempText, { TempTextStyleTypes } from '../TempText/TempText';
+import { TempTextStyleTypes } from '../TempText/TempText';
 import DailyForecastExpanded from './DailyForecastExpanded';
 import DualTempText from '../TempText/DualTempText';
 import PopType from "../PopType/PopType";
+import { formatDayName } from '../../utils/dateFormatting';
+import { useLanguageStore } from '../../store/useLanguageStore';
 
 type DailyForecastItemPropTypes = {
   day: DailyEntity;
@@ -24,6 +25,7 @@ const DailyForecastItem = ({
   setSelected,
   currSelected,
 }: DailyForecastItemPropTypes) => {
+  const isRTL = useLanguageStore((state) => state.isRTL);
   const percpType = day?.snow ? "❄" : "💧";
 
   return (
@@ -32,12 +34,12 @@ const DailyForecastItem = ({
         index === currSelected ? CardStyleTypes.DAILYXL : CardStyleTypes.DAILY
       }
     >
-      <TouchableOpacity onPress={() => setSelected(index)} style={{paddingHorizontal: 10, paddingBottom: 10}}>
-        <View style={DailyForecastItemStyles.dailyItemHeader}>
+      <TouchableOpacity onPress={() => setSelected(index)} style={DailyForecastItemStyles.container}>
+        <View style={[DailyForecastItemStyles.dailyItemHeader, isRTL && DailyForecastItemStyles.dailyItemHeaderRTL]}>
           <Text style={DailyForecastItemStyles.dayText}>
-            {moment.unix(day.dt).format("dddd")}
+            {formatDayName(day.dt)}
           </Text>
-          <View style={DailyForecastItemStyles.tempIconContainer}>
+          <View style={[DailyForecastItemStyles.tempIconContainer, isRTL && DailyForecastItemStyles.tempIconContainerRTL]}>
             <PopType pop={day.pop} percType={percpType} />
             <View style={DailyForecastItemStyles.tempContainer}>
               <DualTempText

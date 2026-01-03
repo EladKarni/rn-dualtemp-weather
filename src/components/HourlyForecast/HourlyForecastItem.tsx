@@ -2,7 +2,6 @@ import React, { useContext } from 'react';
 import WeatherIcon, { IconSizeTypes } from '../WeatherIcon/WeatherIcon';
 import { View, Text, StyleSheet } from 'react-native';
 import { displayWeatherIcon } from '../../utils/Images';
-import moment from 'moment';
 import { TempTextStyleTypes } from '../TempText/TempText';
 import Card, { CardStyleTypes } from '../Card/Card';
 import { HourlyForecastItemStyles } from './HourlyForecast.Styles';
@@ -10,6 +9,8 @@ import DualTempText from '../TempText/DualTempText';
 import { AppStateContext } from '../../utils/AppStateContext';
 import PopType from "../PopType/PopType";
 import { i18n } from "../../localization/i18n";
+import { formatTime } from '../../utils/dateFormatting';
+import { convertWindSpeed } from '../../utils/temperature';
 
 interface HourlyForecastItemProps {
   temp: number;
@@ -31,18 +32,17 @@ const HourlyForecastItem = ({
   percType,
 }: HourlyForecastItemProps) => {
   const context = useContext(AppStateContext);
-  const tempScale = context?.tempScale ?? 'C';
-  const wind_speed =
-    tempScale === "C"
-      ? `${(wind * 3.6).toFixed(0)}`
-      : `${(wind * 2.23694).toFixed(0)}`;
-  const wind_speed_scale =
-    tempScale === "C" ? i18n.t("SpeedInfo") : i18n.t("SpeedInfoImp");
+  const tempScale = (context?.tempScale ?? 'C') as 'C' | 'F';
+
+  // Use centralized wind speed conversion
+  const { value: windSpeedValue, unit: windSpeedUnit } = convertWindSpeed(wind, tempScale);
+  const wind_speed = windSpeedValue.toFixed(0);
+  const wind_speed_scale = windSpeedUnit;
   return (
     <Card cardType={CardStyleTypes.HOURLY}>
       <View style={HourlyForecastItemStyles.HourlyItem}>
         <Text style={HourlyForecastItemStyles.HourText}>
-          {moment.unix(dt).format("LT").toUpperCase()}
+          {formatTime(dt)}
         </Text>
         <PopType pop={pop} percType={percType} />
         <View style={HourlyForecastItemStyles.HourWindInfo}>

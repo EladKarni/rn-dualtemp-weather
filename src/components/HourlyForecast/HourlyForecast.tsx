@@ -7,17 +7,21 @@ import { HourlyForecastStyles } from './HourlyForecast.Styles';
 
 import { HourlyEntity } from '../../types/WeatherTypes';
 import { i18n } from "../../localization/i18n";
+import { useLanguageStore } from '../../store/useLanguageStore';
 
-type HourlyForecastPropsType = {
+type HourlyForecastProps = {
   hourlyForecast?: HourlyEntity[];
 };
 
-const HourlyForecast = (props: HourlyForecastPropsType) => {
+const HourlyForecast = (props: HourlyForecastProps) => {
+  const isRTL = useLanguageStore((state) => state.isRTL);
+
   return (
     <View style={HourlyForecastStyles.container}>
       <Subtitle text={i18n.t("HourlyTitle")} />
       <FlatList
         horizontal
+        inverted={isRTL}
         data={props.hourlyForecast}
         keyExtractor={(item, index) => index.toString()}
         renderItem={(hour) => {
