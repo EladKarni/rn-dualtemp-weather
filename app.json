@@ -71,7 +71,6 @@
       "buildNumber": "1.2.2"
     },
     "android": {
-      "versionCode": 12,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#1C1B4D"
