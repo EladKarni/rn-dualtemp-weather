@@ -8,6 +8,7 @@ import { HourlyForecastStyles } from './HourlyForecast.Styles';
 import { HourlyEntity } from '../../types/WeatherTypes';
 import { i18n } from "../../localization/i18n";
 import { useLanguageStore } from '../../store/useLanguageStore';
+import { useScrollPositionReset } from '../../hooks/useScrollPositionReset';
 
 type HourlyForecastProps = {
   hourlyForecast?: HourlyEntity[];
@@ -15,15 +16,18 @@ type HourlyForecastProps = {
 
 const HourlyForecast = (props: HourlyForecastProps) => {
   const isRTL = useLanguageStore((state) => state.isRTL);
+  const { flatListRef, handleScrollToIndexFailed } = useScrollPositionReset(props.hourlyForecast);
 
   return (
     <View style={HourlyForecastStyles.container}>
       <Subtitle text={i18n.t("HourlyTitle")} />
       <FlatList
+        ref={flatListRef}
         horizontal
         inverted={isRTL}
         data={props.hourlyForecast}
         keyExtractor={(item, index) => index.toString()}
+        onScrollToIndexFailed={handleScrollToIndexFailed}
         renderItem={(hour) => {
           const percpType = hour.item?.snow ? "❄" : "💧";
           return (
