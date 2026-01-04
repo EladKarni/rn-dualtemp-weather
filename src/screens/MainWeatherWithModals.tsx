@@ -19,11 +19,7 @@ interface MainWeatherWithModalsProps {
   activeModal: 'location' | 'settings' | 'addLocation' | null;
   closeModal: () => void;
   openAddLocation: () => void;
-  locationName: string;
-  onLocationPress: () => void;
-  hasMultipleLocations: boolean;
   onSettingsPress: () => void;
-  fetchedLocaleSuccessfully: boolean;
   savedLocations: SavedLocation[];
   activeLocationId: string | null;
   locationLoadingStates: Map<string, LocationWeatherState>;
@@ -48,11 +44,7 @@ export default function MainWeatherWithModals({
   activeModal,
   closeModal,
   openAddLocation,
-  locationName,
-  onLocationPress,
-  hasMultipleLocations,
   onSettingsPress,
-  fetchedLocaleSuccessfully,
   savedLocations,
   activeLocationId,
   locationLoadingStates,
@@ -72,7 +64,6 @@ export default function MainWeatherWithModals({
         refreshing={refreshing}
         onRefresh={onRefresh}
         onLayoutRootView={onLayoutRootView}
-        fetchedLocaleSuccessfully={fetchedLocaleSuccessfully}
         savedLocations={savedLocations}
         activeLocationId={activeLocationId}
         locationLoadingStates={locationLoadingStates}

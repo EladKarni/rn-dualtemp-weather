@@ -1,4 +1,4 @@
-import { createContext, Dispatch, SetStateAction } from 'react';
+import { createContext } from 'react';
 import { Weather } from '../types/WeatherTypes';
 import { Moment } from 'moment';
 

@@ -8,7 +8,6 @@ import { HourlyForecastItemStyles } from './HourlyForecast.Styles';
 import DualTempText from '../TempText/DualTempText';
 import { AppStateContext } from '../../utils/AppStateContext';
 import PopType from "../PopType/PopType";
-import { i18n } from "../../localization/i18n";
 import { useTimeFormatting } from '../../utils/dateFormatting';
 import { convertWindSpeed } from '../../utils/temperature';
 
@@ -17,7 +16,6 @@ interface HourlyForecastItemProps {
   dt: number;
   icon: string;
   pop: number;
-  desc: string;
   wind: number;
   percType?: string;
 }
@@ -27,7 +25,6 @@ const HourlyForecastItem = ({
   dt,
   icon,
   pop,
-  desc,
   wind,
   percType,
 }: HourlyForecastItemProps) => {

@@ -1,4 +1,3 @@
-import { Alert } from "react-native";
 import { Weather } from "../types/WeatherTypes";
 import { logger } from "./logger";
 import {

@@ -57,8 +57,8 @@ const TemperatureChart = ({ feelsLike, cardWidth }: TemperatureChartProps) => {
         backgroundGradientFrom: "white",
         backgroundGradientToOpacity: 0,
         decimalPlaces: 0,
-        color: (opacity = 1) => palette.textColor,
-        labelColor: (opacity = 1) => palette.textColor,
+        color: () => palette.textColor,
+        labelColor: () => palette.textColor,
         propsForDots: {
           r: "5",
           strokeWidth: "1",

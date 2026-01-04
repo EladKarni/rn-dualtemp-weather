@@ -1,4 +1,4 @@
-import { View, Text } from 'react-native'
+import { Text } from 'react-native'
 import React from 'react'
 import { TempTextStyles } from './TempText.Styles'
 import { typography } from '../../Styles/Typography';

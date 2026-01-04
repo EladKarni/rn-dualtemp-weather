@@ -1,6 +1,6 @@
 import React, { useContext } from 'react'
 import { Text } from 'react-native'
-import { AppStateContext, AppStateProviderPropTypes } from '../../utils/AppStateContext'
+import { AppStateContext } from '../../utils/AppStateContext'
 import { DailyForecastItemStyles } from '../DailyForecast/DailyForecast.Styles'
 import TempText, { TempTextStyleTypes } from './TempText'
 

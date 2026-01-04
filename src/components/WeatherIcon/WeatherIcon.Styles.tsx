@@ -1,11 +1,5 @@
-import { ImageStyle, StyleSheet, TextStyle, ViewStyle } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { typography } from '../../Styles/Typography';
-
-// type Style = {
-//     weatherIconContainer: ViewStyle;
-//     weatherPreview: ImageStyle;
-//     weatherDisc: TextStyle;
-// };
 
 export const WeatherIconStyles = StyleSheet.create({
     weatherIconContainer: {

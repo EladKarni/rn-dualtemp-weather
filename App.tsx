@@ -239,7 +239,6 @@ function App() {
               activeModal={activeModal}
               closeModal={() => useModalStore.getState().closeModal()}
               openAddLocation={openAddLocation}
-              fetchedLocaleSuccessfully={fetchedLocaleSuccessfully}
               savedLocations={savedLocations}
               activeLocationId={activeLocationId}
               locationLoadingStates={locationLoadingStates}

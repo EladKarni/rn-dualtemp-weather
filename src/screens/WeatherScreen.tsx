@@ -24,7 +24,6 @@ interface WeatherScreenProps {
   refreshing: boolean;
   onRefresh: () => void;
   onLayoutRootView?: () => void;
-  fetchedLocaleSuccessfully: boolean;
   savedLocations: SavedLocation[];
   activeLocationId: string | null;
   locationLoadingStates: Map<string, LocationWeatherState>;
@@ -43,7 +42,6 @@ export default function WeatherScreen({
   refreshing,
   onRefresh,
   onLayoutRootView,
-  fetchedLocaleSuccessfully,
   savedLocations,
   activeLocationId,
   locationLoadingStates,
@@ -113,6 +111,7 @@ export default function WeatherScreen({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    marginTop: 10,
     backgroundColor: palette.primaryDark,
   },
 });

@@ -32,7 +32,7 @@ export const useScrollPositionReset = <T>(data?: T[]) => {
     }
   }, [isRTL, data]);
 
-  const handleScrollToIndexFailed = (info: { index: number; averageItemLength: number }) => {
+  const handleScrollToIndexFailed = () => {
     // Fallback: scroll to offset 0 if index fails
     flatListRef.current?.scrollToOffset({
       offset: 0,

@@ -6,7 +6,6 @@ import { View } from 'react-native'
 import { DailyEntity } from '../../types/WeatherTypes';
 import { DailyForecastStyles } from './DailyForecast.Styles';
 import { i18n } from "../../localization/i18n";
-import { useLanguageStore } from '../../store/useLanguageStore';
 
 type DailyForecastProps = {
   dailyForecast: DailyEntity[];
