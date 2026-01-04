@@ -9,7 +9,7 @@ import DualTempText from '../TempText/DualTempText';
 import { AppStateContext } from '../../utils/AppStateContext';
 import PopType from "../PopType/PopType";
 import { i18n } from "../../localization/i18n";
-import { formatTime } from '../../utils/dateFormatting';
+import { useTimeFormatting } from '../../utils/dateFormatting';
 import { convertWindSpeed } from '../../utils/temperature';
 
 interface HourlyForecastItemProps {
@@ -33,6 +33,7 @@ const HourlyForecastItem = ({
 }: HourlyForecastItemProps) => {
   const context = useContext(AppStateContext);
   const tempScale = (context?.tempScale ?? 'C') as 'C' | 'F';
+  const { formatTime } = useTimeFormatting();
 
   // Use centralized wind speed conversion
   const { value: windSpeedValue, unit: windSpeedUnit } = convertWindSpeed(wind, tempScale);

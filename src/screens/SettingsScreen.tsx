@@ -14,6 +14,7 @@ import { i18n } from "../localization/i18n";
 import { styles } from "./SettingsScreen.Styles";
 import SettingItem from "../components/SettingItem/SettingItem";
 import { TempUnitSelector } from "../components/TempUnitSelector/TempUnitSelector";
+import { ClockFormatSelector } from "../components/ClockFormatSelector/ClockFormatSelector";
 import { LanguageSelector } from "../components/LanguageSelector/LanguageSelector";
 import { LocationList } from "../components/Settings/LocationList";
 import { useLocationStore } from "../store/useLocationStore";
@@ -100,6 +101,9 @@ const SettingsScreen = ({ visible, onClose, onAddLocationPress }: SettingsScreen
               <Text style={styles.sectionTitle}>{i18n.t("Units")}</Text>
               <SettingItem label={i18n.t("TemperatureUnit")}>
                 <TempUnitSelector />
+              </SettingItem>
+              <SettingItem label={i18n.t("TimeFormat")}>
+                <ClockFormatSelector />
               </SettingItem>
             </View>
 

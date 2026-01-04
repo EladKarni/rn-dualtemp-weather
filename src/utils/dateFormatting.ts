@@ -1,5 +1,7 @@
 import moment from 'moment';
 import { logger } from './logger';
+import { uses24HourClock } from 'react-native-localize';
+import { useSettingsStore } from '../store/useSettingsStore';
 
 /**
  * Safe date formatting utility that ensures locale synchronization
@@ -41,6 +43,23 @@ const safeMomentFormat = (
 };
 
 /**
+ * Helper function to get time format string based on clock format preference
+ * @param clockFormat The clock format preference ("12hour", "24hour", or "auto")
+ * @returns The appropriate moment format string
+ */
+const getTimeFormatString = (clockFormat?: "12hour" | "24hour" | "auto"): string => {
+  switch (clockFormat) {
+    case "12hour":
+      return "h:mm A";
+    case "24hour":
+      return "HH:mm";
+    case "auto":
+    default:
+      return uses24HourClock() ? "HH:mm" : "h:mm A";
+  }
+};
+
+/**
  * Formats a day name (Monday, Tuesday, etc.) using the current locale
  */
 export const formatDayName = (timestamp: number): string => {
@@ -49,16 +68,39 @@ export const formatDayName = (timestamp: number): string => {
 
 /**
  * Formats a time in short format (e.g., "3:30 PM") using the current locale
+ * @param timestamp Unix timestamp
+ * @param clockFormat Optional clock format preference
  */
-export const formatTime = (timestamp: number): string => {
-  return safeMomentFormat(timestamp, 'LT', '--:--').toUpperCase();
+export const formatTime = (timestamp: number, clockFormat?: "12hour" | "24hour" | "auto"): string => {
+  const format = getTimeFormatString(clockFormat);
+  return safeMomentFormat(timestamp, format, '--:--').toUpperCase();
 };
 
 /**
  * Formats sunrise/sunset time using the current locale
+ * @param timestamp Unix timestamp
+ * @param clockFormat Optional clock format preference
  */
-export const formatSunTime = (timestamp: number): string => {
-  return safeMomentFormat(timestamp, 'LT', '--:--');
+export const formatSunTime = (timestamp: number, clockFormat?: "12hour" | "24hour" | "auto"): string => {
+  const format = getTimeFormatString(clockFormat);
+  return safeMomentFormat(timestamp, format, '--:--');
+};
+
+/**
+ * React hook for time formatting with reactive clock format updates
+ * Automatically uses the current clock format preference from settings
+ */
+export const useTimeFormatting = () => {
+  const clockFormat = useSettingsStore((state) => state.clockFormat);
+
+  return {
+    formatTime: (timestamp: number): string => {
+      return formatTime(timestamp, clockFormat);
+    },
+    formatSunTime: (timestamp: number): string => {
+      return formatSunTime(timestamp, clockFormat);
+    }
+  };
 };
 
 /**

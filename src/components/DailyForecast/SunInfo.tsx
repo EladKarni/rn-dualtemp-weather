@@ -3,7 +3,7 @@ import { DailyForecastExtendedItemStyles } from "./DailyForecastExtendedItemStyl
 import WeatherIcon, { IconSizeTypes } from "../WeatherIcon/WeatherIcon";
 import { displayWeatherIcon } from "../../utils/Images";
 import { i18n } from "../../localization/i18n";
-import { formatSunTime } from "../../utils/dateFormatting";
+import { useTimeFormatting } from "../../utils/dateFormatting";
 import { useLanguageStore } from "../../store/useLanguageStore";
 
 type SunInfoProps = {
@@ -15,6 +15,7 @@ const SunInfo = ({ time, type }: SunInfoProps) => {
   const iconType = type === 'sunrise' ? '01d' : 'sunset';
   const translationKey = type.charAt(0).toUpperCase() + type.slice(1);
   const isRTL = useLanguageStore((state) => state.isRTL);
+  const { formatSunTime } = useTimeFormatting();
 
   return (
     <View style={[  DailyForecastExtendedItemStyles.InfoSectionTextUnit, isRTL && DailyForecastExtendedItemStyles.InfoSectionTextRTL ]}>
