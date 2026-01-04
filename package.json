@@ -6,7 +6,13 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "eject": "expo eject"
+    "eject": "expo eject",
+    "generate:icons": "node scripts/generate-dev-icons.js",
+    "prebuild:dev": "cross-env EAS_BUILD_PROFILE=development expo prebuild --clean",
+    "prebuild:prod": "cross-env EAS_BUILD_PROFILE=production expo prebuild --clean",
+    "build:dev": "eas build --profile development",
+    "build:preview": "eas build --profile preview",
+    "build:prod": "eas build --profile production"
   },
   "dependencies": {
     "@expo-google-fonts/dm-sans": "^0.2.2",
@@ -42,6 +48,8 @@
     "@babel/core": "^7.26.0",
     "@tanstack/eslint-plugin-query": "^5.81.2",
     "@types/react": "~19.1.10",
+    "cross-env": "^10.1.0",
+    "sharp": "^0.34.5",
     "typescript": "~5.9.2"
   },
   "private": true,
