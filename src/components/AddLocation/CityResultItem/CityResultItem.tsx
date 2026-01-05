@@ -1,6 +1,6 @@
 import React from 'react';
 import { TouchableOpacity, View, Text } from 'react-native';
-import type { CityResult } from '../../utils/geocoding';
+import type { CityResult } from '../../../utils/geocoding';
 import { styles } from './CityResultItem.styles';
 
 interface CityResultItemProps {

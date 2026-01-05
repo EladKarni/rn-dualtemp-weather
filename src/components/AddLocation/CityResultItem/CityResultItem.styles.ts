@@ -1,14 +1,14 @@
 import { StyleSheet } from 'react-native';
-import { palette } from '../../Styles/Palette';
+import { palette } from '../../../Styles/Palette';
+import { spacing } from '../../../Styles/Spacing';
 
 export const styles = StyleSheet.create({
   cityItem: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 15,
-    paddingHorizontal: 15,
-    marginBottom: 10,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
     backgroundColor: palette.primaryLight,
     borderRadius: 10,
     borderWidth: 1,
@@ -31,6 +31,6 @@ export const styles = StyleSheet.create({
     fontSize: 28,
     color: palette.highlightColor,
     fontWeight: "300",
-    marginLeft: 10,
+    marginLeft: spacing.sm,
   },
 });

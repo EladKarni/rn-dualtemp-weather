@@ -18,6 +18,7 @@ import { ClockFormatSelector } from "../components/ClockFormatSelector/ClockForm
 import { LanguageSelector } from "../components/LanguageSelector/LanguageSelector";
 import { LocationList } from "../components/Settings/LocationList";
 import { useLocationStore } from "../store/useLocationStore";
+import { useModalAnimation } from "../hooks/useModalAnimation";
 type SettingsScreenProps = {
   visible: boolean;
   onClose: () => void;
@@ -25,43 +26,11 @@ type SettingsScreenProps = {
 };
 
 const SettingsScreen = ({ visible, onClose, onAddLocationPress }: SettingsScreenProps) => {
-  const slideAnim = useRef(new Animated.Value(300)).current;
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-
   const savedLocations = useLocationStore((state) => state.savedLocations);
   const removeLocation = useLocationStore((state) => state.removeLocation);
   const canAddMoreLocations = useLocationStore((state) => state.canAddMoreLocations());
 
-  useEffect(() => {
-    if (visible) {
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.spring(slideAnim, {
-          toValue: 0,
-          tension: 65,
-          friction: 11,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    } else {
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 0,
-          duration: 200,
-          useNativeDriver: true,
-        }),
-        Animated.timing(slideAnim, {
-          toValue: 300,
-          duration: 250,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    }
-  }, [visible]);
+  const { fadeAnim, slideAnim } = useModalAnimation(visible);
 
   return (
     <Modal

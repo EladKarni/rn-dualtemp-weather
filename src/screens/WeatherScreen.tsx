@@ -1,5 +1,6 @@
 import React from 'react';
-import { SafeAreaView, ScrollView, View, RefreshControl, StyleSheet } from 'react-native';
+import { ScrollView, View, RefreshControl, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import AppHeader from '../components/AppHeader/AppHeader';
 import CurrentWeatherCard from '../components/CurrentWeatherCard/CurrentWeatherCard';
 import HourlyForecast from '../components/HourlyForecast/HourlyForecast';
@@ -111,7 +112,7 @@ export default function WeatherScreen({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 10,
+    paddingTop: 5,
     backgroundColor: palette.primaryDark,
   },
 });

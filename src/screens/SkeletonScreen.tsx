@@ -1,5 +1,6 @@
 import React from 'react';
-import { SafeAreaView, ScrollView, StyleSheet } from 'react-native';
+import { ScrollView, StyleSheet } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import AppHeader from '../components/AppHeader/AppHeader';
 import { WeatherLoadingSkeleton } from '../components/LoadingSkeleton/LoadingSkeleton';
 import { palette } from '../Styles/Palette';
