@@ -1,9 +1,9 @@
 import React from 'react';
-import { ScrollView, StyleSheet } from 'react-native';
+import { ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AppHeader from '../components/AppHeader/AppHeader';
 import { WeatherLoadingSkeleton } from '../components/LoadingSkeleton/LoadingSkeleton';
-import { palette } from '../Styles/Palette';
+import { skeletonScreenStyles } from '../styles/screens/SkeletonScreen.styles';
 import type { SavedLocation } from '../store/useLocationStore';
 import type { LocationWeatherState } from '../hooks/useMultiLocationWeather';
 
@@ -23,7 +23,7 @@ export default function SkeletonScreen({
   locationLoadingStates,
 }: SkeletonScreenProps) {
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={skeletonScreenStyles.container}>
       <ScrollView>
         <AppHeader
           onSettingsPress={onSettingsPress}
@@ -38,9 +38,4 @@ export default function SkeletonScreen({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: palette.primaryDark,
-  },
-});
+

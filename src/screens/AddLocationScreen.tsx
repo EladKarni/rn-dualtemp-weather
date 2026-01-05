@@ -12,7 +12,7 @@ import {
   FlatList,
 } from "react-native";
 import { i18n } from "../localization/i18n";
-import { styles } from "./AddLocationScreen.Styles";
+import { styles } from "../styles/screens/AddLocationScreen.styles";
 import { CityResult, searchCities, formatLocationName } from "../utils/geocoding";
 import { useLocationStore } from "../store/useLocationStore";
 import { useLanguageStore } from "../store/useLanguageStore";

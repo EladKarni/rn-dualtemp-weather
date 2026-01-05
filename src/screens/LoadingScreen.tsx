@@ -1,8 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AppHeader from '../components/AppHeader/AppHeader';
-import { palette } from '../Styles/Palette';
+import { loadingScreenStyles } from '../styles/screens/LoadingScreen.styles';
 import type { SavedLocation } from '../store/useLocationStore';
 import type { LocationWeatherState } from '../hooks/useMultiLocationWeather';
 
@@ -24,8 +24,8 @@ export default function LoadingScreen({
   locationLoadingStates,
 }: LoadingScreenProps) {
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.errorContainer}>
+    <SafeAreaView style={loadingScreenStyles.container}>
+      <View style={loadingScreenStyles.errorContainer}>
         <AppHeader
           onSettingsPress={onSettingsPress}
           savedLocations={savedLocations}
@@ -33,9 +33,9 @@ export default function LoadingScreen({
           onLocationSelect={onLocationSelect}
           locationLoadingStates={locationLoadingStates}
         />
-        <View style={styles.errorContent}>
-          <Text style={styles.loadingTitle}>Loading Weather...</Text>
-          <Text style={styles.loadingMessage}>
+        <View style={loadingScreenStyles.errorContent}>
+          <Text style={loadingScreenStyles.loadingTitle}>Loading Weather...</Text>
+          <Text style={loadingScreenStyles.loadingMessage}>
             Fetching forecast for {locationName}
           </Text>
         </View>
@@ -44,30 +44,4 @@ export default function LoadingScreen({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: palette.primaryDark,
-  },
-  errorContainer: {
-    flex: 1,
-  },
-  errorContent: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-  },
-  loadingTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: palette.textColor,
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  loadingMessage: {
-    fontSize: 14,
-    color: palette.highlightColor,
-    textAlign: 'center',
-  },
-});
+

@@ -1,5 +1,5 @@
 import React from 'react';
-import { ScrollView, View, RefreshControl, StyleSheet } from 'react-native';
+import { ScrollView, View, RefreshControl } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AppHeader from '../components/AppHeader/AppHeader';
 import CurrentWeatherCard from '../components/CurrentWeatherCard/CurrentWeatherCard';
@@ -10,7 +10,7 @@ import DailyForecastSkeleton from '../components/DailyForecast/DailyForecastSkel
 import AppFooter from '../components/AppFooter/AppFooter';
 import { WeatherErrorBanner } from '../components/ErrorAlert/WeatherErrorBanner';
 import { AppStateContext } from '../utils/AppStateContext';
-import { palette } from '../Styles/Palette';
+import { weatherScreenStyles } from '../styles/screens/WeatherScreen.styles';
 import type { Weather } from '../types/WeatherTypes';
 import type { AppError } from '../utils/errors';
 import type { Moment } from 'moment';
@@ -57,7 +57,7 @@ export default function WeatherScreen({
   const showForecastSkeleton = refreshing && !forecast?.hourly && !forecast?.daily;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={weatherScreenStyles.container}>
       <View onLayout={onLayoutRootView}>
         <ScrollView
           refreshControl={
@@ -109,10 +109,4 @@ export default function WeatherScreen({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingTop: 5,
-    backgroundColor: palette.primaryDark,
-  },
-});
+

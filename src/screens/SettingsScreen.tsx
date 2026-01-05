@@ -11,7 +11,7 @@ import {
   ScrollView,
 } from "react-native";
 import { i18n } from "../localization/i18n";
-import { styles } from "./SettingsScreen.Styles";
+import { styles } from "../styles/screens/SettingsScreen.styles";
 import SettingItem from "../components/SettingItem/SettingItem";
 import { TempUnitSelector } from "../components/TempUnitSelector/TempUnitSelector";
 import { ClockFormatSelector } from "../components/ClockFormatSelector/ClockFormatSelector";

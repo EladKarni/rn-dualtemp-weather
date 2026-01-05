@@ -1,6 +1,6 @@
 import { StyleSheet } from "react-native";
-import { palette } from "../Styles/Palette";
-import { spacing } from "../Styles/Spacing";
+import { palette } from "../../Styles/Palette";
+import { spacing } from "../../Styles/Spacing";
 
 export const styles = StyleSheet.create({
   backdrop: {
