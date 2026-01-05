@@ -54,7 +54,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    paddingTop: 10,
     paddingBottom: 15,
     paddingLeft: 20, // Match app margins
   },

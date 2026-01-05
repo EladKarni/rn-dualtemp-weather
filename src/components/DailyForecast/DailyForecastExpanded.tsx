@@ -5,7 +5,7 @@ import React, { useState } from "react";
 import DailyExpandedFeelInfo from "./DailyExpandedFeelInfo";
 import { i18n } from "../../localization/i18n";
 import TemperatureChart from "./TemperatureChart";
-import SunInfo from "./SunInfo";
+import SunriseSunsetCompact from "./SunriseSunsetCompact";
 import { useLanguageStore } from "../../store/useLanguageStore";
 import { useSettingsStore } from "../../store/useSettingsStore";
 
@@ -54,10 +54,10 @@ const DailyForecastExpanded = ({ day }: DailyForecastItemExpandedProps) => {
         </View>
       </View>
       {showSunriseSunset && (
-        <>
-          <SunInfo time={day.sunrise} type="sunrise" />
-          <SunInfo time={day.sunset} type="sunset" />
-        </>
+        <SunriseSunsetCompact 
+          sunrise={day.sunrise} 
+          sunset={day.sunset} 
+        />
       )}
     </>
   );
