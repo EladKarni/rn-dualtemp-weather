@@ -7,6 +7,7 @@ import { i18n } from "../../localization/i18n";
 import TemperatureChart from "./TemperatureChart";
 import SunInfo from "./SunInfo";
 import { useLanguageStore } from "../../store/useLanguageStore";
+import { useSettingsStore } from "../../store/useSettingsStore";
 
 type DailyForecastItemExpandedProps = {
   day: DailyEntity;
@@ -14,7 +15,8 @@ type DailyForecastItemExpandedProps = {
 
 const DailyForecastExpanded = ({ day }: DailyForecastItemExpandedProps) => {
   const [cardWidth, setCardWidth] = useState(0);
-  const isRTL = useLanguageStore((state) => state.isRTL)
+  const isRTL = useLanguageStore((state) => state.isRTL);
+  const showSunriseSunset = useSettingsStore((state) => state.showSunriseSunset);
 
   return (
     <>
@@ -51,8 +53,12 @@ const DailyForecastExpanded = ({ day }: DailyForecastItemExpandedProps) => {
           <DailyExpandedFeelInfo temp={day.temp.min} label={i18n.t("Min")} />
         </View>
       </View>
-      <SunInfo time={day.sunrise} type="sunrise" />
-      <SunInfo time={day.sunset} type="sunset" />
+      {showSunriseSunset && (
+        <>
+          <SunInfo time={day.sunrise} type="sunrise" />
+          <SunInfo time={day.sunset} type="sunset" />
+        </>
+      )}
     </>
   );
 };

@@ -49,6 +49,9 @@ export const en = {
     Language: "Language",
     AppLanguage: "App Language",
     AutoDetect: "Auto-detect (Device Language)",
+    ShowSunriseSunset: "Show Sunrise/Sunset",
+    Show: "Show",
+    Hide: "Hide",
     // Error messages
     Error: "Error",
     Retry: "Retry",

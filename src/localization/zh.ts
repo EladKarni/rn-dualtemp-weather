@@ -49,6 +49,9 @@ export const zh = {
   Language: "语言",
   AppLanguage: "应用语言",
   AutoDetect: "自动检测（设备语言）",
+  ShowSunriseSunset: "显示日出/日落",
+  Show: "显示",
+  Hide: "隐藏",
   // Error messages
   Error: "错误",
   Retry: "重试",

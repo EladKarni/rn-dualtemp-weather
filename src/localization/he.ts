@@ -49,6 +49,9 @@ export const he = {
     Language: "שפה",
     AppLanguage: "שפת האפליקציה",
     AutoDetect: "זיהוי אוטומטי (שפת המכשיר)",
+    ShowSunriseSunset: "הצג זריחה/שקיעה",
+    Show: "הצג",
+    Hide: "הסתר",
     // Error messages
     Error: "שגיאה",
     Retry: "נסה שוב",

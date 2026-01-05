@@ -49,6 +49,9 @@ export const es = {
     Language: "Idioma",
     AppLanguage: "Idioma de la Aplicación",
     AutoDetect: "Detectar Automáticamente (Idioma del Dispositivo)",
+    ShowSunriseSunset: "Mostrar Amanecer/Atardecer",
+    Show: "Mostrar",
+    Hide: "Ocultar",
     // Error messages
     Error: "Error",
     Retry: "Reintentar",

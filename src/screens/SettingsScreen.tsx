@@ -15,6 +15,7 @@ import { styles } from "./SettingsScreen.Styles";
 import SettingItem from "../components/SettingItem/SettingItem";
 import { TempUnitSelector } from "../components/TempUnitSelector/TempUnitSelector";
 import { ClockFormatSelector } from "../components/ClockFormatSelector/ClockFormatSelector";
+import { SunriseSunsetToggle } from "../components/SunriseSunsetToggle/SunriseSunsetToggle";
 import { LanguageSelector } from "../components/LanguageSelector/LanguageSelector";
 import { LocationList } from "../components/Settings/LocationList";
 import { useLocationStore } from "../store/useLocationStore";
@@ -73,6 +74,9 @@ const SettingsScreen = ({ visible, onClose, onAddLocationPress }: SettingsScreen
               </SettingItem>
               <SettingItem label={i18n.t("TimeFormat")}>
                 <ClockFormatSelector />
+              </SettingItem>
+              <SettingItem label={i18n.t("ShowSunriseSunset")}>
+                <SunriseSunsetToggle />
               </SettingItem>
             </View>
 

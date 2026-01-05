@@ -49,6 +49,9 @@ export const fr = {
     Language: "Langue",
     AppLanguage: "Langue de l'Application",
     AutoDetect: "Détection Automatique (Langue de l'Appareil)",
+    ShowSunriseSunset: "Afficher Lever/Coucher du Soleil",
+    Show: "Afficher",
+    Hide: "Masquer",
     // Error messages
     Error: "Erreur",
     Retry: "Réessayer",

@@ -49,6 +49,9 @@ export const ar = {
     Language: "اللغة",
     AppLanguage: "لغة التطبيق",
     AutoDetect: "الكشف التلقائي (لغة الجهاز)",
+    ShowSunriseSunset: "إظهار شروق/غروب الشمس",
+    Show: "إظهار",
+    Hide: "إخفاء",
     // Error messages
     Error: "خطأ",
     Retry: "إعادة المحاولة",
