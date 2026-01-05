@@ -1,6 +1,7 @@
 import { registerRootComponent } from 'expo';
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as SplashScreen from 'expo-splash-screen';
 import {
   QueryClient,
@@ -98,14 +99,16 @@ const asyncStoragePersister = createAsyncStoragePersister({
 
 function RootComponent() {
   return (
-    <RootErrorBoundary>
-      <PersistQueryClientProvider
-        client={queryClient}
-        persistOptions={{ persister: asyncStoragePersister }}
-      >
-        <App />
-      </PersistQueryClientProvider>
-    </RootErrorBoundary>
+    <SafeAreaProvider>
+      <RootErrorBoundary>
+        <PersistQueryClientProvider
+          client={queryClient}
+          persistOptions={{ persister: asyncStoragePersister }}
+        >
+          <App />
+        </PersistQueryClientProvider>
+      </RootErrorBoundary>
+    </SafeAreaProvider>
   );
 }
 
