@@ -4,7 +4,9 @@ import { i18n } from '../localization/i18n';
 import { logger } from '../utils/logger';
 import type { SavedLocation } from '../store/useLocationStore';
 import type { Weather } from '../types/WeatherTypes';
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
+import { useSettingsStore } from '../store/useSettingsStore';
+import { createCurrentDate } from '../utils/fetchLocale';
 
 export interface LocationWeatherState {
   hasCurrentWeather: boolean;
@@ -33,6 +35,7 @@ export function useMultiLocationWeather(
   fetchedLocaleSuccessfully: boolean
 ) {
   const activeLocation = savedLocations.find(loc => loc.id === activeLocationId);
+  const setLastUpdated = useSettingsStore(state => state.setLastUpdated);
 
   // Active location: fetch with high priority
   const activeQuery = useQuery({
@@ -138,6 +141,13 @@ export function useMultiLocationWeather(
       return undefined;
     };
   }, [activeLocationId, activeQuery.data, otherLocations, prefetchQueries]);
+
+  // Update lastUpdated timestamp when data is successfully fetched
+  useEffect(() => {
+    if (activeQuery.isSuccess && activeQuery.data) {
+      setLastUpdated(createCurrentDate());
+    }
+  }, [activeQuery.isSuccess, activeQuery.data, setLastUpdated]);
 
   return {
     // Active location data (for backwards compatibility with existing code)

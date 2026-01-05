@@ -1,27 +1,28 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text } from 'react-native';
 import { useLanguageStore } from '../../store/useLanguageStore';
 import { CardFooterStyles } from './CardFooter.Styles';
-import { AppStateContext } from '../../utils/AppStateContext';
 import { typography } from '../../Styles/Typography';
 import { i18n } from "../../localization/i18n";
 import "intl";
 import "intl/locale-data/jsonp/he";
+import { useSettingsStore } from '../../store/useSettingsStore';
 
 const CardFooter = () => {
-  const context = useContext(AppStateContext);
   const isRTL = useLanguageStore(state => state.isRTL);
-
-  const [updatedString, setUpdatedString] = useState<string>();
+  const lastTimeUpdated = useSettingsStore(state => state.lastUpdated);
+  const [updatedString, setUpdatedString] = useState<string>(lastTimeUpdated ? lastTimeUpdated.fromNow() : '');
 
   useEffect(() => {
+    if (!lastTimeUpdated) return;
+    
     const updateStringFunc = setInterval(
-      () => setUpdatedString(context?.date.fromNow()),
+      () => setUpdatedString(lastTimeUpdated.fromNow()),
       100
     );
 
     return () => clearInterval(updateStringFunc);
-  }, [updatedString, context]);
+  }, [lastTimeUpdated]);
 
   return (
     <View style={[CardFooterStyles.cardFooter, isRTL && CardFooterStyles.cardFooterRTL]}>

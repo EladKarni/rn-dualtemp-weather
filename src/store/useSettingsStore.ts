@@ -2,11 +2,14 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { uses24HourClock } from "react-native-localize";
+import { Moment } from "moment";
 
 interface SettingsState {
   tempScale: "C" | "F";
   clockFormat: "12hour" | "24hour" | "auto";
   showSunriseSunset: boolean;
+  lastUpdated: Moment | null;
+  setLastUpdated: (time: Moment) => void;
   setTempScale: (scale: "C" | "F") => void;
   setClockFormat: (format: "12hour" | "24hour" | "auto") => void;
   setShowSunriseSunset: (show: boolean) => void;
@@ -22,8 +25,11 @@ export const useSettingsStore = create<SettingsState>()(
       clockFormat: "auto",
       showSunriseSunset: true,
       isHydrated: false,
+      lastUpdated: null,
+      setLastUpdated: (time: Moment) => set({ lastUpdated: time }),
       setTempScale: (scale: "C" | "F") => set({ tempScale: scale }),
-      setClockFormat: (format: "12hour" | "24hour" | "auto") => set({ clockFormat: format }),
+      setClockFormat: (format: "12hour" | "24hour" | "auto") =>
+        set({ clockFormat: format }),
       setShowSunriseSunset: (show: boolean) => set({ showSunriseSunset: show }),
       getEffectiveClockFormat: () => {
         const clockFormat = get().clockFormat;
@@ -40,7 +46,8 @@ export const useSettingsStore = create<SettingsState>()(
       partialize: (state) => ({
         tempScale: state.tempScale,
         clockFormat: state.clockFormat,
-        showSunriseSunset: state.showSunriseSunset
+        showSunriseSunset: state.showSunriseSunset,
+        lastUpdated: state.lastUpdated,
       }),
       onRehydrateStorage: () => (state) => {
         state?.setHydrated();
