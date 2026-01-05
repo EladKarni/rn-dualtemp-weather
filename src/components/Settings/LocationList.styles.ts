@@ -1,41 +1,41 @@
 import { StyleSheet } from 'react-native';
 import { palette } from '../../Styles/Palette';
+import { spacing } from '../../Styles/Spacing';
+import { shadowProp } from '../../Styles/BoxShadow';
 
 export const styles = StyleSheet.create({
-  locationItem: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: palette.primaryLight,
-  },
-  locationItemInfo: {
+  container: {
     flex: 1,
   },
-  locationItemName: {
-    fontSize: 16,
-    color: palette.textColor,
-  },
-  deleteIcon: {
-    fontSize: 18,
+  locationsContainer: {
+    flex: 1,
+    paddingBottom: spacing.md,
   },
   addLocationButton: {
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    alignItems: "center",
-    marginTop: 10,
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.md,
+    borderRadius: 16,
+    overflow: 'hidden',
+    ...shadowProp,
   },
   addLocationButtonDisabled: {
-    opacity: 0.5,
+    opacity: 0.6,
+  },
+  addLocationButtonGradient: {
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.xl,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 56,
+    borderRadius: 16,
   },
   addLocationButtonText: {
     fontSize: 16,
-    color: palette.highlightColor,
-    fontWeight: "600",
+    fontWeight: '600',
+    color: palette.primaryColor,
+    letterSpacing: 0.3,
   },
   addLocationButtonTextDisabled: {
-    color: "#999",
+    color: '#999',
   },
 });

@@ -1,7 +1,12 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Alert } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import type { SavedLocation } from '../../store/useLocationStore';
 import { i18n } from '../../localization/i18n';
+import { palette } from '../../Styles/Palette';
+import { spacing } from '../../Styles/Spacing';
+import { shadowProp } from '../../Styles/BoxShadow';
+import { LocationCard } from './LocationCard';
 import { styles } from './LocationList.styles';
 
 interface LocationListProps {
@@ -33,24 +38,16 @@ export const LocationList: React.FC<LocationListProps> = ({
   };
 
   return (
-    <>
-      {savedLocations.map((location) => (
-        <View key={location.id} style={styles.locationItem}>
-          <View style={styles.locationItemInfo}>
-            <Text style={styles.locationItemName}>
-              {location.isGPS ? `📍 ${i18n.t("CurrentLocation")}` : location.name}
-            </Text>
-          </View>
-          {!location.isGPS && (
-            <TouchableOpacity
-              onPress={() => handleDeleteLocation(location)}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              <Text style={styles.deleteIcon}>🗑️</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      ))}
+    <View style={styles.container}>
+      <View style={styles.locationsContainer}>
+        {savedLocations.map((location) => (
+          <LocationCard
+            key={location.id}
+            location={location}
+            onDelete={handleDeleteLocation}
+          />
+        ))}
+      </View>
 
       <TouchableOpacity
         style={[
@@ -63,18 +60,30 @@ export const LocationList: React.FC<LocationListProps> = ({
           }
         }}
         disabled={!canAddMoreLocations}
+        activeOpacity={0.8}
       >
-        <Text
-          style={[
-            styles.addLocationButtonText,
-            !canAddMoreLocations && styles.addLocationButtonTextDisabled,
-          ]}
+        <LinearGradient
+          colors={
+            canAddMoreLocations
+              ? [palette.highlightColor, palette.textColorSecondary]
+              : ['rgba(153, 153, 153, 0.3)', 'rgba(153, 153, 153, 0.2)']
+          }
+          style={styles.addLocationButtonGradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
         >
-          + {i18n.t("AddLocation")}
-          {!canAddMoreLocations &&
-            ` (${savedLocations.filter((loc) => !loc.isGPS).length}/5)`}
-        </Text>
+          <Text
+            style={[
+              styles.addLocationButtonText,
+              !canAddMoreLocations && styles.addLocationButtonTextDisabled,
+            ]}
+          >
+            + {i18n.t("AddLocation")}
+            {!canAddMoreLocations &&
+              ` (${savedLocations.filter((loc) => !loc.isGPS).length}/5)`}
+          </Text>
+        </LinearGradient>
       </TouchableOpacity>
-    </>
+    </View>
   );
 };
