@@ -9,6 +9,8 @@ import {
 import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
 import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persister";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { registerWidgetTaskHandler } from 'react-native-android-widget';
+import { widgetTaskHandler } from './src/widgets/widgetTaskHandler';
 import App from './App';
 
 // Basic error boundary for root level
@@ -113,3 +115,4 @@ function RootComponent() {
 }
 
 registerRootComponent(RootComponent);
+registerWidgetTaskHandler(widgetTaskHandler);

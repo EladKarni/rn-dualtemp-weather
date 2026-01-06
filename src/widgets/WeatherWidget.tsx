@@ -9,22 +9,19 @@ interface WeatherWidgetProps {
   locationName?: string;
 }
 
-export function WeatherWidget({ 
-  weather, 
-  lastUpdated, 
-  locationName 
+export function WeatherWidget({
+  weather,
+  lastUpdated,
+  locationName
 }: WeatherWidgetProps) {
-  // Use default temp scale (C) for now - will add dynamic temp scale later
-  const tempScale = 'C'; // TODO: Get from settings store
-  const temp = tempScale === 'C' 
-    ? Math.round(weather.current.temp)
-    : Math.round((weather.current.temp * 9/5) + 32);
-    
+  // Hardcode temp scale for now
+  const tempScale = 'C';
+  const temp = Math.round(weather.current.temp);
   const description = weather.current.weather[0].description;
   const locationText = locationName || 'Current Location';
-  const lastUpdatedText = new Date(lastUpdated).toLocaleTimeString([], { 
-    hour: '2-digit', 
-    minute: '2-digit' 
+  const lastUpdatedText = new Date(lastUpdated).toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit'
   });
 
   return (
@@ -38,7 +35,7 @@ export function WeatherWidget({
         flexDirection: 'column',
         justifyContent: 'space-between'
       }}
-      clickAction="OPEN_APP"
+      clickAction="REFRESH"
     >
       {/* Header with location and last updated */}
       <FlexWidget
@@ -122,7 +119,7 @@ export function WeatherWidget({
         }}
       >
         <TextWidget
-          text="Tap to open app"
+          text="Tap to refresh"
           style={{
             fontSize: 10,
             color: '#6B7280' // 40% white

@@ -24,7 +24,7 @@ interface LocationState {
   canAddMoreLocations: () => boolean;
 }
 
-const GPS_LOCATION_ID = "gps-location";
+export const GPS_LOCATION_ID = "gps-location";
 const MAX_SAVED_LOCATIONS = 5;
 
 export const useLocationStore = create<LocationState>()(

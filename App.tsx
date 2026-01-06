@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 
 import {
@@ -45,6 +45,7 @@ import { useWeatherLoadingState } from "./src/hooks/useWeatherLoadingState";
 import { useLocaleQuery } from "./src/hooks/useLocaleQuery";
 import { useScreenProps } from "./src/hooks/useScreenProps";
 import { useRenderDecision } from "./src/hooks/useRenderDecision";
+import { initializeForecastStore } from "./src/store/useForecastStore";
 
 // Screens
 import LoadingScreen from "./src/screens/LoadingScreen";
@@ -56,7 +57,12 @@ import MainWeatherWithModals from "./src/screens/MainWeatherWithModals";
 import ErrorBoundary from "./src/components/ErrorBoundary/ErrorBoundary";
 
 function App() {
-
+  // Initialize forecast store
+  useEffect(() => {
+    initializeForecastStore().catch(error => {
+      console.error('Failed to initialize forecast store:', error);
+    });
+  }, []);
 
   // Store state
   const tempScale = useSettingsStore((state) => state.tempScale);

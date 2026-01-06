@@ -1,38 +1,454 @@
 import React from 'react';
 import { FlexWidget, TextWidget } from 'react-native-android-widget';
 import WeatherWidget from './WeatherWidget';
+import WeatherCompact from './WeatherCompact';
+import WeatherStandard from './WeatherStandard';
+import WeatherExtended from './WeatherExtended';
 import type { WidgetTaskHandlerProps } from 'react-native-android-widget';
-import { useWeatherStore } from '../store/useWeatherStore';
-import { useLocationStore } from '../store/useLocationStore';
+import { useLocationStore, GPS_LOCATION_ID } from '../store/useLocationStore';
 import { useLanguageStore } from '../store/useLanguageStore';
+import { useForecastStore, initializeForecastStore } from '../store/useForecastStore';
 import { i18n } from '../localization/i18n';
 import { logger } from '../utils/logger';
 import { fetchForecast } from '../utils/fetchWeather';
+import { HelloWidget } from './HelloWidget';
 
 const nameToWidget = {
   Weather: WeatherWidget,
+  WeatherCompact: WeatherCompact,
+  WeatherStandard: WeatherStandard,
+  WeatherExtended: WeatherExtended,
+  Hello: HelloWidget,
 };
 
 export async function widgetTaskHandler(props: WidgetTaskHandlerProps) {
-  const Widget = nameToWidget[props.widgetInfo.widgetName as keyof typeof nameToWidget];
+  const widgetInfo = props.widgetInfo;
+  logger.debug(`Widget action: ${props.widgetAction}, widget name: ${widgetInfo.widgetName}`);
+  
+  const Widget = nameToWidget[widgetInfo.widgetName as keyof typeof nameToWidget];
+
+  if (!Widget) {
+    logger.error(`No widget found with name: ${widgetInfo.widgetName}`);
+    return;
+  }
 
   switch (props.widgetAction) {
     case 'WIDGET_ADDED':
+      if (widgetInfo.widgetName === 'Weather') {
+        logger.debug('Handling Weather widget addition');
+        try {
+          // Initialize database if needed (widgets run outside React context)
+          await initializeForecastStore();
+
+          // Get current stores state (widgets run outside React context)
+          const weatherStore = useForecastStore.getState();
+          const locationStore = useLocationStore.getState();
+
+          const gpsLocation = locationStore.savedLocations.find(
+            loc => loc.id === GPS_LOCATION_ID
+          );
+
+          if (!gpsLocation) {
+            logger.warn('No GPS location found for widget');
+            props.renderWidget(
+              <FlexWidget
+                style={{
+                  height: 'match_parent',
+                  width: 'match_parent',
+                  backgroundColor: '#1C1B4D',
+                  borderRadius: 16,
+                  padding: 16,
+                  justifyContent: 'center',
+                  alignItems: 'center'
+                }}
+                clickAction="OPEN_APP"
+              >
+                <TextWidget
+                  text="Weather data unavailable"
+                  style={{
+                    fontSize: 14,
+                    color: '#E5E7EB',
+                    textAlign: 'center'
+                  }}
+                />
+                <TextWidget
+                  text="Tap to open app"
+                  style={{
+                    fontSize: 12,
+                    color: '#9CA3AF',
+                    textAlign: 'center'
+                  }}
+                />
+              </FlexWidget>
+            );
+            return;
+          }
+
+          // Check if we have fresh data
+          let weather = await weatherStore.getWeatherData(GPS_LOCATION_ID);
+          const isFresh = await weatherStore.isLocationDataFresh(GPS_LOCATION_ID);
+
+          // If no fresh data, fetch it
+          if (!weather || !isFresh) {
+            logger.debug('Fetching fresh data for widget:', GPS_LOCATION_ID);
+            weather = await fetchForecast(
+              i18n.locale,
+              gpsLocation.latitude,
+              gpsLocation.longitude
+            );
+
+            // Store for future use
+            await weatherStore.setWeatherData(GPS_LOCATION_ID, weather);
+          }
+
+          if (weather) {
+            const lastUpdateDate = new Date();
+            props.renderWidget(
+              <WeatherWidget
+                weather={weather}
+                lastUpdated={lastUpdateDate}
+                locationName={gpsLocation.name}
+              />
+            );
+          } else {
+            // Inline error handling (no separate component needed)
+            props.renderWidget(
+              <FlexWidget
+                style={{
+                  height: 'match_parent',
+                  width: 'match_parent',
+                  backgroundColor: '#1C1B4D',
+                  borderRadius: 16,
+                  padding: 16,
+                  justifyContent: 'center',
+                  alignItems: 'center'
+                }}
+                clickAction="OPEN_APP"
+              >
+                <TextWidget
+                  text="Weather data unavailable"
+                  style={{
+                    fontSize: 14,
+                    color: '#E5E7EB',
+                    textAlign: 'center'
+                  }}
+                />
+                <TextWidget
+                  text="Tap to open app"
+                  style={{
+                    fontSize: 12,
+                    color: '#9CA3AF',
+                    textAlign: 'center'
+                  }}
+                />
+              </FlexWidget>
+            );
+          }
+        } catch (error) {
+          logger.error('Widget addition failed:', error);
+          // Inline error handling
+          props.renderWidget(
+            <FlexWidget
+              style={{
+                height: 'match_parent',
+                width: 'match_parent',
+                backgroundColor: '#1C1B4D',
+                borderRadius: 16,
+                padding: 16,
+                justifyContent: 'center',
+                alignItems: 'center'
+              }}
+              clickAction="OPEN_APP"
+            >
+              <TextWidget
+                text="Unable to load weather"
+                style={{
+                  fontSize: 14,
+                  color: '#E5E7EB',
+                  textAlign: 'center'
+                }}
+              />
+              <TextWidget
+                text="Tap to open app"
+                style={{
+                  fontSize: 12,
+                  color: '#9CA3AF',
+                  textAlign: 'center'
+                }}
+              />
+            </FlexWidget>
+          );
+        }
+      } else if (widgetInfo.widgetName === 'WeatherCompact' || widgetInfo.widgetName === 'WeatherStandard' || widgetInfo.widgetName === 'WeatherExtended') {
+        // Handle new weather widgets
+        logger.debug(`Handling ${widgetInfo.widgetName} widget addition`);
+        try {
+          // Initialize database if needed (widgets run outside React context)
+          await initializeForecastStore();
+
+          // Get current stores state (widgets run outside React context)
+          const weatherStore = useForecastStore.getState();
+          const locationStore = useLocationStore.getState();
+
+          const gpsLocation = locationStore.savedLocations.find(
+            loc => loc.id === GPS_LOCATION_ID
+          );
+
+          if (!gpsLocation) {
+            logger.warn('No GPS location found for widget');
+            props.renderWidget(
+              <FlexWidget
+                style={{
+                  height: 'match_parent',
+                  width: 'match_parent',
+                  backgroundColor: '#1C1B4D',
+                  borderRadius: 16,
+                  padding: 16,
+                  justifyContent: 'center',
+                  alignItems: 'center'
+                }}
+                clickAction="OPEN_APP"
+              >
+                <TextWidget
+                  text="Weather data unavailable"
+                  style={{
+                    fontSize: 14,
+                    color: '#E5E7EB',
+                    textAlign: 'center'
+                  }}
+                />
+                <TextWidget
+                  text="Tap to open app"
+                  style={{
+                    fontSize: 12,
+                    color: '#9CA3AF',
+                    textAlign: 'center'
+                  }}
+                />
+              </FlexWidget>
+            );
+            return;
+          }
+
+          // Check if we have fresh data
+          let weather = await weatherStore.getWeatherData(GPS_LOCATION_ID);
+          const isFresh = await weatherStore.isLocationDataFresh(GPS_LOCATION_ID);
+
+          // If no fresh data, fetch it
+          if (!weather || !isFresh) {
+            logger.debug('Fetching fresh data for widget:', GPS_LOCATION_ID);
+            weather = await fetchForecast(
+              i18n.locale,
+              gpsLocation.latitude,
+              gpsLocation.longitude
+            );
+
+            // Store for future use
+            await weatherStore.setWeatherData(GPS_LOCATION_ID, weather);
+          }
+
+          if (weather) {
+            const lastUpdateDate = new Date();
+            const WidgetComponent = nameToWidget[widgetInfo.widgetName as keyof typeof nameToWidget];
+            props.renderWidget(
+              <WidgetComponent
+                weather={weather}
+                lastUpdated={lastUpdateDate}
+                locationName={gpsLocation.name}
+              />
+            );
+          } else {
+            // Inline error handling
+            props.renderWidget(
+              <FlexWidget
+                style={{
+                  height: 'match_parent',
+                  width: 'match_parent',
+                  backgroundColor: '#1C1B4D',
+                  borderRadius: 16,
+                  padding: 16,
+                  justifyContent: 'center',
+                  alignItems: 'center'
+                }}
+                clickAction="OPEN_APP"
+              >
+                <TextWidget
+                  text="Weather data unavailable"
+                  style={{
+                    fontSize: 14,
+                    color: '#E5E7EB',
+                    textAlign: 'center'
+                  }}
+                />
+                <TextWidget
+                  text="Tap to open app"
+                  style={{
+                    fontSize: 12,
+                    color: '#9CA3AF',
+                    textAlign: 'center'
+                  }}
+                />
+              </FlexWidget>
+            );
+          }
+        } catch (error) {
+          logger.error('Widget addition failed:', error);
+          // Inline error handling
+          props.renderWidget(
+            <FlexWidget
+              style={{
+                height: 'match_parent',
+                width: 'match_parent',
+                backgroundColor: '#1C1B4D',
+                borderRadius: 16,
+                padding: 16,
+                justifyContent: 'center',
+                alignItems: 'center'
+              }}
+              clickAction="OPEN_APP"
+            >
+              <TextWidget
+                text="Unable to load weather"
+                style={{
+                  fontSize: 14,
+                  color: '#E5E7EB',
+                  textAlign: 'center'
+                }}
+              />
+              <TextWidget
+                text="Tap to open app"
+                style={{
+                  fontSize: 12,
+                  color: '#9CA3AF',
+                  textAlign: 'center'
+                }}
+              />
+            </FlexWidget>
+          );
+        }
+      } else {
+        // Handle other widget types (like HelloWidget)
+        logger.debug(`Handling non-Weather widget: ${widgetInfo.widgetName}`);
+        props.renderWidget(<HelloWidget />);
+      }
+      break;
     case 'WIDGET_UPDATE':
     case 'WIDGET_RESIZED':
-      try {
-        // Get current stores state (widgets run outside React context)
-        const weatherStore = useWeatherStore.getState();
-        const locationStore = useLocationStore.getState();
-        const languageStore = useLanguageStore.getState();
+      if (widgetInfo.widgetName === 'WeatherCompact' || widgetInfo.widgetName === 'WeatherStandard' || widgetInfo.widgetName === 'WeatherExtended') {
+        // Handle new weather widgets
+        logger.debug(`Handling ${widgetInfo.widgetName} widget update`);
+        try {
+          // Initialize database if needed (widgets run outside React context)
+          await initializeForecastStore();
 
-        const activeLocationId = locationStore.activeLocationId;
-        const activeLocation = locationStore.savedLocations.find(
-          loc => loc.id === activeLocationId
-        );
+          // Get current stores state (widgets run outside React context)
+          const weatherStore = useForecastStore.getState();
+          const locationStore = useLocationStore.getState();
 
-        if (!activeLocation) {
-          logger.warn('No active location found for widget');
+          const gpsLocation = locationStore.savedLocations.find(
+            loc => loc.id === GPS_LOCATION_ID
+          );
+
+          if (!gpsLocation) {
+            logger.warn('No GPS location found for widget');
+            props.renderWidget(
+              <FlexWidget
+                style={{
+                  height: 'match_parent',
+                  width: 'match_parent',
+                  backgroundColor: '#1C1B4D',
+                  borderRadius: 16,
+                  padding: 16,
+                  justifyContent: 'center',
+                  alignItems: 'center'
+                }}
+                clickAction="OPEN_APP"
+              >
+                <TextWidget
+                  text="Weather data unavailable"
+                  style={{
+                    fontSize: 14,
+                    color: '#E5E7EB',
+                    textAlign: 'center'
+                  }}
+                />
+                <TextWidget
+                  text="Tap to open app"
+                  style={{
+                    fontSize: 12,
+                    color: '#9CA3AF',
+                    textAlign: 'center'
+                  }}
+                />
+              </FlexWidget>
+            );
+            return;
+          }
+
+          // Check if we have fresh data
+          let weather = await weatherStore.getWeatherData(GPS_LOCATION_ID);
+          const isFresh = await weatherStore.isLocationDataFresh(GPS_LOCATION_ID);
+
+          // If no fresh data, fetch it
+          if (!weather || !isFresh) {
+            logger.debug('Fetching fresh data for widget:', GPS_LOCATION_ID);
+            weather = await fetchForecast(
+              i18n.locale,
+              gpsLocation.latitude,
+              gpsLocation.longitude
+            );
+
+            // Store for future use
+            await weatherStore.setWeatherData(GPS_LOCATION_ID, weather);
+          }
+
+          if (weather) {
+            const lastUpdateDate = new Date();
+            const WidgetComponent = nameToWidget[widgetInfo.widgetName as keyof typeof nameToWidget];
+            props.renderWidget(
+              <WidgetComponent
+                weather={weather}
+                lastUpdated={lastUpdateDate}
+                locationName={gpsLocation.name}
+              />
+            );
+          } else {
+            // Inline error handling
+            props.renderWidget(
+              <FlexWidget
+                style={{
+                  height: 'match_parent',
+                  width: 'match_parent',
+                  backgroundColor: '#1C1B4D',
+                  borderRadius: 16,
+                  padding: 16,
+                  justifyContent: 'center',
+                  alignItems: 'center'
+                }}
+                clickAction="OPEN_APP"
+              >
+                <TextWidget
+                  text="Weather data unavailable"
+                  style={{
+                    fontSize: 14,
+                    color: '#E5E7EB',
+                    textAlign: 'center'
+                  }}
+                />
+                <TextWidget
+                  text="Tap to open app"
+                  style={{
+                    fontSize: 12,
+                    color: '#9CA3AF',
+                    textAlign: 'center'
+                  }}
+                />
+              </FlexWidget>
+            );
+          }
+        } catch (error) {
+          logger.error('Widget update failed:', error);
+          // Inline error handling
           props.renderWidget(
             <FlexWidget
               style={{
@@ -47,7 +463,7 @@ export async function widgetTaskHandler(props: WidgetTaskHandlerProps) {
               clickAction="OPEN_APP"
             >
               <TextWidget
-                text="Weather data unavailable"
+                text="Unable to load weather"
                 style={{
                   fontSize: 14,
                   color: '#E5E7EB',
@@ -64,37 +480,120 @@ export async function widgetTaskHandler(props: WidgetTaskHandlerProps) {
               />
             </FlexWidget>
           );
-          return;
         }
+      } else {
+        // Handle existing Weather widget
+        try {
+          // Initialize database if needed (widgets run outside React context)
+          await initializeForecastStore();
 
-        // Check if we have fresh data
-        let weather = weatherStore.getWeatherData(activeLocationId);
-        const lastUpdated = weatherStore.getLastUpdated(activeLocationId);
+          // Get current stores state (widgets run outside React context)
+          const weatherStore = useForecastStore.getState();
+          const locationStore = useLocationStore.getState();
 
-        // If no fresh data, fetch it
-        if (!weather || !weatherStore.isLocationDataFresh(activeLocationId)) {
-          logger.debug('Fetching fresh data for widget:', activeLocationId);
-          weather = await fetchForecast(
-            i18n.locale,
-            activeLocation.latitude,
-            activeLocation.longitude
+          const gpsLocation = locationStore.savedLocations.find(
+            loc => loc.id === GPS_LOCATION_ID
           );
-          
-          // Store for future use
-          weatherStore.setWeatherData(activeLocationId, weather);
-        }
 
-        if (weather) {
-          const lastUpdateDate = lastUpdated || new Date();
-          props.renderWidget(
-            <WeatherWidget
-              weather={weather}
-              lastUpdated={lastUpdateDate}
-              locationName={activeLocation.name}
-            />
-          );
-        } else {
-          // Inline error handling (no separate component needed)
+          if (!gpsLocation) {
+            logger.warn('No GPS location found for widget');
+            props.renderWidget(
+              <FlexWidget
+                style={{
+                  height: 'match_parent',
+                  width: 'match_parent',
+                  backgroundColor: '#1C1B4D',
+                  borderRadius: 16,
+                  padding: 16,
+                  justifyContent: 'center',
+                  alignItems: 'center'
+                }}
+                clickAction="OPEN_APP"
+              >
+                <TextWidget
+                  text="Weather data unavailable"
+                  style={{
+                    fontSize: 14,
+                    color: '#E5E7EB',
+                    textAlign: 'center'
+                  }}
+                />
+                <TextWidget
+                  text="Tap to open app"
+                  style={{
+                    fontSize: 12,
+                    color: '#9CA3AF',
+                    textAlign: 'center'
+                  }}
+                />
+              </FlexWidget>
+            );
+            return;
+          }
+
+          // Check if we have fresh data
+          let weather = await weatherStore.getWeatherData(GPS_LOCATION_ID);
+          const isFresh = await weatherStore.isLocationDataFresh(GPS_LOCATION_ID);
+
+          // If no fresh data, fetch it
+          if (!weather || !isFresh) {
+            logger.debug('Fetching fresh data for widget:', GPS_LOCATION_ID);
+            weather = await fetchForecast(
+              i18n.locale,
+              gpsLocation.latitude,
+              gpsLocation.longitude
+            );
+
+            // Store for future use
+            await weatherStore.setWeatherData(GPS_LOCATION_ID, weather);
+          }
+
+          if (weather) {
+            const lastUpdateDate = new Date();
+              props.renderWidget(
+                <WeatherWidget
+                  weather={weather}
+                  lastUpdated={lastUpdateDate}
+                  locationName={gpsLocation.name}
+                />
+              );
+          } else {
+            // Inline error handling (no separate component needed)
+            props.renderWidget(
+              <FlexWidget
+                style={{
+                  height: 'match_parent',
+                  width: 'match_parent',
+                  backgroundColor: '#1C1B4D',
+                  borderRadius: 16,
+                  padding: 16,
+                  justifyContent: 'center',
+                  alignItems: 'center'
+                }}
+                clickAction="OPEN_APP"
+              >
+                <TextWidget
+                  text="Weather data unavailable"
+                  style={{
+                    fontSize: 14,
+                    color: '#E5E7EB',
+                    textAlign: 'center'
+                  }}
+                />
+                <TextWidget
+                  text="Tap to open app"
+                  style={{
+                    fontSize: 12,
+                    color: '#9CA3AF',
+                    textAlign: 'center'
+                  }}
+                />
+              </FlexWidget>
+            );
+          }
+        } catch (error) {
+          logger.error('Widget update failed:', error);
+          // Inline error handling
           props.renderWidget(
             <FlexWidget
               style={{
@@ -109,7 +608,7 @@ export async function widgetTaskHandler(props: WidgetTaskHandlerProps) {
               clickAction="OPEN_APP"
             >
               <TextWidget
-                text="Weather data unavailable"
+                text="Unable to load weather"
                 style={{
                   fontSize: 14,
                   color: '#E5E7EB',
@@ -127,40 +626,6 @@ export async function widgetTaskHandler(props: WidgetTaskHandlerProps) {
             </FlexWidget>
           );
         }
-      } catch (error) {
-        logger.error('Widget update failed:', error);
-        // Inline error handling
-        props.renderWidget(
-          <FlexWidget
-            style={{
-              height: 'match_parent',
-              width: 'match_parent',
-              backgroundColor: '#1C1B4D',
-              borderRadius: 16,
-              padding: 16,
-              justifyContent: 'center',
-              alignItems: 'center'
-            }}
-            clickAction="OPEN_APP"
-          >
-            <TextWidget
-              text="Unable to load weather"
-              style={{
-                fontSize: 14,
-                color: '#E5E7EB',
-                textAlign: 'center'
-              }}
-            />
-            <TextWidget
-              text="Tap to open app"
-              style={{
-                fontSize: 12,
-                color: '#9CA3AF',
-                textAlign: 'center'
-              }}
-            />
-          </FlexWidget>
-        );
       }
       break;
 
@@ -169,25 +634,135 @@ export async function widgetTaskHandler(props: WidgetTaskHandlerProps) {
       if (props.clickAction === 'REFRESH') {
         // Manual refresh from widget
         try {
-          const weatherStore = useWeatherStore.getState();
+          const weatherStore = useForecastStore.getState();
           const locationStore = useLocationStore.getState();
           const languageStore = useLanguageStore.getState();
 
-          const activeLocationId = locationStore.activeLocationId;
-          const activeLocation = locationStore.savedLocations.find(
-            loc => loc.id === activeLocationId
+          const gpsLocation = locationStore.savedLocations.find(
+            loc => loc.id === GPS_LOCATION_ID
           );
 
-          if (activeLocation) {
-            await weatherStore.refreshWeather(
-              activeLocationId,
-              i18n.locale,
-              activeLocation.latitude,
-              activeLocation.longitude
+          if (gpsLocation) {
+            // Show refreshing state
+            props.renderWidget(
+              <FlexWidget
+                style={{
+                  height: 'match_parent',
+                  width: 'match_parent',
+                  backgroundColor: '#1C1B4D',
+                  borderRadius: 16,
+                  padding: 16,
+                  justifyContent: 'center',
+                  alignItems: 'center'
+                }}
+                clickAction="REFRESH"
+              >
+                <TextWidget
+                  text="Refreshing..."
+                  style={{
+                    fontSize: 14,
+                    color: '#E5E7EB',
+                    textAlign: 'center'
+                  }}
+                />
+              </FlexWidget>
             );
+
+            // Perform refresh
+            await weatherStore.refreshWeather(
+              GPS_LOCATION_ID,
+              i18n.locale,
+              gpsLocation.latitude,
+              gpsLocation.longitude
+            );
+
+            // Get fresh data and re-render widget
+            const freshWeather = await weatherStore.getWeatherData(GPS_LOCATION_ID);
+            if (freshWeather) {
+              const lastUpdateDate = new Date();
+              // Re-render the appropriate widget type
+              const WidgetComponent = nameToWidget[props.widgetInfo.widgetName as keyof typeof nameToWidget];
+              if (WidgetComponent && WidgetComponent !== HelloWidget) {
+                props.renderWidget(
+                  <WidgetComponent
+                    weather={freshWeather}
+                    lastUpdated={lastUpdateDate}
+                    locationName={gpsLocation.name}
+                  />
+                );
+                logger.debug(`${props.widgetInfo.widgetName} widget refreshed and re-rendered successfully`);
+              }
+            } else {
+              // Handle case where refresh succeeded but data is unavailable
+              props.renderWidget(
+                <FlexWidget
+                  style={{
+                    height: 'match_parent',
+                    width: 'match_parent',
+                    backgroundColor: '#1C1B4D',
+                    borderRadius: 16,
+                    padding: 16,
+                    justifyContent: 'center',
+                    alignItems: 'center'
+                  }}
+                  clickAction="REFRESH"
+                >
+                  <TextWidget
+                    text="Weather data unavailable"
+                    style={{
+                      fontSize: 14,
+                      color: '#E5E7EB',
+                      textAlign: 'center'
+                    }}
+                  />
+                  <TextWidget
+                    text="Tap to retry"
+                    style={{
+                      fontSize: 12,
+                      color: '#9CA3AF',
+                      textAlign: 'center'
+                    }}
+                  />
+                </FlexWidget>
+              );
+            }
+          } else {
+            logger.warn('No active location found for widget refresh');
           }
         } catch (error) {
           logger.error('Manual widget refresh failed:', error);
+          // Show error state with retry option
+          props.renderWidget(
+            <FlexWidget
+              style={{
+                height: 'match_parent',
+                width: 'match_parent',
+                backgroundColor: '#1C1B4D',
+                borderRadius: 16,
+                padding: 16,
+                justifyContent: 'center',
+                alignItems: 'center'
+              }}
+              clickAction="REFRESH"
+            >
+              <TextWidget
+                text="Unable to refresh"
+                style={{
+                  fontSize: 14,
+                  color: '#E5E7EB',
+                  textAlign: 'center'
+                }}
+              />
+              <TextWidget
+                text="Tap to retry"
+                style={{
+                  fontSize: 12,
+                  color: '#9CA3AF',
+                  textAlign: 'center'
+                }}
+              />
+            </FlexWidget>
+          );
         }
       }
       break;

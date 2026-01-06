@@ -60,6 +60,63 @@
           "project": "react-native",
           "organization": "ek-solutions"
         }
+      ],
+      [
+        "react-native-android-widget",
+        {
+          "widgets": [
+            {
+              "name": "Weather",
+              "label": "Weather Widget",
+              "minWidth": "180dp",
+              "minHeight": "100dp",
+              "targetCellWidth": 2,
+              "targetCellHeight": 1,
+              "description": "Shows current weather",
+              "updatePeriodMillis": 3600000
+            },
+            {
+              "name": "WeatherCompact",
+              "label": "Weather (Compact)",
+              "minWidth": "90dp",
+              "minHeight": "90dp",
+              "targetCellWidth": 1,
+              "targetCellHeight": 1,
+              "description": "Essential weather info in 1x1 size",
+              "updatePeriodMillis": 1800000
+            },
+            {
+              "name": "WeatherStandard",
+              "label": "Weather (Standard)",
+              "minWidth": "90dp",
+              "minHeight": "180dp",
+              "targetCellWidth": 1,
+              "targetCellHeight": 2,
+              "description": "Current weather with mini forecast in 1x2 size",
+              "updatePeriodMillis": 1800000
+            },
+            {
+              "name": "WeatherExtended",
+              "label": "Weather (Extended)",
+              "minWidth": "180dp",
+              "minHeight": "180dp",
+              "targetCellWidth": 2,
+              "targetCellHeight": 2,
+              "description": "Comprehensive weather view in 2x2 size",
+              "updatePeriodMillis": 1800000
+            },
+            {
+              "name": "Hello",
+              "label": "Hello Widget",
+              "minWidth": "180dp",
+              "minHeight": "100dp",
+              "targetCellWidth": 2,
+              "targetCellHeight": 1,
+              "description": "Simple hello widget",
+              "updatePeriodMillis": 3600000
+            }
+          ]
+        }
       ]
     ],
     "ios": {

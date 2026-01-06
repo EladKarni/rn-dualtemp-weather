@@ -8,6 +8,8 @@ import type { AppError } from '../utils/errors';
 import type { Moment } from 'moment';
 import type { SavedLocation } from '../store/useLocationStore';
 import type { LocationWeatherState } from '../hooks/useMultiLocationWeather';
+import { WidgetPreview } from 'react-native-android-widget';
+import WeatherWidget from '../widgets/WeatherWidget';
 
 interface MainWeatherWithModalsProps {
   forecast: Weather;
@@ -72,6 +74,12 @@ export default function MainWeatherWithModals({
         onRetry={onRetry}
         onDismissError={onDismissError}
         lastUpdated={lastUpdated}
+      />
+
+      <WidgetPreview
+        renderWidget={() => <WeatherWidget weather={forecast} lastUpdated={lastUpdated} />}
+        width={320}
+        height={200}
       />
 
       <LocationDropdown
