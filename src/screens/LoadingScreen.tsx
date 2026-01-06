@@ -4,7 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import AppHeader from "../components/AppHeader/AppHeader";
 import type { SavedLocation } from "../store/useLocationStore";
 import type { LocationWeatherState } from "../hooks/useMultiLocationWeather";
-import { loadingScreenStyles } from "../Styles/screens/LoadingScreen.styles";
+import { loadingScreenStyles } from "../styles/screens/LoadingScreen.styles";
 
 interface LoadingScreenProps {
   locationName: string;

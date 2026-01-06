@@ -15,7 +15,7 @@ import type { AppError } from "../utils/errors";
 import type { Moment } from "moment";
 import type { SavedLocation } from "../store/useLocationStore";
 import type { LocationWeatherState } from "../hooks/useMultiLocationWeather";
-import { weatherScreenStyles } from "../Styles/screens/WeatherScreen.styles";
+import { weatherScreenStyles } from "../styles/screens/WeatherScreen.styles";
 
 interface WeatherScreenProps {
   forecast: Weather;

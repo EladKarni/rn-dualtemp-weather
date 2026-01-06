@@ -1,5 +1,5 @@
-import { StyleSheet } from 'react-native';
-import { palette } from '../../Styles/Palette';
+import { StyleSheet } from "react-native";
+import { palette } from "../Palette";
 
 export const loadingScreenStyles = StyleSheet.create({
   container: {
@@ -11,20 +11,20 @@ export const loadingScreenStyles = StyleSheet.create({
   },
   errorContent: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 20,
   },
   loadingTitle: {
     fontSize: 20,
-    fontWeight: '600',
+    fontWeight: "600",
     color: palette.textColor,
     marginBottom: 8,
-    textAlign: 'center',
+    textAlign: "center",
   },
   loadingMessage: {
     fontSize: 14,
     color: palette.highlightColor,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });

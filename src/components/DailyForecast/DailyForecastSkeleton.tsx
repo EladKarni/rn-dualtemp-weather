@@ -1,9 +1,9 @@
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import Subtitle from '../Subtitle/Subtitle';
-import { DailyForecastStyles } from './DailyForecast.Styles';
-import { palette } from '../../Styles/Palette';
-import { i18n } from '../../localization/i18n';
+import React from "react";
+import { View, StyleSheet } from "react-native";
+import Subtitle from "../Subtitle/Subtitle";
+import { DailyForecastStyles } from "./DailyForecast.Styles";
+import { palette } from "../../styles/Palette";
+import { i18n } from "../../localization/i18n";
 
 /**
  * Skeleton placeholder for DailyForecast
@@ -15,7 +15,7 @@ const DailyForecastSkeleton = () => {
 
   return (
     <View style={DailyForecastStyles.container}>
-      <Subtitle text={i18n.t('DailyTitle')} />
+      <Subtitle text={i18n.t("DailyTitle")} />
       {skeletonItems.map((_, index) => (
         <View key={index}>
           <View style={styles.skeletonItem}>
@@ -34,15 +34,15 @@ const DailyForecastSkeleton = () => {
 
 const styles = StyleSheet.create({
   skeletonItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     paddingHorizontal: 15,
-    alignItems: 'center',
+    alignItems: "center",
     height: 50,
   },
   itemRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 15,
   },
   skeletonDay: {

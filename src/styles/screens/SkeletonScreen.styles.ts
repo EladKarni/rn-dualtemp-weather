@@ -1,5 +1,5 @@
-import { StyleSheet } from 'react-native';
-import { palette } from '../../Styles/Palette';
+import { StyleSheet } from "react-native";
+import { palette } from "../Palette";
 
 export const skeletonScreenStyles = StyleSheet.create({
   container: {

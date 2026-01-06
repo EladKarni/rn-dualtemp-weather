@@ -5,7 +5,7 @@ import AppHeader from "../components/AppHeader/AppHeader";
 import { WeatherLoadingSkeleton } from "../components/LoadingSkeleton/LoadingSkeleton";
 import type { SavedLocation } from "../store/useLocationStore";
 import type { LocationWeatherState } from "../hooks/useMultiLocationWeather";
-import { skeletonScreenStyles } from "../Styles/screens/SkeletonScreen.styles";
+import { skeletonScreenStyles } from "../styles/screens/SkeletonScreen.styles";
 
 interface SkeletonScreenProps {
   onSettingsPress: () => void;

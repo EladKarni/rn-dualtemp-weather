@@ -1,7 +1,7 @@
-import { StyleSheet } from 'react-native';
-import { palette } from '../../Styles/Palette';
-import { spacing } from '../../Styles/Spacing';
-import { shadowProp } from '../../Styles/BoxShadow';
+import { StyleSheet } from "react-native";
+import { palette } from "../../styles/Palette";
+import { spacing } from "../../styles/Spacing";
+import { shadowProp } from "../../styles/BoxShadow";
 
 export const styles = StyleSheet.create({
   container: {
@@ -15,7 +15,7 @@ export const styles = StyleSheet.create({
     marginHorizontal: spacing.lg,
     marginTop: spacing.md,
     borderRadius: 16,
-    overflow: 'hidden',
+    overflow: "hidden",
     borderWidth: 1,
     borderColor: palette.highlightColor,
     ...shadowProp,
@@ -26,17 +26,17 @@ export const styles = StyleSheet.create({
   addLocationButtonGradient: {
     paddingVertical: spacing.lg,
     paddingHorizontal: spacing.xl,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     minHeight: 56,
     borderRadius: 16,
   },
   addLocationButtonText: {
     fontSize: 16,
-    fontWeight: '700',
+    fontWeight: "700",
     color: palette.primaryColor,
     letterSpacing: 0.3,
-    textTransform: 'uppercase',
+    textTransform: "uppercase",
   },
   addLocationButtonTextDisabled: {
     color: palette.textColorSecondary,

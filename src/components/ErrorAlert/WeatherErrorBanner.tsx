@@ -1,8 +1,8 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { AppError } from '../../utils/errors';
-import { i18n } from '../../localization/i18n';
-import { palette } from '../../Styles/Palette';
+import React from "react";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { AppError } from "../../utils/errors";
+import { i18n } from "../../localization/i18n";
+import { palette } from "../../styles/Palette";
 
 interface WeatherErrorBannerProps {
   error: AppError;
@@ -22,20 +22,26 @@ export const WeatherErrorBanner: React.FC<WeatherErrorBannerProps> = ({
     const diffMs = now.getTime() - date.getTime();
     const diffMins = Math.floor(diffMs / 60000);
 
-    if (diffMins < 1) return i18n.t('JustNow') || 'Just now';
-    if (diffMins === 1) return i18n.t('OneMinuteAgo') || '1 minute ago';
-    if (diffMins < 60) return i18n.t('XMinutesAgo', { count: diffMins }) || `${diffMins} minutes ago`;
+    if (diffMins < 1) return i18n.t("JustNow") || "Just now";
+    if (diffMins === 1) return i18n.t("OneMinuteAgo") || "1 minute ago";
+    if (diffMins < 60)
+      return (
+        i18n.t("XMinutesAgo", { count: diffMins }) || `${diffMins} minutes ago`
+      );
 
     const diffHours = Math.floor(diffMins / 60);
-    if (diffHours === 1) return i18n.t('OneHourAgo') || '1 hour ago';
-    return i18n.t('XHoursAgo', { count: diffHours }) || `${diffHours} hours ago`;
+    if (diffHours === 1) return i18n.t("OneHourAgo") || "1 hour ago";
+    return (
+      i18n.t("XHoursAgo", { count: diffHours }) || `${diffHours} hours ago`
+    );
   };
 
   const getErrorMessage = (): string => {
     let message = error.userMessage;
 
     if (lastUpdated) {
-      message += '. ' + i18n.t('LastUpdated', { time: getTimeAgoText(lastUpdated) }) ||
+      message +=
+        ". " + i18n.t("LastUpdated", { time: getTimeAgoText(lastUpdated) }) ||
         `. Last updated ${getTimeAgoText(lastUpdated)}`;
     }
 
@@ -49,14 +55,17 @@ export const WeatherErrorBanner: React.FC<WeatherErrorBannerProps> = ({
         <View style={styles.messageContainer}>
           <Text style={styles.message}>{getErrorMessage()}</Text>
           <Text style={styles.supportText}>
-            If this happens often, contact {process.env.EXPO_PUBLIC_SUPPORT_EMAIL || 'support@eladkarni.solutions'} for help.
+            If this happens often, contact{" "}
+            {process.env.EXPO_PUBLIC_SUPPORT_EMAIL ||
+              "support@eladkarni.solutions"}{" "}
+            for help.
           </Text>
         </View>
       </View>
       <View style={styles.actions}>
         {error.recoverable && onRetry && (
           <TouchableOpacity onPress={onRetry} style={styles.retryButton}>
-            <Text style={styles.retryText}>{i18n.t('Retry')}</Text>
+            <Text style={styles.retryText}>{i18n.t("Retry")}</Text>
           </TouchableOpacity>
         )}
         {onDismiss && (
@@ -71,17 +80,17 @@ export const WeatherErrorBanner: React.FC<WeatherErrorBannerProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: 'rgba(255, 69, 58, 0.1)',
+    backgroundColor: "rgba(255, 69, 58, 0.1)",
     borderLeftWidth: 4,
-    borderLeftColor: '#FF453A',
+    borderLeftColor: "#FF453A",
     padding: 12,
     marginHorizontal: 16,
     marginVertical: 8,
     borderRadius: 8,
   },
   content: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    alignItems: "flex-start",
   },
   icon: {
     fontSize: 20,
@@ -103,9 +112,9 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   actions: {
-    flexDirection: 'row',
+    flexDirection: "row",
     marginTop: 8,
-    justifyContent: 'flex-end',
+    justifyContent: "flex-end",
   },
   retryButton: {
     paddingHorizontal: 16,
@@ -115,8 +124,8 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   retryText: {
-    color: '#fff',
-    fontWeight: '600',
+    color: "#fff",
+    fontWeight: "600",
     fontSize: 14,
   },
   dismissButton: {
@@ -126,6 +135,6 @@ const styles = StyleSheet.create({
   dismissText: {
     color: palette.textColor,
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 });

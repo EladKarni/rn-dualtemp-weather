@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet, Linking, Image } from "react-native";
-import { palette } from "../../Styles/Palette";
+import { palette } from "../../styles/Palette";
 import { i18n } from "../../localization/i18n";
 
 const AppFooter = () => {

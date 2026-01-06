@@ -1,5 +1,5 @@
 import { StyleSheet } from "react-native";
-import { palette } from "../../Styles/Palette";
+import { palette } from "../Palette";
 
 export const styles = StyleSheet.create({
   overlay: {

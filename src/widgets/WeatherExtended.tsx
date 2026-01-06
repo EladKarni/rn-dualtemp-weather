@@ -3,8 +3,6 @@ import React from "react";
 import { FlexWidget, TextWidget } from "react-native-android-widget";
 import { Weather } from "../types/WeatherTypes";
 import { processWidgetData } from "./components/shared/BaseWeatherWidget";
-import { DualTemperatureDisplay } from "./components/shared/DualTemperatureDisplay";
-import { WeatherIcon } from "./components/shared/WeatherIcon";
 import moment from "moment";
 
 interface WeatherExtendedProps {
@@ -24,10 +22,6 @@ export function WeatherExtended({
     locationName,
     size: "extended",
   });
-
-  const formatCurrentDate = (date: Date) => {
-    return moment(date).format("LL");
-  };
 
   const getTimeAgo = (date: Date) => {
     const now = moment();
@@ -66,7 +60,7 @@ export function WeatherExtended({
           style={{
             fontSize: 18,
             fontWeight: "bold",
-            color: "#FFFFFF",
+            color: "#E5E7EB",
           }}
         />
       </FlexWidget>
@@ -95,10 +89,10 @@ export function WeatherExtended({
             style={{
               fontSize: 32,
               fontWeight: "bold",
-              color: "#FFFFFF",
+              color: "#E5E7EB",
             }}
           />
-          <TextWidget text={"/"} />
+          <TextWidget text={"/"} style={{ color: "#E5E7EB" }} />
           {/* Secondary Temperature (smaller) */}
           <TextWidget
             text={` ${

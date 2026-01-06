@@ -1,14 +1,14 @@
-import { StyleSheet } from 'react-native';
-import { palette } from '../../Styles/Palette';
+import { StyleSheet } from "react-native";
+import { palette } from "../../styles/Palette";
 
 export const styles = StyleSheet.create({
   deleteButton: {
     borderRadius: 20,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: "rgba(255, 255, 255, 0.2)",
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    borderColor: "rgba(255, 255, 255, 0.3)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   deleteButton_small: {
     width: 28,
@@ -23,13 +23,13 @@ export const styles = StyleSheet.create({
     height: 36,
   },
   deleteIcon: {
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   deleteIconText: {
-    fontWeight: '300',
+    fontWeight: "300",
     color: palette.textColor,
-    textAlign: 'center',
+    textAlign: "center",
   },
   deleteIconText_small: {
     fontSize: 16,

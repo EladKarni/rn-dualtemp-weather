@@ -1,6 +1,6 @@
-import { StyleSheet } from 'react-native';
-import { palette } from '../../../Styles/Palette';
-import { spacing } from '../../../Styles/Spacing';
+import { StyleSheet } from "react-native";
+import { palette } from "../../../styles/Palette";
+import { spacing } from "../../../styles/Spacing";
 
 export const styles = StyleSheet.create({
   cityItem: {

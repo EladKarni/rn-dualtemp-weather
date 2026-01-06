@@ -4,7 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import AppHeader from "../components/AppHeader/AppHeader";
 import type { SavedLocation } from "../store/useLocationStore";
 import type { LocationWeatherState } from "../hooks/useMultiLocationWeather";
-import { errorScreenStyles } from "../Styles/screens/ErrorScreen.styles";
+import { errorScreenStyles } from "../styles/screens/ErrorScreen.styles";
 
 interface ErrorScreenProps {
   onSettingsPress: () => void;

@@ -1,6 +1,6 @@
 import React from "react";
 import { View, StyleSheet, TouchableOpacity } from "react-native";
-import { palette } from "../../Styles/Palette";
+import { palette } from "../../styles/Palette";
 import GearIcon from "../GearIcon/GearIcon";
 import LocationPills from "../LocationPills/LocationPills";
 import type { SavedLocation } from "../../store/useLocationStore";
@@ -26,7 +26,12 @@ const AppHeader = ({
 
   return (
     <View style={[styles.headerContainer, isRTL && styles.headerContainerRTL]}>
-      <View style={[styles.locationPillsWrapper, isRTL && styles.locationPillsWrapperRTL]}>
+      <View
+        style={[
+          styles.locationPillsWrapper,
+          isRTL && styles.locationPillsWrapperRTL,
+        ]}
+      >
         <LocationPills
           savedLocations={savedLocations}
           activeLocationId={activeLocationId}
@@ -81,7 +86,6 @@ const styles = StyleSheet.create({
     right: undefined,
     left: 20,
   },
-
 });
 
 export default AppHeader;

@@ -1,17 +1,17 @@
-import React from 'react';
-import { TouchableOpacity, Text, View } from 'react-native';
-import { palette } from '../../Styles/Palette';
-import { styles } from './DeleteButton.styles';
+import React from "react";
+import { TouchableOpacity, Text, View } from "react-native";
+import { palette } from "../../styles/Palette";
+import { styles } from "./DeleteButton.styles";
 
 interface DeleteButtonProps {
   onPress: () => void;
-  size?: 'small' | 'medium' | 'large';
+  size?: "small" | "medium" | "large";
   style?: any;
 }
 
 export const DeleteButton: React.FC<DeleteButtonProps> = ({
   onPress,
-  size = 'medium',
+  size = "medium",
   style,
 }) => {
   return (

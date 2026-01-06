@@ -22,9 +22,9 @@ import { useLanguageStore } from "../store/useLanguageStore";
 import { logger } from "../utils/logger";
 import { AppError, toAppError } from "../utils/errors";
 import { useModalAnimation } from "../hooks/useModalAnimation";
-import { palette } from "../Styles/Palette";
+import { palette } from "../styles/Palette";
 import { CityResultItem } from "../components/AddLocation/CityResultItem/CityResultItem";
-import { styles } from "../Styles/screens/AddLocationScreen.styles";
+import { styles } from "../styles/screens/AddLocationScreen.styles";
 
 type AddLocationScreenProps = {
   visible: boolean;

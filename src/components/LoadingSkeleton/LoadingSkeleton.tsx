@@ -1,15 +1,16 @@
-import React from 'react';
-import { View, StyleSheet, ActivityIndicator, ViewStyle } from 'react-native';
-import { palette } from '../../Styles/Palette';
+import React from "react";
+import { View, StyleSheet, ActivityIndicator, ViewStyle } from "react-native";
+import { palette } from "../../styles/Palette";
 
 interface SkeletonCardProps {
   height?: number;
   width?: number | string;
 }
 
-export const SkeletonCard: React.FC<SkeletonCardProps> = ({ height = 120, width = '100%' }) => (
-  <View style={[styles.skeleton, { height, width } as ViewStyle]} />
-);
+export const SkeletonCard: React.FC<SkeletonCardProps> = ({
+  height = 120,
+  width = "100%",
+}) => <View style={[styles.skeleton, { height, width } as ViewStyle]} />;
 
 export const WeatherSkeletonCard: React.FC = () => (
   <View style={styles.weatherCardContainer}>
@@ -38,9 +39,9 @@ export const DailyForecastSkeleton: React.FC = () => (
 );
 
 export const LoadingSpinner: React.FC = () => (
-  <ActivityIndicator 
-    size="large" 
-    color={palette.highlightColor} 
+  <ActivityIndicator
+    size="large"
+    color={palette.highlightColor}
     style={styles.spinner}
   />
 );
@@ -62,7 +63,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   skeleton: {
-    backgroundColor: '#e0e0e0',
+    backgroundColor: "#e0e0e0",
     borderRadius: 12,
     marginBottom: 16,
   },
@@ -70,8 +71,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   hourlyContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 16,
     paddingHorizontal: 8,
   },
@@ -79,8 +80,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   spinnerContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     paddingVertical: 20,
   },
   spinner: {
