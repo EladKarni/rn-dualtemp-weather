@@ -4,13 +4,14 @@ import { FlexWidget, TextWidget } from 'react-native-android-widget';
 import { processWeatherData, getWeatherIcon } from '../../utils/widgetDataUtils';
 import { Weather } from '../../../types/WeatherTypes';
 import { useSettingsStore } from '../../../store/useSettingsStore';
-import { getLayoutConfig, WidgetSize } from '../../utils/widgetLayoutUtils';
+import { getLayoutConfig, getActualDimensions, WidgetSize } from '../../utils/widgetLayoutUtils';
 
 interface BaseWeatherWidgetProps {
   weather: Weather;
   lastUpdated: Date;
   locationName: string;
   size: WidgetSize;
+  widgetName?: string; // NEW: Optional widget name for dimension-aware processing
 }
 
 /**
@@ -22,7 +23,8 @@ export const processWidgetData = ({
   weather,
   lastUpdated,
   locationName: originalLocationName,
-  size
+  size,
+  widgetName
 }: BaseWeatherWidgetProps) => {
   // Get user's temperature scale preference (direct store access)
   const tempScale = useSettingsStore.getState().tempScale;
@@ -37,6 +39,9 @@ export const processWidgetData = ({
     minute: '2-digit'
   });
 
+  // Get actual widget dimensions if widget name is provided
+  const dimensions = widgetName ? getActualDimensions(widgetName) : null;
+
   return {
     processedData,
     layout,
@@ -44,6 +49,8 @@ export const processWidgetData = ({
     locationName: originalLocationName,
     weatherIcon: getWeatherIcon(processedData.weatherId),
     tempScale,
+    dimensions, // NEW: Pass actual dimensions back to widgets
+    widgetName, // NEW: Pass widget name for reference
   };
 };
 

@@ -3,10 +3,9 @@ import React from 'react';
 import { FlexWidget, TextWidget } from 'react-native-android-widget';
 import { Weather } from '../types/WeatherTypes';
 import { processWidgetData } from './components/shared/BaseWeatherWidget';
-import { TemperatureDisplay } from './components/shared/TemperatureDisplay';
-import { WeatherMetrics } from './components/shared/WeatherMetrics';
+import { DualTemperatureDisplay } from './components/shared/DualTemperatureDisplay';
 import { WeatherIcon } from './components/shared/WeatherIcon';
-import { ForecastRow } from './components/shared/ForecastRow';
+import { convertWindSpeed } from '../utils/temperature';
 
 interface WeatherStandardProps {
   weather: Weather;
@@ -14,19 +13,92 @@ interface WeatherStandardProps {
   locationName: string;
 }
 
+// Helper component for hourly forecast item
+const HourlyItem = ({
+  forecast,
+  tempScale
+}: {
+  forecast: any;
+  tempScale: 'C' | 'F';
+}) => {
+  // Format time using device locale
+  const timeText = new Date(forecast.dt * 1000).toLocaleTimeString([], {
+    hour: '2-digit',
+    minute: '2-digit'
+  });
+
+  // Calculate wind speed
+  const { value: windSpeed, unit: windUnit } = convertWindSpeed(forecast.wind_speed, tempScale);
+
+  return (
+    <FlexWidget
+      style={{
+        backgroundColor: 'rgba(255, 255, 255, 0.1)',
+        borderRadius: 8,
+        padding: 8,
+        marginBottom: 8,
+        flexDirection: 'column',
+        alignItems: 'center',
+        flex: 1,
+      }}
+    >
+      {/* Time and Precipitation */}
+      <TextWidget
+        text={timeText}
+        style={{
+          fontSize: 10,
+          color: '#E5E7EB',
+          marginBottom: 2,
+        }}
+      />
+
+      <TextWidget
+        text={`💧 ${Math.round(forecast.pop * 100)}%`}
+        style={{
+          fontSize: 9,
+          color: '#9CA3AF',
+          marginBottom: 4,
+        }}
+      />
+
+      {/* Wind Speed */}
+      <TextWidget
+        text={`${Math.round(windSpeed)}${windUnit}`}
+        style={{
+          fontSize: 9,
+          color: '#9CA3AF',
+          marginBottom: 4,
+        }}
+      />
+
+      {/* Weather Icon */}
+      <WeatherIcon
+        weatherId={forecast.weather[0].id}
+        size="small"
+      />
+
+      {/* Dual Temperature */}
+      <DualTemperatureDisplay
+        temp={forecast.temp}
+        size="small"
+      />
+    </FlexWidget>
+  );
+};
+
 export function WeatherStandard({
   weather,
   lastUpdated,
   locationName
 }: WeatherStandardProps) {
-  const { processedData, layout, lastUpdatedText, tempScale } = processWidgetData({
+  const { processedData, tempScale } = processWidgetData({
     weather,
     lastUpdated,
     locationName,
     size: 'standard'
   });
 
-  // Get first 2 hourly forecast items
+  // Get forecast items - aim for 2-3 items that fit
   const forecastItems = processedData.hourlyForecast.slice(0, 2);
 
   return (
@@ -34,88 +106,26 @@ export function WeatherStandard({
       style={{
         height: 'match_parent',
         width: 'match_parent',
-        backgroundColor: '#1C1B4D',
+        backgroundColor: '#3621dcff', // palette.primaryColor
         borderRadius: 16,
-        padding: layout.spacing.padding,
+        padding: 12,
         flexDirection: 'column',
-        justifyContent: 'space-between'
       }}
       clickAction="REFRESH"
     >
-      {/* Header with location and last updated */}
+      {/* Hourly Forecast Items */}
       <FlexWidget
         style={{
-          width: 'match_parent',
-          flexDirection: 'column',
-          alignItems: 'flex-start'
-        }}
-      >
-        <TextWidget
-          text={locationName}
-          style={{
-            fontSize: layout.fonts.location,
-            color: '#E5E7EB', // 80% white
-          }}
-        />
-        <TextWidget
-          text={`Updated: ${lastUpdatedText}`}
-          style={{
-            fontSize: layout.fonts.smallText,
-            color: '#9CA3AF', // 60% white
-          }}
-        />
-      </FlexWidget>
-
-      {/* Current weather section */}
-      <FlexWidget
-        style={{
-          width: 'match_parent',
+          flex: 1,
           flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between'
-        }}
-      >
-        <FlexWidget style={{ flexDirection: 'column', alignItems: 'flex-start' }}>
-          <TextWidget
-            text={processedData.description.charAt(0).toUpperCase() + processedData.description.slice(1)}
-            style={{
-              fontSize: layout.fonts.text,
-              color: '#E5E7EB', // 80% white
-              marginBottom: layout.spacing.small,
-            }}
-          />
-          <TemperatureDisplay 
-            temp={processedData.temp}
-            scale={tempScale}
-            size="medium"
-          />
-        </FlexWidget>
-        
-        <WeatherIcon weatherId={processedData.weatherId} size="large" />
-      </FlexWidget>
-
-      {/* Weather metrics */}
-      <WeatherMetrics
-        humidity={processedData.humidity}
-        windSpeed={processedData.windSpeed.value}
-        tempScale={tempScale}
-        size="medium"
-      />
-
-      {/* Mini forecast */}
-      <FlexWidget
-        style={{
-          width: 'match_parent',
-          flexDirection: 'row',
-          justifyContent: 'space-around'
+          justifyContent: 'space-between',
         }}
       >
         {forecastItems.map((forecast, index) => (
-          <ForecastRow
+          <HourlyItem
             key={forecast.dt}
             forecast={forecast}
             tempScale={tempScale}
-            size="small"
           />
         ))}
       </FlexWidget>
@@ -124,19 +134,18 @@ export function WeatherStandard({
       <FlexWidget
         style={{
           width: 'match_parent',
-          alignItems: 'center'
+          alignItems: 'center',
+          marginTop: 8,
         }}
       >
         <TextWidget
           text="Tap to refresh"
           style={{
-            fontSize: layout.fonts.smallText,
-            color: '#6B7280', // 40% white
+            fontSize: 9,
+            color: '#6B7280',
           }}
         />
       </FlexWidget>
     </FlexWidget>
   );
 }
-
-export default WeatherStandard;

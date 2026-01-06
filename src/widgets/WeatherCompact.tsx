@@ -3,8 +3,8 @@ import React from 'react';
 import { FlexWidget, TextWidget } from 'react-native-android-widget';
 import { Weather } from '../types/WeatherTypes';
 import { processWidgetData } from './components/shared/BaseWeatherWidget';
-import { TemperatureDisplay } from './components/shared/TemperatureDisplay';
-import { WeatherIcon } from './components/shared/WeatherIcon';
+import { getActualDimensions, calculateOptimalFontSize } from './utils/widgetLayoutUtils';
+import { formatTemperature } from '../utils/temperature';
 
 interface WeatherCompactProps {
   weather: Weather;
@@ -12,54 +12,99 @@ interface WeatherCompactProps {
   locationName: string;
 }
 
+// Helper function to format temperature for abbreviation
+const formatTempForAbbreviation = (temp: number, scale: 'C' | 'F'): string => {
+  const value = Math.round(temp);
+  const unit = scale === 'F' ? '°F' : '°C';
+
+  // Handle very long temperatures (like -15°F or -26°C)
+  if (Math.abs(value) >= 100) {
+    return `${value}${unit}`; // No abbreviation for 3+ digit temps
+  }
+
+  return `${value}${unit}`;
+};
+
 export function WeatherCompact({
   weather,
   lastUpdated,
   locationName
 }: WeatherCompactProps) {
-  const { processedData, layout, weatherIcon, tempScale } = processWidgetData({
+  // Use dimension-aware processing for true 1x1 behavior
+  const { processedData, tempScale } = processWidgetData({
     weather,
     lastUpdated,
     locationName,
-    size: 'compact'
+    size: 'compact',
+    widgetName: 'WeatherCompact' // Pass widget name for dimension-aware processing
   });
+
+  // Get actual dimensions to ensure true 1x1 layout
+  const dimensions = getActualDimensions('WeatherCompact');
+
+  // Determine user's preferred scale for primary display
+  const primaryScale = tempScale;
+  const secondaryScale = primaryScale === 'F' ? 'C' : 'F';
+
+  // Format temperatures for 1x1 space (abbreviated)
+  const primaryTemp = formatTempForAbbreviation(processedData.temp, primaryScale);
+  const secondaryTemp = formatTempForAbbreviation(processedData.temp, secondaryScale);
 
   return (
     <FlexWidget
       style={{
         height: 'match_parent',
         width: 'match_parent',
-        backgroundColor: '#1C1B4D',
+        backgroundColor: '#3621dcff', // palette.primaryColor - matches app theme
         borderRadius: 16,
-        padding: layout.spacing.padding,
         flexDirection: 'column',
         justifyContent: 'center',
-        alignItems: 'center'
+        alignItems: 'center',
+        padding: getActualDimensions('WeatherCompact').width === 1 && getActualDimensions('WeatherCompact').height === 1 ? 4 : 8, // Minimal padding for true 1x1
       }}
       clickAction="REFRESH"
     >
-      {/* Weather Icon */}
-      <WeatherIcon weatherId={processedData.weatherId} size="large" />
+      {/* Stacked Temperature Layout - Primary prominent, secondary supporting */}
+      <FlexWidget
+        style={{
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
+      >
+        {/* Primary Temperature - User's preferred scale, more prominent */}
+        <TextWidget
+          text={primaryTemp}
+          style={{
+            fontSize: calculateOptimalFontSize('WeatherCompact', 'primary-temp'),        // Optimized for 1x1 space
+            color: '#FFFFFF',    // White for primary text - matches app theme
+            fontWeight: 'bold',     // Prominent weight
+            textAlign: 'center',
+            marginBottom: 1,      // Small gap to slash
+          }}
+        />
 
-      {/* Temperature */}
-      <FlexWidget style={{ marginTop: layout.spacing.margin }}>
-        <TemperatureDisplay 
-          temp={processedData.temp}
-          scale={tempScale}
-          size="small"
+        {/* Slash Separator */}
+        <TextWidget
+          text="/"
+          style={{
+            fontSize: calculateOptimalFontSize('WeatherCompact', 'slash'),        // Optimized for 1x1
+            color: '#E5E7EB',    // Light gray - subtle contrast
+            textAlign: 'center',
+            marginVertical: 1    // Small vertical spacing
+          }}
+        />
+
+        {/* Secondary Temperature */}
+        <TextWidget
+          text={secondaryTemp}
+          style={{
+            fontSize: calculateOptimalFontSize('WeatherCompact', 'secondary-temp'),        // Optimized for 1x1
+            color: '#E5E7EB',    // Light gray - supporting color
+            textAlign: 'center',
+          }}
         />
       </FlexWidget>
-
-      {/* Location (abbreviated if needed) */}
-      <TextWidget
-        text={locationName.length > 12 ? locationName.substring(0, 10) + '...' : locationName}
-        style={{
-          fontSize: layout.fonts.location,
-          color: '#E5E7EB',
-          textAlign: 'center',
-          marginTop: layout.spacing.small,
-        }}
-      />
     </FlexWidget>
   );
 }
