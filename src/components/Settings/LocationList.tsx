@@ -66,7 +66,7 @@ export const LocationList: React.FC<LocationListProps> = ({
           colors={
             canAddMoreLocations
               ? [palette.highlightColor, palette.textColorSecondary]
-              : ['rgba(153, 153, 153, 0.3)', 'rgba(153, 153, 153, 0.2)']
+              : [palette.primaryDark, palette.primaryColor]
           }
           style={styles.addLocationButtonGradient}
           start={{ x: 0, y: 0 }}

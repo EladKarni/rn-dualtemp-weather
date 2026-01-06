@@ -16,6 +16,8 @@ export const styles = StyleSheet.create({
     marginTop: spacing.md,
     borderRadius: 16,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: palette.highlightColor,
     ...shadowProp,
   },
   addLocationButtonDisabled: {
@@ -31,11 +33,12 @@ export const styles = StyleSheet.create({
   },
   addLocationButtonText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
     color: palette.primaryColor,
     letterSpacing: 0.3,
+    textTransform: 'uppercase',
   },
   addLocationButtonTextDisabled: {
-    color: '#999',
+    color: palette.textColorSecondary,
   },
 });
