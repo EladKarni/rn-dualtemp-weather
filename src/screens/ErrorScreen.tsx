@@ -1,10 +1,10 @@
-import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import AppHeader from '../components/AppHeader/AppHeader';
-import { errorScreenStyles } from '../styles/screens/ErrorScreen.styles';
-import type { SavedLocation } from '../store/useLocationStore';
-import type { LocationWeatherState } from '../hooks/useMultiLocationWeather';
+import React from "react";
+import { View, Text, TouchableOpacity } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import AppHeader from "../components/AppHeader/AppHeader";
+import type { SavedLocation } from "../store/useLocationStore";
+import type { LocationWeatherState } from "../hooks/useMultiLocationWeather";
+import { errorScreenStyles } from "../Styles/screens/ErrorScreen.styles";
 
 interface ErrorScreenProps {
   onSettingsPress: () => void;
@@ -18,7 +18,7 @@ interface ErrorScreenProps {
 
 export default function ErrorScreen({
   onSettingsPress,
-  errorMessage = 'Unable to fetch weather data. Please check your connection and try again.',
+  errorMessage = "Unable to fetch weather data. Please check your connection and try again.",
   onRetry,
   savedLocations,
   activeLocationId,
@@ -36,19 +36,25 @@ export default function ErrorScreen({
           locationLoadingStates={locationLoadingStates}
         />
         <View style={errorScreenStyles.errorContent}>
-          <Text style={errorScreenStyles.errorTitle}>Unable to Load Weather</Text>
+          <Text style={errorScreenStyles.errorTitle}>
+            Unable to Load Weather
+          </Text>
           <Text style={errorScreenStyles.errorMessage}>{errorMessage}</Text>
-          <TouchableOpacity style={errorScreenStyles.retryButton} onPress={onRetry}>
+          <TouchableOpacity
+            style={errorScreenStyles.retryButton}
+            onPress={onRetry}
+          >
             <Text style={errorScreenStyles.retryButtonText}>Retry</Text>
           </TouchableOpacity>
           <Text style={errorScreenStyles.supportText}>
-            If this happens often, please contact support at{'\n'}
-            <Text style={errorScreenStyles.supportEmail}>{process.env.EXPO_PUBLIC_SUPPORT_EMAIL || 'support@eladkarni.solutions'}</Text>
+            If this happens often, please contact support at{"\n"}
+            <Text style={errorScreenStyles.supportEmail}>
+              {process.env.EXPO_PUBLIC_SUPPORT_EMAIL ||
+                "support@eladkarni.solutions"}
+            </Text>
           </Text>
         </View>
       </View>
     </SafeAreaView>
   );
 }
-
-

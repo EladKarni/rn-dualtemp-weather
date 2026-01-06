@@ -16,6 +16,12 @@ export class WeatherDatabase {
   private readonly FRESHNESS_THRESHOLD = 30 * 60 * 1000; // 30 minutes
 
   async initialize(): Promise<void> {
+    if (this.db) {
+      // Database already initialized
+      logger.debug('Weather database already initialized');
+      return;
+    }
+
     try {
       this.db = await SQLite.openDatabaseAsync(this.DB_NAME);
       

@@ -1,28 +1,26 @@
-import React from 'react';
-import { ScrollView, View, RefreshControl } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import AppHeader from '../components/AppHeader/AppHeader';
-import CurrentWeatherCard from '../components/CurrentWeatherCard/CurrentWeatherCard';
-import HourlyForecast from '../components/HourlyForecast/HourlyForecast';
-import DailyForecast from '../components/DailyForecast/DailyForecast';
-import HourlyForecastSkeleton from '../components/HourlyForecast/HourlyForecastSkeleton';
-import DailyForecastSkeleton from '../components/DailyForecast/DailyForecastSkeleton';
-import AppFooter from '../components/AppFooter/AppFooter';
-import { WeatherErrorBanner } from '../components/ErrorAlert/WeatherErrorBanner';
-import { AppStateContext } from '../utils/AppStateContext';
-import { weatherScreenStyles } from '../styles/screens/WeatherScreen.styles';
-import type { Weather } from '../types/WeatherTypes';
-import type { AppError } from '../utils/errors';
-import type { Moment } from 'moment';
-import type { SavedLocation } from '../store/useLocationStore';
-import type { LocationWeatherState } from '../hooks/useMultiLocationWeather';
-import { WidgetPreview } from 'react-native-android-widget';
-import WeatherWidget from '../widgets/WeatherWidget';
+import React from "react";
+import { ScrollView, View, RefreshControl } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import AppHeader from "../components/AppHeader/AppHeader";
+import CurrentWeatherCard from "../components/CurrentWeatherCard/CurrentWeatherCard";
+import HourlyForecast from "../components/HourlyForecast/HourlyForecast";
+import DailyForecast from "../components/DailyForecast/DailyForecast";
+import HourlyForecastSkeleton from "../components/HourlyForecast/HourlyForecastSkeleton";
+import DailyForecastSkeleton from "../components/DailyForecast/DailyForecastSkeleton";
+import AppFooter from "../components/AppFooter/AppFooter";
+import { WeatherErrorBanner } from "../components/ErrorAlert/WeatherErrorBanner";
+import { AppStateContext } from "../utils/AppStateContext";
+import type { Weather } from "../types/WeatherTypes";
+import type { AppError } from "../utils/errors";
+import type { Moment } from "moment";
+import type { SavedLocation } from "../store/useLocationStore";
+import type { LocationWeatherState } from "../hooks/useMultiLocationWeather";
+import { weatherScreenStyles } from "../Styles/screens/WeatherScreen.styles";
 
 interface WeatherScreenProps {
   forecast: Weather;
   date: Moment;
-  tempScale: 'C' | 'F';
+  tempScale: "C" | "F";
   onSettingsPress: () => void;
   refreshing: boolean;
   onRefresh: () => void;
@@ -56,7 +54,8 @@ export default function WeatherScreen({
 }: WeatherScreenProps) {
   // Determine if we should show skeleton for hourly/daily forecasts
   // Show skeleton if forecast is still loading (initial load)
-  const showForecastSkeleton = refreshing && !forecast?.hourly && !forecast?.daily;
+  const showForecastSkeleton =
+    refreshing && !forecast?.hourly && !forecast?.daily;
 
   return (
     <SafeAreaView style={weatherScreenStyles.container}>
@@ -110,5 +109,3 @@ export default function WeatherScreen({
     </SafeAreaView>
   );
 }
-
-

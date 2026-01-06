@@ -12,8 +12,11 @@ import {
   FlatList,
 } from "react-native";
 import { i18n } from "../localization/i18n";
-import { styles } from "../styles/screens/AddLocationScreen.styles";
-import { CityResult, searchCities, formatLocationName } from "../utils/geocoding";
+import {
+  CityResult,
+  searchCities,
+  formatLocationName,
+} from "../utils/geocoding";
 import { useLocationStore } from "../store/useLocationStore";
 import { useLanguageStore } from "../store/useLanguageStore";
 import { logger } from "../utils/logger";
@@ -21,6 +24,7 @@ import { AppError, toAppError } from "../utils/errors";
 import { useModalAnimation } from "../hooks/useModalAnimation";
 import { palette } from "../Styles/Palette";
 import { CityResultItem } from "../components/AddLocation/CityResultItem/CityResultItem";
+import { styles } from "../Styles/screens/AddLocationScreen.styles";
 
 type AddLocationScreenProps = {
   visible: boolean;
@@ -36,7 +40,9 @@ const AddLocationScreen = ({ visible, onClose }: AddLocationScreenProps) => {
   const selectedLanguage = useLanguageStore((state) => state.selectedLanguage);
 
   const addLocation = useLocationStore((state) => state.addLocation);
-  const canAddMoreLocations = useLocationStore((state) => state.canAddMoreLocations());
+  const canAddMoreLocations = useLocationStore((state) =>
+    state.canAddMoreLocations()
+  );
 
   const { fadeAnim, slideAnim } = useModalAnimation(visible);
 
@@ -64,7 +70,7 @@ const AddLocationScreen = ({ visible, onClose }: AddLocationScreenProps) => {
 
     searchTimeoutRef.current = setTimeout(async () => {
       try {
-        const locale = selectedLanguage || 'en';
+        const locale = selectedLanguage || "en";
         const results = await searchCities(searchQuery, locale);
         setSearchResults(results);
         setError(null);
@@ -91,7 +97,11 @@ const AddLocationScreen = ({ visible, onClose }: AddLocationScreenProps) => {
       return;
     }
 
-    const locationName = formatLocationName(city.name, city.state, city.country);
+    const locationName = formatLocationName(
+      city.name,
+      city.state,
+      city.country
+    );
 
     addLocation({
       name: locationName,
@@ -113,7 +123,7 @@ const AddLocationScreen = ({ visible, onClose }: AddLocationScreenProps) => {
     if (searchQuery.trim().length < 3) {
       return (
         <View style={styles.emptyState}>
-          <Text style={styles.emptyText}>{i18n.t('StartTyping')}</Text>
+          <Text style={styles.emptyText}>{i18n.t("StartTyping")}</Text>
         </View>
       );
     }
@@ -121,7 +131,7 @@ const AddLocationScreen = ({ visible, onClose }: AddLocationScreenProps) => {
     if (searchResults.length === 0 && !isSearching && !error) {
       return (
         <View style={styles.emptyState}>
-          <Text style={styles.emptyText}>{i18n.t('NoResults')}</Text>
+          <Text style={styles.emptyText}>{i18n.t("NoResults")}</Text>
         </View>
       );
     }
@@ -177,11 +187,17 @@ const AddLocationScreen = ({ visible, onClose }: AddLocationScreenProps) => {
             </View>
             <View style={styles.errorActions}>
               {error.recoverable && (
-                <TouchableOpacity onPress={handleRetry} style={styles.retryButton}>
-                  <Text style={styles.retryText}>{i18n.t('Retry')}</Text>
+                <TouchableOpacity
+                  onPress={handleRetry}
+                  style={styles.retryButton}
+                >
+                  <Text style={styles.retryText}>{i18n.t("Retry")}</Text>
                 </TouchableOpacity>
               )}
-              <TouchableOpacity onPress={() => setError(null)} style={styles.dismissButton}>
+              <TouchableOpacity
+                onPress={() => setError(null)}
+                style={styles.dismissButton}
+              >
                 <Text style={styles.dismissText}>×</Text>
               </TouchableOpacity>
             </View>
@@ -192,7 +208,7 @@ const AddLocationScreen = ({ visible, onClose }: AddLocationScreenProps) => {
           {isSearching ? (
             <View style={styles.loadingState}>
               <ActivityIndicator size="large" color={palette.highlightColor} />
-              <Text style={styles.loadingText}>{i18n.t('Searching')}</Text>
+              <Text style={styles.loadingText}>{i18n.t("Searching")}</Text>
             </View>
           ) : searchResults.length > 0 ? (
             <FlatList
@@ -200,7 +216,9 @@ const AddLocationScreen = ({ visible, onClose }: AddLocationScreenProps) => {
               renderItem={({ item }) => (
                 <CityResultItem city={item} onPress={handleSelectCity} />
               )}
-              keyExtractor={(item, index) => `${item.name}-${item.country}-${index}`}
+              keyExtractor={(item, index) =>
+                `${item.name}-${item.country}-${index}`
+              }
               contentContainerStyle={styles.listContent}
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={true}

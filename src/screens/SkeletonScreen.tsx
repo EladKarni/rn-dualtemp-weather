@@ -1,11 +1,11 @@
-import React from 'react';
-import { ScrollView } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import AppHeader from '../components/AppHeader/AppHeader';
-import { WeatherLoadingSkeleton } from '../components/LoadingSkeleton/LoadingSkeleton';
-import { skeletonScreenStyles } from '../styles/screens/SkeletonScreen.styles';
-import type { SavedLocation } from '../store/useLocationStore';
-import type { LocationWeatherState } from '../hooks/useMultiLocationWeather';
+import React from "react";
+import { ScrollView } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import AppHeader from "../components/AppHeader/AppHeader";
+import { WeatherLoadingSkeleton } from "../components/LoadingSkeleton/LoadingSkeleton";
+import type { SavedLocation } from "../store/useLocationStore";
+import type { LocationWeatherState } from "../hooks/useMultiLocationWeather";
+import { skeletonScreenStyles } from "../Styles/screens/SkeletonScreen.styles";
 
 interface SkeletonScreenProps {
   onSettingsPress: () => void;
@@ -37,5 +37,3 @@ export default function SkeletonScreen({
     </SafeAreaView>
   );
 }
-
-

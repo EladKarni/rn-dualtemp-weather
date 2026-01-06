@@ -11,7 +11,6 @@ import {
   ScrollView,
 } from "react-native";
 import { i18n } from "../localization/i18n";
-import { styles } from "../styles/screens/SettingsScreen.styles";
 import SettingItem from "../components/SettingItem/SettingItem";
 import { TempUnitSelector } from "../components/TempUnitSelector/TempUnitSelector";
 import { ClockFormatSelector } from "../components/ClockFormatSelector/ClockFormatSelector";
@@ -20,16 +19,23 @@ import { LanguageSelector } from "../components/LanguageSelector/LanguageSelecto
 import { LocationList } from "../components/Settings/LocationList";
 import { useLocationStore } from "../store/useLocationStore";
 import { useModalAnimation } from "../hooks/useModalAnimation";
+import { styles } from "../Styles/screens/SettingsScreen.styles";
 type SettingsScreenProps = {
   visible: boolean;
   onClose: () => void;
   onAddLocationPress: () => void;
 };
 
-const SettingsScreen = ({ visible, onClose, onAddLocationPress }: SettingsScreenProps) => {
+const SettingsScreen = ({
+  visible,
+  onClose,
+  onAddLocationPress,
+}: SettingsScreenProps) => {
   const savedLocations = useLocationStore((state) => state.savedLocations);
   const removeLocation = useLocationStore((state) => state.removeLocation);
-  const canAddMoreLocations = useLocationStore((state) => state.canAddMoreLocations());
+  const canAddMoreLocations = useLocationStore((state) =>
+    state.canAddMoreLocations()
+  );
 
   const { fadeAnim, slideAnim } = useModalAnimation(visible);
 

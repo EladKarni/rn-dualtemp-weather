@@ -479,6 +479,9 @@ export async function widgetTaskHandler(props: WidgetTaskHandlerProps) {
       if (props.clickAction === 'REFRESH') {
         // Manual refresh from widget
         try {
+          // Initialize database if needed (widgets run outside React context)
+          await initializeForecastStore();
+
           const weatherStore = useForecastStore.getState();
           const locationStore = useLocationStore.getState();
           const languageStore = useLanguageStore.getState();

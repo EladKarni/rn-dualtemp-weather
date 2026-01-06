@@ -10,9 +10,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#1C1B4D"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "extra": {
       "supportsRTL": true
     },
@@ -40,19 +38,10 @@
       [
         "react-native-localization-settings",
         {
-          "languages": [
-            "ar",
-            "en",
-            "es",
-            "fr",
-            "he",
-            "zh"
-          ]
+          "languages": ["ar", "en", "es", "fr", "he", "zh"]
         }
       ],
-      [
-        "expo-localization"
-      ],
+      ["expo-localization"],
       [
         "@sentry/react-native/expo",
         {
@@ -65,38 +54,40 @@
         "react-native-android-widget",
         {
           "widgets": [
-
             {
               "name": "WeatherCompact",
               "label": "Weather (Compact)",
-              "minWidth": "45dp",
-              "minHeight": "45dp",
+              "minWidth": "60dp",
+              "minHeight": "60dp",
               "targetCellWidth": 1,
               "targetCellHeight": 1,
               "description": "Essential weather info in 1x1 size",
+              "previewImage": "./assets/widget-preview/Compact.png",
               "updatePeriodMillis": 1800000
             },
             {
               "name": "WeatherStandard",
               "label": "Weather (Standard)",
-              "minWidth": "45dp",
-              "minHeight": "90dp",
+              "minWidth": "60dp",
+              "minHeight": "120dp",
               "targetCellWidth": 1,
               "targetCellHeight": 2,
               "description": "Current weather with mini forecast in 1x2 size",
-              "updatePeriodMillis": 1800000
+              "previewImage": "./assets/widget-preview/Standard.png",
+              "updatePeriodMillis": 1800000,
+              "configureOnTouch": true
             },
             {
               "name": "WeatherExtended",
               "label": "Weather (Extended)",
-              "minWidth": "90dp",
-              "minHeight": "135dp",
+              "minWidth": "120dp",
+              "minHeight": "180dp",
               "targetCellWidth": 2,
               "targetCellHeight": 2,
               "description": "Comprehensive weather view in 2x2 size",
+              "previewImage": "./assets/widget-preview/Extended.png",
               "updatePeriodMillis": 1800000
-            },
-
+            }
           ]
         }
       ]
@@ -117,9 +108,7 @@
         "backgroundColor": "#1C1B4D"
       },
       "package": "com.ekarni.rndualtempweatherapp",
-      "permissions": [
-        "ACCESS_BACKGROUND_LOCATION"
-      ]
+      "permissions": ["ACCESS_BACKGROUND_LOCATION"]
     },
     "updates": {
       "url": "https://u.expo.dev/444bda66-1ab4-4665-ba53-c2b76743a33b"
