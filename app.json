@@ -57,8 +57,8 @@
             {
               "name": "WeatherCompact",
               "label": "Weather (Compact)",
-              "minWidth": "60dp",
-              "minHeight": "60dp",
+              "minWidth": "40dp",
+              "minHeight": "40dp",
               "targetCellWidth": 1,
               "targetCellHeight": 1,
               "description": "Essential weather info in 1x1 size",
@@ -68,25 +68,26 @@
             {
               "name": "WeatherStandard",
               "label": "Weather (Standard)",
-              "minWidth": "60dp",
-              "minHeight": "120dp",
+              "minWidth": "40dp",
+              "minHeight": "110dp",
               "targetCellWidth": 1,
               "targetCellHeight": 2,
               "description": "Current weather with mini forecast in 1x2 size",
               "previewImage": "./assets/widget-preview/Standard.png",
               "updatePeriodMillis": 1800000,
-              "configureOnTouch": true
+              "resizeMode": "horizontal"
             },
             {
               "name": "WeatherExtended",
               "label": "Weather (Extended)",
-              "minWidth": "120dp",
-              "minHeight": "180dp",
-              "targetCellWidth": 2,
+              "minWidth": "270dp",
+              "minHeight": "110dp",
+              "targetCellWidth": 3,
               "targetCellHeight": 2,
-              "description": "Comprehensive weather view in 2x2 size",
+              "description": "Daily forecast with vertical expansion in 3x2+ size",
               "previewImage": "./assets/widget-preview/Extended.png",
-              "updatePeriodMillis": 1800000
+              "updatePeriodMillis": 1800000,
+              "resizeMode": "vertical"
             }
           ]
         }

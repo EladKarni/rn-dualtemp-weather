@@ -6,6 +6,7 @@ import { formatTemperature } from '../../../utils/temperature';
 interface DualTemperatureDisplayProps {
   temp: number;
   size: 'small' | 'medium' | 'large';
+  tempScale: 'C' | 'F';  // User's preferred temperature scale
   separator?: string; // default: " / "
 }
 
@@ -18,19 +19,22 @@ const getDualTempFontSize = (size: DualTemperatureDisplayProps['size']): number 
   }
 };
 
-export const DualTemperatureDisplay: React.FC<DualTemperatureDisplayProps> = ({ 
-  temp, 
+export const DualTemperatureDisplay: React.FC<DualTemperatureDisplayProps> = ({
+  temp,
   size,
+  tempScale,
   separator = " / "
 }) => {
   const fontSize = getDualTempFontSize(size);
-  
+
   // Format both temperatures
   const tempF = formatTemperature(temp, 'F');
   const tempC = formatTemperature(temp, 'C');
-  
-  // Combine: "72°F / 22°C"
-  const dualTempText = `${tempF}${separator}${tempC}`;
+
+  // Show preferred unit first based on user's temperature scale preference
+  const dualTempText = tempScale === 'F'
+    ? `${tempF}${separator}${tempC}`  // "72°F / 22°C"
+    : `${tempC}${separator}${tempF}`;  // "22°C / 72°F"
 
   return (
     <TextWidget

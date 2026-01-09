@@ -6,7 +6,7 @@ import { WeatherExtended } from './WeatherExtended';
 import type { WidgetTaskHandlerProps } from 'react-native-android-widget';
 import { useLocationStore, GPS_LOCATION_ID } from '../store/useLocationStore';
 import { useLanguageStore } from '../store/useLanguageStore';
-import { useForecastStore, initializeForecastStore } from '../store/useForecastStore';
+import { useForecastStore } from '../store/useForecastStore';
 import { i18n } from '../localization/i18n';
 import { logger } from '../utils/logger';
 import { fetchForecast } from '../utils/fetchWeather';
@@ -34,7 +34,8 @@ export async function widgetTaskHandler(props: WidgetTaskHandlerProps) {
       logger.debug(`Handling ${widgetInfo.widgetName} widget addition`);
       try {
         // Initialize database if needed (widgets run outside React context)
-        await initializeForecastStore();
+        // Always call initializeDatabase() directly in widget context since widgets may run in separate process
+        await useForecastStore.getState().initializeDatabase();
 
         // Get current stores state (widgets run outside React context)
         const weatherStore = useForecastStore.getState();
@@ -100,10 +101,12 @@ export async function widgetTaskHandler(props: WidgetTaskHandlerProps) {
         if (weather) {
           const lastUpdateDate = new Date();
           props.renderWidget(
-            <WeatherCompact
+            <Widget
               weather={weather}
               lastUpdated={lastUpdateDate}
               locationName={gpsLocation.name}
+              width={widgetInfo.width}
+              height={widgetInfo.height}
             />
           );
         } else {
@@ -184,7 +187,8 @@ export async function widgetTaskHandler(props: WidgetTaskHandlerProps) {
         logger.debug(`Handling ${widgetInfo.widgetName} widget update`);
         try {
           // Initialize database if needed (widgets run outside React context)
-          await initializeForecastStore();
+          // Always call initializeDatabase() directly in widget context since widgets may run in separate process
+          await useForecastStore.getState().initializeDatabase();
 
           // Get current stores state (widgets run outside React context)
           const weatherStore = useForecastStore.getState();
@@ -255,6 +259,8 @@ export async function widgetTaskHandler(props: WidgetTaskHandlerProps) {
                 weather={weather}
                 lastUpdated={lastUpdateDate}
                 locationName={gpsLocation.name}
+                width={widgetInfo.width}
+                height={widgetInfo.height}
               />
             );
           } else {
@@ -330,7 +336,8 @@ export async function widgetTaskHandler(props: WidgetTaskHandlerProps) {
         // Handle existing Weather widget
         try {
           // Initialize database if needed (widgets run outside React context)
-          await initializeForecastStore();
+          // Always call initializeDatabase() directly in widget context since widgets may run in separate process
+          await useForecastStore.getState().initializeDatabase();
 
           // Get current stores state (widgets run outside React context)
           const weatherStore = useForecastStore.getState();
@@ -480,7 +487,8 @@ export async function widgetTaskHandler(props: WidgetTaskHandlerProps) {
         // Manual refresh from widget
         try {
           // Initialize database if needed (widgets run outside React context)
-          await initializeForecastStore();
+          // Always call initializeDatabase() directly in widget context since widgets may run in separate process
+          await useForecastStore.getState().initializeDatabase();
 
           const weatherStore = useForecastStore.getState();
           const locationStore = useLocationStore.getState();
@@ -536,6 +544,8 @@ export async function widgetTaskHandler(props: WidgetTaskHandlerProps) {
                     weather={freshWeather}
                     lastUpdated={lastUpdateDate}
                     locationName={gpsLocation.name}
+                    width={props.widgetInfo.width}
+                    height={props.widgetInfo.height}
                   />
                 );
                 logger.debug(`${props.widgetInfo.widgetName} widget refreshed and re-rendered successfully`);

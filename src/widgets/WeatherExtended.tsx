@@ -3,18 +3,81 @@ import React from "react";
 import { FlexWidget, TextWidget } from "react-native-android-widget";
 import { Weather } from "../types/WeatherTypes";
 import { processWidgetData } from "./components/shared/BaseWeatherWidget";
+import { DualTemperatureDisplay } from "./components/shared/DualTemperatureDisplay";
+import { WeatherIcon } from "./components/shared/WeatherIcon";
+import { calculateDailyItemCount } from "./utils/widgetLayoutUtils";
 import moment from "moment";
 
 interface WeatherExtendedProps {
   weather: Weather;
   lastUpdated: Date;
   locationName: string;
+  width?: number;   // Optional: Widget width in pixels (3x2 = 270dp minimum)
+  height?: number;  // Optional: Widget height in pixels for vertical expansion (110dp minimum)
 }
+
+// Helper component for daily forecast item
+const DailyItem = ({
+  forecast,
+  tempScale,
+}: {
+  forecast: any;
+  tempScale: "C" | "F";
+}) => {
+  // Format day name
+  const dayText = moment(forecast.dt * 1000).format("ddd");
+
+  return (
+    <FlexWidget
+      style={{
+        width: "match_parent",
+        height: 60,
+        backgroundColor: "rgba(255, 255, 255, 0.1)",
+        borderRadius: 8,
+        padding: 8,
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+      }}
+    >
+      {/* Day name */}
+      <TextWidget
+        text={dayText}
+        style={{
+          fontSize: 14,
+          color: "#E5E7EB",
+          width: 40,
+        }}
+      />
+
+      {/* Weather Icon */}
+      <WeatherIcon weatherId={forecast.weather[0].id} size="small" />
+
+      {/* High/Low Temps */}
+      <FlexWidget style={{ flexDirection: "row", alignItems: "center", flex: 1, justifyContent: "flex-end" }}>
+        <DualTemperatureDisplay
+          temp={forecast.temp.max}
+          size="small"
+          tempScale={tempScale}
+          separator=" / "
+        />
+        <TextWidget text=" • " style={{ color: "#6B7280", fontSize: 12 }} />
+        <DualTemperatureDisplay
+          temp={forecast.temp.min}
+          size="small"
+          tempScale={tempScale}
+          separator=" / "
+        />
+      </FlexWidget>
+    </FlexWidget>
+  );
+};
 
 export function WeatherExtended({
   weather,
   lastUpdated,
   locationName,
+  height,
 }: WeatherExtendedProps) {
   const { processedData, tempScale } = processWidgetData({
     weather,
@@ -23,16 +86,12 @@ export function WeatherExtended({
     size: "extended",
   });
 
-  const getTimeAgo = (date: Date) => {
-    const now = moment();
-    const then = moment(date);
-    const diff = now.diff(then, "minutes");
+  // Calculate how many items to show based on height
+  // If no height provided, default to 1 item
+  const itemCount = height ? calculateDailyItemCount(height, 7) : 1;
 
-    if (diff < 1) return "just now";
-    if (diff < 60) return `${diff}m ago`;
-    if (diff < 1440) return `${Math.floor(diff / 60)}h ago`;
-    return `${Math.floor(diff / 1440)}d ago`;
-  };
+  // Get daily forecast items
+  const forecastItems = processedData.dailyForecast.slice(0, Math.max(1, itemCount));
 
   return (
     <FlexWidget
@@ -43,140 +102,35 @@ export function WeatherExtended({
         borderRadius: 16,
         padding: 16,
         flexDirection: "column",
-        justifyContent: "space-between",
       }}
       clickAction="REFRESH"
     >
-      {/* Header - Today's Date */}
-      <FlexWidget
-        style={{
-          width: "match_parent",
-          alignItems: "center",
-          marginBottom: 8,
-        }}
-      >
+      {/* Header */}
+      <FlexWidget style={{ width: "match_parent", alignItems: "center", marginBottom: 8 }}>
         <TextWidget
-          text={new Date().toLocaleDateString()}
-          style={{
-            fontSize: 18,
-            fontWeight: "bold",
-            color: "#E5E7EB",
-          }}
+          text="Daily Forecast"
+          style={{ fontSize: 16, fontWeight: "bold", color: "#E5E7EB" }}
         />
       </FlexWidget>
 
-      {/* Main content - Temperature */}
+      {/* Daily Items - Vertical Column */}
       <FlexWidget
         style={{
-          width: "match_parent",
           flex: 1,
+          width: "match_parent",
           flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
+          justifyContent: "space-between",
+          flexGap: 4,
         }}
       >
-        {/* Current Temperature */}
-        <FlexWidget
-          style={{
-            flexDirection: "row",
-            alignItems: "flex-end",
-            marginBottom: 8,
-          }}
-        >
-          {/* Primary Temperature (larger) */}
-          <TextWidget
-            text={`${Math.round(processedData.temp)}°`}
-            style={{
-              fontSize: 32,
-              fontWeight: "bold",
-              color: "#E5E7EB",
-            }}
-          />
-          <TextWidget text={"/"} style={{ color: "#E5E7EB" }} />
-          {/* Secondary Temperature (smaller) */}
-          <TextWidget
-            text={` ${
-              tempScale === "C"
-                ? Math.round((processedData.temp * 9) / 5 + 32)
-                : Math.round(((processedData.temp - 32) * 5) / 9)
-            }°`}
-            style={{
-              fontSize: 16,
-              color: "#E5E7EB",
-              marginLeft: 8,
-            }}
-          />
-        </FlexWidget>
-
-        {/* Min/Max Temperature */}
-        <FlexWidget
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            marginBottom: 4,
-          }}
-        >
-          <TextWidget
-            text={`H: ${Math.round(
-              weather.daily?.[0]?.temp?.max || processedData.temp
-            )}°`}
-            style={{
-              fontSize: 14,
-              color: "#E5E7EB",
-              marginRight: 12,
-            }}
-          />
-          <TextWidget
-            text={`L: ${Math.round(
-              weather.daily?.[0]?.temp?.min || processedData.temp
-            )}°`}
-            style={{
-              fontSize: 14,
-              color: "#E5E7EB",
-            }}
-          />
-        </FlexWidget>
-
-        {/* Sunrise/Sunset */}
-        <FlexWidget
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-          }}
-        >
-          <TextWidget
-            text={`↑${moment(weather.current?.sunrise * 1000).format("H:mm")}`}
-            style={{
-              fontSize: 12,
-              color: "#E5E7EB",
-              marginRight: 8,
-            }}
-          />
-          <TextWidget
-            text={`↓${moment(weather.current?.sunset * 1000).format("H:mm")}`}
-            style={{
-              fontSize: 12,
-              color: "#E5E7EB",
-            }}
-          />
-        </FlexWidget>
+        {forecastItems.map((forecast) => (
+          <DailyItem key={forecast.dt} forecast={forecast} tempScale={tempScale} />
+        ))}
       </FlexWidget>
 
-      {/* Footer - Last Updated */}
-      <FlexWidget
-        style={{
-          width: "match_parent",
-          alignItems: "center",
-          marginTop: 16,
-        }}
-      >
-        <TextWidget
-          text={`Updated ${getTimeAgo(lastUpdated)}`}
-          style={{
-            fontSize: 12,
-            color: "#E5E7EB",
-          }}
-        />
+      {/* Footer */}
+      <FlexWidget style={{ width: "match_parent", alignItems: "center", marginTop: 8 }}>
+        <TextWidget text="Tap to refresh" style={{ fontSize: 9, color: "#6B7280" }} />
       </FlexWidget>
     </FlexWidget>
   );

@@ -14,19 +14,27 @@ export class WeatherDatabase {
   private db: SQLite.SQLiteDatabase | null = null;
   private readonly DB_NAME = 'weather_forecasts.db';
   private readonly FRESHNESS_THRESHOLD = 30 * 60 * 1000; // 30 minutes
+  private initPromise: Promise<void> | null = null;
 
   async initialize(): Promise<void> {
+    // If already initializing, wait for that to complete
+    if (this.initPromise) {
+      return this.initPromise;
+    }
+
     if (this.db) {
       // Database already initialized
       logger.debug('Weather database already initialized');
       return;
     }
 
-    try {
-      this.db = await SQLite.openDatabaseAsync(this.DB_NAME);
-      
-      // Create tables
-      await this.db.execAsync(`
+    // Store the initialization promise to prevent concurrent initializations
+    this.initPromise = (async () => {
+      try {
+        this.db = await SQLite.openDatabaseAsync(this.DB_NAME);
+
+        // Create tables
+        await this.db.execAsync(`
         CREATE TABLE IF NOT EXISTS weather_cache (
           location_id TEXT PRIMARY KEY,
           weather_data TEXT NOT NULL,
@@ -36,30 +44,35 @@ export class WeatherDatabase {
           longitude REAL NOT NULL,
           created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'unixepoch'))
         );
-        
+
         CREATE TABLE IF NOT EXISTS weather_errors (
           location_id TEXT PRIMARY KEY,
           error_data TEXT NOT NULL,
           occurred_at INTEGER NOT NULL
         );
-        
-        CREATE INDEX IF NOT EXISTS idx_weather_last_updated 
+
+        CREATE INDEX IF NOT EXISTS idx_weather_last_updated
         ON weather_cache(last_updated);
-        
-        CREATE INDEX IF NOT EXISTS idx_weather_location_id 
+
+        CREATE INDEX IF NOT EXISTS idx_weather_location_id
         ON weather_cache(location_id);
       `);
-      
-      logger.debug('Weather database initialized successfully');
-    } catch (error) {
-      logger.error('Failed to initialize weather database:', error);
-      throw error;
-    }
+
+        logger.debug('Weather database initialized successfully');
+      } catch (error) {
+        this.db = null;
+        this.initPromise = null;
+        logger.error('Failed to initialize weather database:', error);
+        throw error;
+      }
+    })();
+
+    return this.initPromise;
   }
 
-  private ensureInitialized(): void {
+  private async ensureInitialized(): Promise<void> {
     if (!this.db) {
-      throw new Error('Database not initialized. Call initialize() first.');
+      await this.initialize();
     }
   }
 
@@ -70,8 +83,8 @@ export class WeatherDatabase {
     latitude: number,
     longitude: number
   ): Promise<void> {
-    this.ensureInitialized();
-    
+    await this.ensureInitialized();
+
     try {
       const now = Date.now();
       const weatherJson = JSON.stringify(weather);
@@ -91,8 +104,8 @@ export class WeatherDatabase {
   }
 
   async getWeatherData(locationId: string): Promise<WeatherData | null> {
-    this.ensureInitialized();
-    
+    await this.ensureInitialized();
+
     try {
       const result = await this.db!.getFirstAsync(
         `SELECT weather_data, last_updated, locale, latitude, longitude
@@ -121,6 +134,8 @@ export class WeatherDatabase {
   }
 
   async isLocationDataFresh(locationId: string): Promise<boolean> {
+    await this.ensureInitialized();
+
     try {
       const result = await this.db!.getFirstAsync(
         `SELECT last_updated FROM weather_cache WHERE location_id = ?`,
@@ -142,8 +157,8 @@ export class WeatherDatabase {
   }
 
   async getAllFreshData(): Promise<Map<string, WeatherData>> {
-    this.ensureInitialized();
-    
+    await this.ensureInitialized();
+
     try {
       const cutoffTime = Date.now() - this.FRESHNESS_THRESHOLD;
       const results = await this.db!.getAllAsync(
@@ -182,8 +197,8 @@ export class WeatherDatabase {
   }
 
   async deleteLocationData(locationId: string): Promise<void> {
-    this.ensureInitialized();
-    
+    await this.ensureInitialized();
+
     try {
       await this.db!.runAsync(
         'DELETE FROM weather_cache WHERE location_id = ?',
@@ -203,8 +218,8 @@ export class WeatherDatabase {
   }
 
   async cleanupOldData(): Promise<void> {
-    this.ensureInitialized();
-    
+    await this.ensureInitialized();
+
     try {
       const cutoffTime = Date.now() - (24 * 60 * 60 * 1000); // 24 hours
       
@@ -225,8 +240,8 @@ export class WeatherDatabase {
     oldestEntry: number | null;
     newestEntry: number | null;
   }> {
-    this.ensureInitialized();
-    
+    await this.ensureInitialized();
+
     try {
       const cutoffTime = Date.now() - this.FRESHNESS_THRESHOLD;
       

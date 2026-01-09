@@ -61,10 +61,10 @@ export const getActualDimensions = (widgetName: string): WidgetDimensions => {
       minHeight: '180dp'
     },
     'WeatherExtended': {
-      width: 2,
-      height: 2,        // True 2x2 (180dp x 180dp)
-      minWidth: '180dp',
-      minHeight: '180dp'
+      width: 3,
+      height: 2,        // True 3x2 (270dp x 110dp) - expands vertically
+      minWidth: '270dp',
+      minHeight: '110dp'
     }
   };
   
@@ -86,17 +86,20 @@ export const calculateOptimalFontSize = (widgetName: string, contentType: 'prima
     'primary-temp': {
       '1x1': 16,    // Largest possible for dual temp primary
       '1x2': 18,    // Medium size for dual temp
-      '2x2': 20      // Large size available
+      '2x2': 20,    // Large size available
+      '3x2': 14      // Wide layout for daily forecast
     },
     'secondary-temp': {
       '1x1': 12,    // Smaller for supporting temp
       '1x2': 14,    // Medium size
-      '2x2': 16      // Medium-large size
+      '2x2': 16,    // Medium-large size
+      '3x2': 12      // Wide layout for daily forecast
     },
     'slash': {
       '1x1': 10,     // Small separator
       '1x2': 12,     // Medium separator
-      '2x2': 14       // Medium-large separator
+      '2x2': 14,     // Medium-large separator
+      '3x2': 10       // Wide layout separator
     },
     // Legacy compatibility
     'temp': { compact: 20, standard: 32, extended: 40 },
@@ -158,4 +161,59 @@ export const getSpacing = (size: WidgetSize, type: keyof LayoutConfig['spacing']
  */
 export const getColor = (size: WidgetSize, type: keyof LayoutConfig['colors']): string => {
   return getLayoutConfig(size).colors[type];
+};
+
+/**
+ * Calculate how many hourly forecast items can fit in the given width
+ * Each item needs ~80-100px minimum + gaps between items
+ * @param widthPx - Widget width in pixels
+ * @param maxItems - Maximum items to show (default: 4)
+ * @returns Number of items that fit (1-4)
+ */
+export const calculateHourlyItemCount = (widthPx: number, maxItems: number = 4): number => {
+  // Constants based on HourlyItem component requirements
+  const MIN_ITEM_WIDTH = 70;  // Minimum width per item including padding and spacing
+  const ITEM_GAP = 8;          // Gap between items
+  const CONTAINER_PADDING = 12 * 2; // 12px padding on each side
+
+  // Calculate available width for items
+  const availableWidth = widthPx - CONTAINER_PADDING;
+
+  // Calculate how many items fit
+  // Formula: (availableWidth + gap) / (itemWidth + gap)
+  const itemCount = Math.floor((availableWidth + ITEM_GAP) / (MIN_ITEM_WIDTH + ITEM_GAP));
+
+  // Clamp between 1 and maxItems
+  return Math.max(1, Math.min(itemCount, maxItems));
+};
+
+/**
+ * Calculate optimal gap between items based on item count
+ * More items = tighter gaps to maximize space
+ */
+export const getItemSpacing = (itemCount: number): number => {
+  return itemCount === 1 ? 0 : itemCount <= 2 ? 4 : 6;
+};
+
+/**
+ * Calculate how many daily forecast items can fit in the given height
+ * @param heightPx - Widget height in pixels (minimum 110dp for 3x2)
+ * @param maxItems - Maximum items to show (default: 7 for full week)
+ * @returns Number of items that fit (1-7)
+ */
+export const calculateDailyItemCount = (heightPx: number, maxItems: number = 7): number => {
+  const MIN_ITEM_HEIGHT = 60;  // Minimum height per daily item
+  const HEADER_HEIGHT = 40;     // Space for "Daily Forecast" header
+  const FOOTER_HEIGHT = 24;     // Space for "Tap to refresh" footer
+  const CONTAINER_PADDING = 16 * 2; // 16px padding top/bottom
+  const ITEM_GAP = 4;           // Gap between items
+
+  // Calculate available height for items
+  const availableHeight = heightPx - HEADER_HEIGHT - FOOTER_HEIGHT - CONTAINER_PADDING;
+
+  // Calculate how many items fit
+  const itemCount = Math.floor((availableHeight + ITEM_GAP) / (MIN_ITEM_HEIGHT + ITEM_GAP));
+
+  // Clamp between 1 and maxItems
+  return Math.max(1, Math.min(itemCount, maxItems));
 };

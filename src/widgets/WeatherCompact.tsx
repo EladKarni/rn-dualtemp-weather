@@ -10,6 +10,8 @@ interface WeatherCompactProps {
   weather: Weather;
   lastUpdated: Date;
   locationName: string;
+  width?: number;   // Optional: Widget width in pixels (unused, but accepted for compatibility)
+  height?: number;  // Optional: Widget height in pixels (unused, but accepted for compatibility)
 }
 
 // Helper function to format temperature for abbreviation
