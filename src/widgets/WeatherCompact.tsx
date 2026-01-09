@@ -4,7 +4,8 @@ import { FlexWidget, TextWidget } from 'react-native-android-widget';
 import { Weather } from '../types/WeatherTypes';
 import { processWidgetData } from './components/shared/BaseWeatherWidget';
 import { getActualDimensions, calculateOptimalFontSize } from './utils/widgetLayoutUtils';
-import { formatTemperature } from '../utils/temperature';
+import { celsiusToFahrenheit } from '../utils/temperature';
+import { WeatherIcon } from './components/shared/WeatherIcon';
 
 interface WeatherCompactProps {
   weather: Weather;
@@ -14,15 +15,12 @@ interface WeatherCompactProps {
   height?: number;  // Optional: Widget height in pixels (unused, but accepted for compatibility)
 }
 
-// Helper function to format temperature for abbreviation
-const formatTempForAbbreviation = (temp: number, scale: 'C' | 'F'): string => {
-  const value = Math.round(temp);
+// Helper function to format temperature with conversion (input is Celsius)
+const formatTempForAbbreviation = (tempCelsius: number, scale: 'C' | 'F'): string => {
+  const value = scale === 'F'
+    ? Math.round(celsiusToFahrenheit(tempCelsius))
+    : Math.round(tempCelsius);
   const unit = scale === 'F' ? '°F' : '°C';
-
-  // Handle very long temperatures (like -15°F or -26°C)
-  if (Math.abs(value) >= 100) {
-    return `${value}${unit}`; // No abbreviation for 3+ digit temps
-  }
 
   return `${value}${unit}`;
 };
@@ -66,47 +64,29 @@ export function WeatherCompact({
       }}
       clickAction="REFRESH"
     >
-      {/* Stacked Temperature Layout - Primary prominent, secondary supporting */}
-      <FlexWidget
+      {/* Primary Temperature - User's preferred scale, prominent at top */}
+      <TextWidget
+        text={primaryTemp}
         style={{
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center'
+          fontSize: calculateOptimalFontSize('WeatherCompact', 'primary-temp'),
+          color: '#FFFFFF',
+          fontWeight: 'bold',
+          textAlign: 'center',
         }}
-      >
-        {/* Primary Temperature - User's preferred scale, more prominent */}
-        <TextWidget
-          text={primaryTemp}
-          style={{
-            fontSize: calculateOptimalFontSize('WeatherCompact', 'primary-temp'),        // Optimized for 1x1 space
-            color: '#FFFFFF',    // White for primary text - matches app theme
-            fontWeight: 'bold',     // Prominent weight
-            textAlign: 'center',
-            marginBottom: 1,      // Small gap to slash
-          }}
-        />
+      />
 
-        {/* Slash Separator */}
-        <TextWidget
-          text="/"
-          style={{
-            fontSize: calculateOptimalFontSize('WeatherCompact', 'slash'),        // Optimized for 1x1
-            color: '#E5E7EB',    // Light gray - subtle contrast
-            textAlign: 'center',
-            marginVertical: 1    // Small vertical spacing
-          }}
-        />
+      {/* Weather Icon - Visual divider in center */}
+      <WeatherIcon weatherId={processedData.weatherId} size="small" />
 
-        {/* Secondary Temperature */}
-        <TextWidget
-          text={secondaryTemp}
-          style={{
-            fontSize: calculateOptimalFontSize('WeatherCompact', 'secondary-temp'),        // Optimized for 1x1
-            color: '#E5E7EB',    // Light gray - supporting color
-            textAlign: 'center',
-          }}
-        />
-      </FlexWidget>
+      {/* Secondary Temperature - Supporting scale at bottom */}
+      <TextWidget
+        text={secondaryTemp}
+        style={{
+          fontSize: calculateOptimalFontSize('WeatherCompact', 'secondary-temp'),
+          color: '#E5E7EB',
+          textAlign: 'center',
+        }}
+      />
     </FlexWidget>
   );
 }

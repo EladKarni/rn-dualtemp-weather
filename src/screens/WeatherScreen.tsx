@@ -18,7 +18,7 @@ import type { LocationWeatherState } from "../hooks/useMultiLocationWeather";
 import { weatherScreenStyles } from "../styles/screens/WeatherScreen.styles";
 import { WidgetPreview } from "react-native-android-widget";
 import { WeatherStandard } from "../widgets/WeatherStandard";
-import WeatherExtended from "../widgets/WeatherExtended";
+import WeatherCompact from "../widgets/WeatherCompact";
 
 interface WeatherScreenProps {
   forecast: Weather;
@@ -106,6 +106,11 @@ export default function WeatherScreen({
               <DailyForecast dailyForecast={forecast.daily} />
             )}
           </AppStateContext.Provider>
+          {/* <WidgetPreview
+            renderWidget={() => <WeatherCompact weather={forecast} lastUpdated={lastUpdated} locationName={""} />}
+            width={80}
+            height={80}
+          /> */}
           <AppFooter />
         </ScrollView>
       </View>
