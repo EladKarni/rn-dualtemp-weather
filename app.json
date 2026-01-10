@@ -81,10 +81,10 @@
               "name": "WeatherExtended",
               "label": "Weather (Extended)",
               "minWidth": "270dp",
-              "minHeight": "110dp",
+              "minHeight": "40dp",
               "targetCellWidth": 3,
-              "targetCellHeight": 2,
-              "description": "Daily forecast with vertical expansion in 3x2+ size",
+              "targetCellHeight": 1,
+              "description": "Today's forecast with vertical expansion in 3x1+ size",
               "previewImage": "./assets/widget-preview/Extended.png",
               "updatePeriodMillis": 1800000,
               "resizeMode": "vertical"

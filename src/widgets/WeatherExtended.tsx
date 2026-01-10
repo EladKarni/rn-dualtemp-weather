@@ -12,26 +12,89 @@ interface WeatherExtendedProps {
   weather: Weather;
   lastUpdated: Date;
   locationName: string;
-  width?: number;   // Optional: Widget width in pixels (3x2 = 270dp minimum)
-  height?: number;  // Optional: Widget height in pixels for vertical expansion (110dp minimum)
+  width?: number;   // Optional: Widget width in pixels (3x1 = 270dp minimum)
+  height?: number;  // Optional: Widget height in pixels for vertical expansion (40dp minimum)
 }
 
-// Helper component for daily forecast item
-const DailyItem = ({
+// Compact horizontal row for single day (used at min height)
+const CompactDailyRow = ({
   forecast,
   tempScale,
+  isToday,
 }: {
   forecast: any;
   tempScale: "C" | "F";
+  isToday: boolean;
 }) => {
-  // Format day name
-  const dayText = moment(forecast.dt * 1000).format("ddd");
+  const dayText = isToday ? "Today" : moment(forecast.dt * 1000).format("ddd");
 
   return (
     <FlexWidget
       style={{
         width: "match_parent",
-        height: 60,
+        height: "match_parent",
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        paddingLeft: 4,
+        paddingRight: 4,
+      }}
+    >
+      {/* Day name */}
+      <TextWidget
+        text={dayText}
+        style={{
+          fontSize: 14,
+          fontWeight: "bold",
+          color: "#FFFFFF",
+        }}
+      />
+
+      {/* Weather Icon */}
+      <WeatherIcon weatherId={forecast.weather[0].id} size="small" />
+
+      {/* High Temp */}
+      <FlexWidget style={{ flexDirection: "row", alignItems: "center" }}>
+        <TextWidget text="Hi " style={{ color: "#E5E7EB", fontSize: 16 }} />
+        <DualTemperatureDisplay
+          temp={forecast.temp.max}
+          size="small"
+          tempScale={tempScale}
+          separator=" / "
+        />
+      </FlexWidget>
+
+      {/* Low Temp */}
+      <FlexWidget style={{ flexDirection: "row", alignItems: "center" }}>
+        <TextWidget text="Lo " style={{ color: "#E5E7EB", fontSize: 16 }} />
+        <DualTemperatureDisplay
+          temp={forecast.temp.min}
+          size="small"
+          tempScale={tempScale}
+          separator=" / "
+        />
+      </FlexWidget>
+    </FlexWidget>
+  );
+};
+
+// Helper component for daily forecast item (used when expanded)
+const DailyItem = ({
+  forecast,
+  tempScale,
+  isToday,
+}: {
+  forecast: any;
+  tempScale: "C" | "F";
+  isToday: boolean;
+}) => {
+  const dayText = isToday ? "Today" : moment(forecast.dt * 1000).format("ddd");
+
+  return (
+    <FlexWidget
+      style={{
+        width: "match_parent",
+        height: 56,
         backgroundColor: "rgba(255, 255, 255, 0.1)",
         borderRadius: 8,
         padding: 8,
@@ -46,22 +109,26 @@ const DailyItem = ({
         style={{
           fontSize: 14,
           color: "#E5E7EB",
-          width: 40,
         }}
       />
 
       {/* Weather Icon */}
       <WeatherIcon weatherId={forecast.weather[0].id} size="small" />
 
-      {/* High/Low Temps */}
-      <FlexWidget style={{ flexDirection: "row", alignItems: "center", flex: 1, justifyContent: "flex-end" }}>
+      {/* High Temp */}
+      <FlexWidget style={{ flexDirection: "row", alignItems: "center" }}>
+        <TextWidget text="Hi " style={{ color: "#E5E7EB", fontSize: 16 }} />
         <DualTemperatureDisplay
           temp={forecast.temp.max}
           size="small"
           tempScale={tempScale}
           separator=" / "
         />
-        <TextWidget text=" • " style={{ color: "#6B7280", fontSize: 12 }} />
+      </FlexWidget>
+
+      {/* Low Temp */}
+      <FlexWidget style={{ flexDirection: "row", alignItems: "center" }}>
+        <TextWidget text="Lo " style={{ color: "#E5E7EB", fontSize: 16 }} />
         <DualTemperatureDisplay
           temp={forecast.temp.min}
           size="small"
@@ -86,51 +153,66 @@ export function WeatherExtended({
     size: "extended",
   });
 
+  // Debug logging
+  console.log('[WeatherExtended] Height received:', height);
+
   // Calculate how many items to show based on height
-  // If no height provided, default to 1 item
+  // If no height provided, default to 1 item (compact mode)
   const itemCount = height ? calculateDailyItemCount(height, 7) : 1;
+  console.log('[WeatherExtended] Calculated itemCount:', itemCount);
 
-  // Get daily forecast items
+  const isCompact = itemCount <= 1;
+
+  // Get daily forecast items (first item is today)
   const forecastItems = processedData.dailyForecast.slice(0, Math.max(1, itemCount));
+  console.log('[WeatherExtended] Showing items:', forecastItems.length, 'out of', processedData.dailyForecast.length, 'available');
 
+  // Compact mode: single horizontal row, no header/footer
+  if (isCompact) {
+    const todayForecast = forecastItems[0];
+    return (
+      <FlexWidget
+        style={{
+          height: "match_parent",
+          width: "match_parent",
+          backgroundColor: "#3621dcff",
+          borderRadius: 16,
+          padding: 8,
+          flexDirection: "row",
+          alignItems: "center",
+        }}
+        clickAction="REFRESH"
+      >
+        <CompactDailyRow forecast={todayForecast} tempScale={tempScale} isToday={true} />
+      </FlexWidget>
+    );
+  }
+
+  // Expanded mode: vertical list with multiple days
   return (
     <FlexWidget
       style={{
         height: "match_parent",
         width: "match_parent",
-        backgroundColor: "#3621dcff", // palette.primaryColor
+        backgroundColor: "#3621dcff",
         borderRadius: 16,
-        padding: 16,
+        padding: 12,
         flexDirection: "column",
       }}
       clickAction="REFRESH"
     >
-      {/* Header */}
-      <FlexWidget style={{ width: "match_parent", alignItems: "center", marginBottom: 8 }}>
-        <TextWidget
-          text="Daily Forecast"
-          style={{ fontSize: 16, fontWeight: "bold", color: "#E5E7EB" }}
-        />
-      </FlexWidget>
-
       {/* Daily Items - Vertical Column */}
       <FlexWidget
         style={{
           flex: 1,
           width: "match_parent",
           flexDirection: "column",
-          justifyContent: "space-between",
-          flexGap: 4,
+          justifyContent: "space-evenly",
         }}
       >
-        {forecastItems.map((forecast) => (
-          <DailyItem key={forecast.dt} forecast={forecast} tempScale={tempScale} />
+        {forecastItems.map((forecast, index) => (
+          <DailyItem key={forecast.dt} forecast={forecast} tempScale={tempScale} isToday={index === 0} />
         ))}
-      </FlexWidget>
-
-      {/* Footer */}
-      <FlexWidget style={{ width: "match_parent", alignItems: "center", marginTop: 8 }}>
-        <TextWidget text="Tap to refresh" style={{ fontSize: 9, color: "#6B7280" }} />
       </FlexWidget>
     </FlexWidget>
   );

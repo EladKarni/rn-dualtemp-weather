@@ -62,9 +62,9 @@ export const getActualDimensions = (widgetName: string): WidgetDimensions => {
     },
     'WeatherExtended': {
       width: 3,
-      height: 2,        // True 3x2 (270dp x 110dp) - expands vertically
+      height: 1,        // True 3x1 (270dp x 40dp) - expands vertically
       minWidth: '270dp',
-      minHeight: '110dp'
+      minHeight: '40dp'
     }
   };
   
@@ -197,22 +197,22 @@ export const getItemSpacing = (itemCount: number): number => {
 
 /**
  * Calculate how many daily forecast items can fit in the given height
- * @param heightPx - Widget height in pixels (minimum 110dp for 3x2)
+ * @param heightPx - Widget height in pixels (minimum 40dp for 3x1)
  * @param maxItems - Maximum items to show (default: 7 for full week)
  * @returns Number of items that fit (1-7)
  */
 export const calculateDailyItemCount = (heightPx: number, maxItems: number = 7): number => {
-  const MIN_ITEM_HEIGHT = 60;  // Minimum height per daily item
-  const HEADER_HEIGHT = 40;     // Space for "Daily Forecast" header
-  const FOOTER_HEIGHT = 24;     // Space for "Tap to refresh" footer
-  const CONTAINER_PADDING = 16 * 2; // 16px padding top/bottom
-  const ITEM_GAP = 4;           // Gap between items
+  const MIN_ITEM_HEIGHT = 56;   // Height per daily item
+  const CONTAINER_PADDING = 12 * 2; // 12px padding top/bottom
+  const ITEM_GAP = 4;           // Minimal gap (space-evenly handles distribution)
 
-  // Calculate available height for items
-  const availableHeight = heightPx - HEADER_HEIGHT - FOOTER_HEIGHT - CONTAINER_PADDING;
+  // Calculate available height for items (no header/footer in new design)
+  const availableHeight = heightPx - CONTAINER_PADDING;
 
   // Calculate how many items fit
   const itemCount = Math.floor((availableHeight + ITEM_GAP) / (MIN_ITEM_HEIGHT + ITEM_GAP));
+
+  console.log('[calculateDailyItemCount] heightPx:', heightPx, 'availableHeight:', availableHeight, 'itemCount:', itemCount, 'maxItems:', maxItems);
 
   // Clamp between 1 and maxItems
   return Math.max(1, Math.min(itemCount, maxItems));

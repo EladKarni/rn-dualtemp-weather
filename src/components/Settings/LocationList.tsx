@@ -4,8 +4,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import type { SavedLocation } from "../../store/useLocationStore";
 import { i18n } from "../../localization/i18n";
 import { palette } from "../../styles/Palette";
-import { spacing } from "../../styles/Spacing";
-import { shadowProp } from "../../styles/BoxShadow";
 import { LocationCard } from "./LocationCard";
 import { styles } from "./LocationList.styles";
 

@@ -61,7 +61,7 @@ export const processWeatherData = (
     
     // Forecasts (limited for widgets)
     hourlyForecast: weather.hourly.slice(0, 6), // Next 6 hours for extended widget
-    dailyForecast: weather.daily.slice(0, 3),  // Next 3 days for extended widget
+    dailyForecast: weather.daily.slice(0, 7),  // Up to 7 days for extended widget (widget will calculate how many fit)
     
     // Weather details
     weatherId: current.weather[0].id,
