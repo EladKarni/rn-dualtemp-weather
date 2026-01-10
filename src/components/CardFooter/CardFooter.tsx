@@ -7,7 +7,6 @@ import { i18n } from "../../localization/i18n";
 import "intl";
 import "intl/locale-data/jsonp/he";
 import { useSettingsStore } from "../../store/useSettingsStore";
-import moment from "moment";
 
 const CardFooter = () => {
   const isRTL = useLanguageStore((state) => state.isRTL);

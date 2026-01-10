@@ -39,9 +39,6 @@ export function WeatherCompact({
     widgetName: 'WeatherCompact' // Pass widget name for dimension-aware processing
   });
 
-  // Get actual dimensions to ensure true 1x1 layout
-  const dimensions = getActualDimensions('WeatherCompact');
-
   // Determine user's preferred scale for primary display
   const primaryScale = tempScale;
   const secondaryScale = primaryScale === 'F' ? 'C' : 'F';

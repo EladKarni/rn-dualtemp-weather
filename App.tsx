@@ -57,10 +57,6 @@ import MainWeatherWithModals from "./src/screens/MainWeatherWithModals";
 
 // Error Boundary
 import ErrorBoundary from "./src/components/ErrorBoundary/ErrorBoundary";
-import { WidgetPreview } from "react-native-android-widget";
-import WeatherCompact from "./src/widgets/WeatherCompact";
-import { WeatherStandard } from "./src/widgets/WeatherStandard";
-import WeatherExtended from "./src/widgets/WeatherExtended";
 
 function App() {
   // Initialize forecast store

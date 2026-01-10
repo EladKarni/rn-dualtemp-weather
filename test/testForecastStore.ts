@@ -1,5 +1,4 @@
 import { initializeForecastStore, useForecastStore } from '../src/store/useForecastStore';
-import { logger } from '../src/utils/logger';
 
 /**
  * Simple test to verify the useForecastStore implementation

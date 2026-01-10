@@ -492,7 +492,6 @@ export async function widgetTaskHandler(props: WidgetTaskHandlerProps) {
 
           const weatherStore = useForecastStore.getState();
           const locationStore = useLocationStore.getState();
-          const languageStore = useLanguageStore.getState();
 
           const gpsLocation = locationStore.savedLocations.find(
             loc => loc.id === GPS_LOCATION_ID

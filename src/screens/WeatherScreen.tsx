@@ -16,8 +16,6 @@ import type { Moment } from "moment";
 import type { SavedLocation } from "../store/useLocationStore";
 import type { LocationWeatherState } from "../hooks/useMultiLocationWeather";
 import { weatherScreenStyles } from "../styles/screens/WeatherScreen.styles";
-import { WidgetPreview } from "react-native-android-widget";
-import { WeatherExtended } from "../widgets/WeatherExtended";
 
 interface WeatherScreenProps {
   forecast: Weather;

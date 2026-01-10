@@ -1,8 +1,6 @@
 // Test script to verify useForecastStore implementation
 // Run with: node -r esbuild-register test/store.test.js
 
-const path = require('path');
-
 // Mock React Native environment for Node.js testing
 global.console = console;
 

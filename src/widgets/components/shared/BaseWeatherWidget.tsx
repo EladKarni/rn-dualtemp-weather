@@ -1,6 +1,4 @@
 'use no memo';
-import React from 'react';
-import { FlexWidget, TextWidget } from 'react-native-android-widget';
 import { processWeatherData, getWeatherIcon } from '../../utils/widgetDataUtils';
 import { Weather } from '../../../types/WeatherTypes';
 import { useSettingsStore } from '../../../store/useSettingsStore';

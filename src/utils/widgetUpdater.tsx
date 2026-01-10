@@ -6,7 +6,6 @@ import { useForecastStore } from '../store/useForecastStore';
 import { useLocationStore, GPS_LOCATION_ID } from '../store/useLocationStore';
 import { logger } from './logger';
 import React from 'react';
-import { FlexWidget, TextWidget } from 'react-native-android-widget';
 
 /**
  * Request immediate update of all weather widgets

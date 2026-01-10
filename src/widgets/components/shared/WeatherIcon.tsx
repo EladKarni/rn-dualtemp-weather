@@ -1,7 +1,6 @@
 'use no memo';
 import React from 'react';
-import { FlexWidget, TextWidget } from 'react-native-android-widget';
-import { WidgetSize } from '../../utils/widgetLayoutUtils';
+import { TextWidget } from 'react-native-android-widget';
 
 interface WeatherIconProps {
   weatherId: number;
