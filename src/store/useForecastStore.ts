@@ -71,7 +71,7 @@ export const useForecastStore = create<ForecastStore>((set, get) => ({
     try {
       // Update runtime state if this is the active location
       const currentForecast = get().forecast;
-      if (!currentForecast || currentForecast.lat === weather.lat && currentForecast.lon === weather.lon) {
+      if (!currentForecast || (currentForecast.lat === weather.lat && currentForecast.lon === weather.lon)) {
         get().updateWeather(weather);
       }
 
