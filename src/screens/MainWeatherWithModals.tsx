@@ -8,7 +8,6 @@ import type { AppError } from '../utils/errors';
 import type { Moment } from 'moment';
 import type { SavedLocation } from '../store/useLocationStore';
 import type { LocationWeatherState } from '../hooks/useMultiLocationWeather';
-import { WidgetPreview } from 'react-native-android-widget';
 
 interface MainWeatherWithModalsProps {
   forecast: Weather;
