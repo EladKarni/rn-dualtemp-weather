@@ -2,6 +2,7 @@
 import React from 'react';
 import { TextWidget } from 'react-native-android-widget';
 import { formatTemperature } from '../../../utils/temperature';
+import { palette } from '../../../styles/Palette';
 
 interface TemperatureDisplayProps {
   temp: number;
@@ -32,7 +33,7 @@ export const TemperatureDisplay: React.FC<TemperatureDisplayProps> = ({
       text={tempFormatted}
       style={{
         fontSize,
-        color: '#FFFFFF',
+        color: palette.textColor,
       }}
     />
   );

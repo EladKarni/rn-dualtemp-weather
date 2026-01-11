@@ -10,6 +10,33 @@ export interface WeatherData {
   longitude: number;
 }
 
+// SQLite row types for type-safe queries
+interface WeatherCacheRow {
+  location_id: string;
+  weather_data: string;
+  last_updated: number;
+  locale: string;
+  latitude: number;
+  longitude: number;
+  created_at: number;
+}
+
+interface LastUpdatedRow {
+  last_updated: number;
+}
+
+interface CountRow {
+  count: number;
+}
+
+interface OldestRow {
+  oldest: number | null;
+}
+
+interface NewestRow {
+  newest: number | null;
+}
+
 export class WeatherDatabase {
   private db: SQLite.SQLiteDatabase | null = null;
   private readonly DB_NAME = 'weather_forecasts.db';
@@ -70,6 +97,16 @@ export class WeatherDatabase {
     return this.initPromise;
   }
 
+  /**
+   * Gets the database instance, throwing if not initialized
+   */
+  private getDb(): SQLite.SQLiteDatabase {
+    if (!this.db) {
+      throw new Error('Database not initialized. Call initialize() first.');
+    }
+    return this.db;
+  }
+
   private async ensureInitialized(): Promise<void> {
     if (!this.db) {
       await this.initialize();
@@ -86,16 +123,17 @@ export class WeatherDatabase {
     await this.ensureInitialized();
 
     try {
+      const db = this.getDb();
       const now = Date.now();
       const weatherJson = JSON.stringify(weather);
-      
-      await this.db!.runAsync(
-        `INSERT OR REPLACE INTO weather_cache 
+
+      await db.runAsync(
+        `INSERT OR REPLACE INTO weather_cache
          (location_id, weather_data, last_updated, locale, latitude, longitude, created_at)
          VALUES (?, ?, ?, ?, ?, ?, ?)`,
         [locationId, weatherJson, now, locale, latitude, longitude, now]
       );
-      
+
       logger.debug(`Weather data saved for location: ${locationId}`);
     } catch (error) {
       logger.error(`Failed to save weather data for ${locationId}:`, error);
@@ -107,25 +145,26 @@ export class WeatherDatabase {
     await this.ensureInitialized();
 
     try {
-      const result = await this.db!.getFirstAsync(
+      const db = this.getDb();
+      const result = await db.getFirstAsync<WeatherCacheRow>(
         `SELECT weather_data, last_updated, locale, latitude, longitude
-         FROM weather_cache 
+         FROM weather_cache
          WHERE location_id = ?`,
         [locationId]
-      ) as any;
-      
+      );
+
       if (!result) {
         return null;
       }
-      
-      const weather = JSON.parse(result.weather_data as string) as Weather;
-      
+
+      const weather = JSON.parse(result.weather_data) as Weather;
+
       return {
         weather,
-        lastUpdated: result.last_updated as number,
-        locale: result.locale as string,
-        latitude: result.latitude as number,
-        longitude: result.longitude as number,
+        lastUpdated: result.last_updated,
+        locale: result.locale,
+        latitude: result.latitude,
+        longitude: result.longitude,
       };
     } catch (error) {
       logger.error(`Failed to get weather data for ${locationId}:`, error);
@@ -137,18 +176,19 @@ export class WeatherDatabase {
     await this.ensureInitialized();
 
     try {
-      const result = await this.db!.getFirstAsync(
+      const db = this.getDb();
+      const result = await db.getFirstAsync<LastUpdatedRow>(
         `SELECT last_updated FROM weather_cache WHERE location_id = ?`,
         [locationId]
-      ) as any;
-      
+      );
+
       if (!result) {
         return false;
       }
-      
-      const lastUpdated = result.last_updated as number;
+
+      const lastUpdated = result.last_updated;
       const age = Date.now() - lastUpdated;
-      
+
       return age < this.FRESHNESS_THRESHOLD;
     } catch (error) {
       logger.error(`Failed to check freshness for ${locationId}:`, error);
@@ -160,34 +200,35 @@ export class WeatherDatabase {
     await this.ensureInitialized();
 
     try {
+      const db = this.getDb();
       const cutoffTime = Date.now() - this.FRESHNESS_THRESHOLD;
-      const results = await this.db!.getAllAsync(
+      const results = await db.getAllAsync<WeatherCacheRow>(
         `SELECT location_id, weather_data, last_updated, locale, latitude, longitude
-         FROM weather_cache 
+         FROM weather_cache
          WHERE last_updated > ?
          ORDER BY last_updated DESC`,
         [cutoffTime]
       );
-      
+
       const weatherMap = new Map<string, WeatherData>();
-      
-      for (const row of results as any[]) {
+
+      for (const row of results) {
         try {
-          const weather = JSON.parse(row.weather_data as string) as Weather;
-          const locationId = row.location_id as string;
-          
+          const weather = JSON.parse(row.weather_data) as Weather;
+          const locationId = row.location_id;
+
           weatherMap.set(locationId, {
             weather,
-            lastUpdated: row.last_updated as number,
-            locale: row.locale as string,
-            latitude: row.latitude as number,
-            longitude: row.longitude as number,
+            lastUpdated: row.last_updated,
+            locale: row.locale,
+            latitude: row.latitude,
+            longitude: row.longitude,
           });
         } catch (parseError) {
           logger.warn(`Failed to parse weather data for location:`, parseError);
         }
       }
-      
+
       logger.debug(`Loaded ${weatherMap.size} fresh weather entries from database`);
       return weatherMap;
     } catch (error) {
@@ -200,16 +241,17 @@ export class WeatherDatabase {
     await this.ensureInitialized();
 
     try {
-      await this.db!.runAsync(
+      const db = this.getDb();
+      await db.runAsync(
         'DELETE FROM weather_cache WHERE location_id = ?',
         [locationId]
       );
-      
-      await this.db!.runAsync(
+
+      await db.runAsync(
         'DELETE FROM weather_errors WHERE location_id = ?',
         [locationId]
       );
-      
+
       logger.debug(`Weather data deleted for location: ${locationId}`);
     } catch (error) {
       logger.error(`Failed to delete weather data for ${locationId}:`, error);
@@ -221,13 +263,14 @@ export class WeatherDatabase {
     await this.ensureInitialized();
 
     try {
+      const db = this.getDb();
       const cutoffTime = Date.now() - (24 * 60 * 60 * 1000); // 24 hours
-      
-      const result = await this.db!.runAsync(
+
+      const result = await db.runAsync(
         'DELETE FROM weather_cache WHERE last_updated < ?',
         [cutoffTime]
       );
-      
+
       logger.debug(`Cleaned up ${result.changes} old weather entries`);
     } catch (error) {
       logger.error('Failed to cleanup old weather data:', error);
@@ -243,30 +286,31 @@ export class WeatherDatabase {
     await this.ensureInitialized();
 
     try {
+      const db = this.getDb();
       const cutoffTime = Date.now() - this.FRESHNESS_THRESHOLD;
-      
-      const totalResult = await this.db!.getFirstAsync(
+
+      const totalResult = await db.getFirstAsync<CountRow>(
         'SELECT COUNT(*) as count FROM weather_cache'
-      ) as any;
-      
-      const freshResult = await this.db!.getFirstAsync(
+      );
+
+      const freshResult = await db.getFirstAsync<CountRow>(
         'SELECT COUNT(*) as count FROM weather_cache WHERE last_updated > ?',
         [cutoffTime]
-      ) as any;
-      
-      const oldestResult = await this.db!.getFirstAsync(
+      );
+
+      const oldestResult = await db.getFirstAsync<OldestRow>(
         'SELECT MIN(last_updated) as oldest FROM weather_cache'
-      ) as any;
-      
-      const newestResult = await this.db!.getFirstAsync(
+      );
+
+      const newestResult = await db.getFirstAsync<NewestRow>(
         'SELECT MAX(last_updated) as newest FROM weather_cache'
-      ) as any;
-      
+      );
+
       return {
-        totalEntries: totalResult?.count as number || 0,
-        freshEntries: freshResult?.count as number || 0,
-        oldestEntry: oldestResult?.oldest as number || null,
-        newestEntry: newestResult?.newest as number || null,
+        totalEntries: totalResult?.count ?? 0,
+        freshEntries: freshResult?.count ?? 0,
+        oldestEntry: oldestResult?.oldest ?? null,
+        newestEntry: newestResult?.newest ?? null,
       };
     } catch (error) {
       logger.error('Failed to get database stats:', error);

@@ -2,6 +2,7 @@
 import React from 'react';
 import { TextWidget } from 'react-native-android-widget';
 import { formatTemperature } from '../../../utils/temperature';
+import { palette } from '../../../styles/Palette';
 
 interface DualTemperatureDisplayProps {
   temp: number;
@@ -41,7 +42,7 @@ export const DualTemperatureDisplay: React.FC<DualTemperatureDisplayProps> = ({
       text={dualTempText}
       style={{
         fontSize,
-        color: '#FFFFFF',
+        color: palette.textColor,
         textAlign: 'center',
       }}
     />

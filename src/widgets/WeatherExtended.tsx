@@ -6,6 +6,7 @@ import { processWidgetData } from "./components/shared/BaseWeatherWidget";
 import { DualTemperatureDisplay } from "./components/shared/DualTemperatureDisplay";
 import { WeatherIcon } from "./components/shared/WeatherIcon";
 import { calculateDailyItemCount } from "./utils/widgetLayoutUtils";
+import { palette } from "../styles/Palette";
 import moment from "moment";
 
 interface WeatherExtendedProps {
@@ -46,7 +47,7 @@ const CompactDailyRow = ({
         style={{
           fontSize: 14,
           fontWeight: "bold",
-          color: "#FFFFFF",
+          color: palette.textColor,
         }}
       />
 
@@ -55,7 +56,7 @@ const CompactDailyRow = ({
 
       {/* High Temp */}
       <FlexWidget style={{ flexDirection: "row", alignItems: "center" }}>
-        <TextWidget text="Hi " style={{ color: "#E5E7EB", fontSize: 16 }} />
+        <TextWidget text="Hi " style={{ color: palette.highlightColor, fontSize: 16 }} />
         <DualTemperatureDisplay
           temp={forecast.temp.max}
           size="small"
@@ -66,7 +67,7 @@ const CompactDailyRow = ({
 
       {/* Low Temp */}
       <FlexWidget style={{ flexDirection: "row", alignItems: "center" }}>
-        <TextWidget text="Lo " style={{ color: "#E5E7EB", fontSize: 16 }} />
+        <TextWidget text="Lo " style={{ color: palette.highlightColor, fontSize: 16 }} />
         <DualTemperatureDisplay
           temp={forecast.temp.min}
           size="small"
@@ -108,7 +109,7 @@ const DailyItem = ({
         text={dayText}
         style={{
           fontSize: 14,
-          color: "#E5E7EB",
+          color: palette.highlightColor,
         }}
       />
 
@@ -117,7 +118,7 @@ const DailyItem = ({
 
       {/* High Temp */}
       <FlexWidget style={{ flexDirection: "row", alignItems: "center" }}>
-        <TextWidget text="Hi " style={{ color: "#E5E7EB", fontSize: 16 }} />
+        <TextWidget text="Hi " style={{ color: palette.highlightColor, fontSize: 16 }} />
         <DualTemperatureDisplay
           temp={forecast.temp.max}
           size="small"
@@ -128,7 +129,7 @@ const DailyItem = ({
 
       {/* Low Temp */}
       <FlexWidget style={{ flexDirection: "row", alignItems: "center" }}>
-        <TextWidget text="Lo " style={{ color: "#E5E7EB", fontSize: 16 }} />
+        <TextWidget text="Lo " style={{ color: palette.highlightColor, fontSize: 16 }} />
         <DualTemperatureDisplay
           temp={forecast.temp.min}
           size="small"
@@ -153,19 +154,13 @@ export function WeatherExtended({
     size: "extended",
   });
 
-  // Debug logging
-  console.log('[WeatherExtended] Height received:', height);
-
   // Calculate how many items to show based on height
   // If no height provided, default to 1 item (compact mode)
   const itemCount = height ? calculateDailyItemCount(height, 7) : 1;
-  console.log('[WeatherExtended] Calculated itemCount:', itemCount);
-
   const isCompact = itemCount <= 1;
 
   // Get daily forecast items (first item is today)
   const forecastItems = processedData.dailyForecast.slice(0, Math.max(1, itemCount));
-  console.log('[WeatherExtended] Showing items:', forecastItems.length, 'out of', processedData.dailyForecast.length, 'available');
 
   // Compact mode: single horizontal row, no header/footer
   if (isCompact) {
@@ -175,7 +170,7 @@ export function WeatherExtended({
         style={{
           height: "match_parent",
           width: "match_parent",
-          backgroundColor: "#3621dcff",
+          backgroundColor: palette.primaryColor,
           borderRadius: 16,
           padding: 8,
           flexDirection: "row",
@@ -194,7 +189,7 @@ export function WeatherExtended({
       style={{
         height: "match_parent",
         width: "match_parent",
-        backgroundColor: "#3621dcff",
+        backgroundColor: palette.primaryColor,
         borderRadius: 16,
         padding: 12,
         flexDirection: "column",

@@ -6,6 +6,7 @@ import { processWidgetData } from './components/shared/BaseWeatherWidget';
 import { getActualDimensions, calculateOptimalFontSize } from './utils/widgetLayoutUtils';
 import { celsiusToFahrenheit } from '../utils/temperature';
 import { WeatherIcon } from './components/shared/WeatherIcon';
+import { palette } from '../styles/Palette';
 
 interface WeatherCompactProps {
   weather: Weather;
@@ -52,12 +53,12 @@ export function WeatherCompact({
       style={{
         height: 'match_parent',
         width: 'match_parent',
-        backgroundColor: '#3621dcff', // palette.primaryColor - matches app theme
+        backgroundColor: palette.primaryColor,
         borderRadius: 16,
         flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',
-        padding: getActualDimensions('WeatherCompact').width === 1 && getActualDimensions('WeatherCompact').height === 1 ? 4 : 8, // Minimal padding for true 1x1
+        padding: getActualDimensions('WeatherCompact').width === 1 && getActualDimensions('WeatherCompact').height === 1 ? 4 : 8,
       }}
       clickAction="REFRESH"
     >
@@ -66,7 +67,7 @@ export function WeatherCompact({
         text={primaryTemp}
         style={{
           fontSize: calculateOptimalFontSize('WeatherCompact', 'primary-temp'),
-          color: '#FFFFFF',
+          color: palette.textColor,
           fontWeight: 'bold',
           textAlign: 'center',
         }}
@@ -80,7 +81,7 @@ export function WeatherCompact({
         text={secondaryTemp}
         style={{
           fontSize: calculateOptimalFontSize('WeatherCompact', 'secondary-temp'),
-          color: '#E5E7EB',
+          color: palette.highlightColor,
           textAlign: 'center',
         }}
       />

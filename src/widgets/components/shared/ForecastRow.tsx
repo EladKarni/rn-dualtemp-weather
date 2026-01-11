@@ -4,6 +4,7 @@ import { FlexWidget, TextWidget } from 'react-native-android-widget';
 import { HourlyEntity } from '../../../types/WeatherTypes';
 import { formatTemperature } from '../../../utils/temperature';
 import { WeatherIcon } from './WeatherIcon';
+import { palette } from '../../../styles/Palette';
 
 interface ForecastRowProps {
   forecast: HourlyEntity;
@@ -58,7 +59,7 @@ export const ForecastRow: React.FC<ForecastRowProps> = ({
         text={time}
         style={{
           fontSize: fontSize - 2,
-          color: '#9CA3AF',
+          color: palette.textColorSecondary,
           marginBottom: 4,
         }}
       />
@@ -67,7 +68,7 @@ export const ForecastRow: React.FC<ForecastRowProps> = ({
         text={formatTemperature(Math.round(forecast.temp), tempScale)}
         style={{
           fontSize,
-          color: '#FFFFFF',
+          color: palette.textColor,
           marginTop: 4,
         }}
       />

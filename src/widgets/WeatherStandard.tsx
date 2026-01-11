@@ -7,6 +7,7 @@ import { DualTemperatureDisplay } from "./components/shared/DualTemperatureDispl
 import { WeatherIcon } from "./components/shared/WeatherIcon";
 import { convertWindSpeed } from "../utils/temperature";
 import { calculateHourlyItemCount, getItemSpacing } from "./utils/widgetLayoutUtils";
+import { palette } from "../styles/Palette";
 
 interface WeatherStandardProps {
   weather: Weather;
@@ -58,7 +59,7 @@ const HourlyItem = ({
         text={timeText}
         style={{
           fontSize: 10,
-          color: "#E5E7EB",
+          color: palette.highlightColor,
           marginBottom: 2,
         }}
       />
@@ -67,7 +68,7 @@ const HourlyItem = ({
         text={`💧 ${Math.round(forecast.pop * 100)}%`}
         style={{
           fontSize: 9,
-          color: "#9CA3AF",
+          color: palette.textColorSecondary,
           marginBottom: 4,
         }}
       />
@@ -77,7 +78,7 @@ const HourlyItem = ({
         text={`${Math.round(windSpeed)}${windUnit}`}
         style={{
           fontSize: 9,
-          color: "#9CA3AF",
+          color: palette.textColorSecondary,
           marginBottom: 4,
         }}
       />
@@ -122,7 +123,7 @@ export function WeatherStandard({
       style={{
         height: "match_parent",
         width: "match_parent",
-        backgroundColor: "#3621dcff", // palette.primaryColor
+        backgroundColor: palette.primaryColor,
         borderRadius: 16,
         padding: 12,
         flexDirection: "column",
@@ -174,7 +175,7 @@ export function WeatherStandard({
           text="Tap to refresh"
           style={{
             fontSize: 9,
-            color: "#6B7280",
+            color: palette.textColorSecondary,
           }}
         />
       </FlexWidget>

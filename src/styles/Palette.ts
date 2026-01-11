@@ -6,4 +6,4 @@ export const palette = {
   primaryLight: "#6B58FFFF",
   primaryDark: "#1C1B4DFF",
   shadowLight: "#715EF5FF",
-};
+} as const;

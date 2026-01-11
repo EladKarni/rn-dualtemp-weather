@@ -2,6 +2,7 @@
 import React from 'react';
 import { FlexWidget, TextWidget } from 'react-native-android-widget';
 import { convertWindSpeed } from '../../../utils/temperature';
+import { palette } from '../../../styles/Palette';
 
 interface WeatherMetricsProps {
   humidity: number;
@@ -41,14 +42,14 @@ export const WeatherMetrics: React.FC<WeatherMetricsProps> = ({
         text={`💧 ${humidity}%`}
         style={{
           fontSize,
-          color: '#D1D5DB',
+          color: palette.highlightColor,
         }}
       />
       <TextWidget
         text={`💨 ${Math.round(wind.value)} ${wind.unit}`}
         style={{
           fontSize,
-          color: '#D1D5DB',
+          color: palette.highlightColor,
         }}
       />
     </FlexWidget>
