@@ -159,6 +159,57 @@ Once you are done done testing on your Simulator or using the Expo Go app, you c
 Note that `development` is one of the predefined build presets. To see the other options or add your own, checkout `eas.json` in the root directory. You'll also need to remove `app.config.js` from the `.gitignore` as EAS uses that to determain what to upload for processing.
 
 <br>
+
+### <u>Build Variants</u>
+
+This app supports two build variants that can be installed simultaneously on the same device:
+
+#### Production Variant
+
+Used for: `preview`, `preview-apk`, and `production` build profiles
+
+* **Bundle ID (iOS):** `com.ekarni.rndualtempweatherapp`
+* **Package Name (Android):** `com.ekarni.rndualtempweatherapp`
+* **App Name:** "Dualtemp Weather"
+* **Icon:** Standard app icon
+
+#### Development Variant
+
+Used for: `development` build profile
+
+* **Bundle ID (iOS):** `com.ekarni.rndualtempweatherapp.dev`
+* **Package Name (Android):** `com.ekarni.rndualtempweatherapp.dev`
+* **App Name:** "Dualtemp Weather Dev"
+* **Icon:** App icon with "DEV" badge overlay
+
+#### Building Variants
+
+```sh
+# Build development variant (installable alongside production)
+eas build --profile development --platform all
+
+# Build preview variant (production signature)
+eas build --profile preview --platform all
+
+# Build production variant (for app stores)
+eas build --profile production --platform all
+```
+
+#### Local Development
+
+For local testing with different variants, use the prebuild scripts:
+
+```sh
+# Prebuild with development configuration
+npm run prebuild:dev
+
+# Prebuild with production configuration
+npm run prebuild:prod
+```
+
+The app.config.js automatically detects the `EAS_BUILD_PROFILE` environment variable and configures the app accordingly.
+
+<br>
 <br>
 
 <!-- ROADMAP -->

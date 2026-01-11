@@ -20,7 +20,9 @@ export const loadedImages = {
     
     mist: require('../../assets/Images/50d.png'),
 
-    sunsetIcon: require('../../assets/Images/sunsetIcon.png')
+    sunsetIcon: require('../../assets/Images/sunsetIcon.png'),
+    sunrise: require('../../assets/Images/sunrise.png'),
+    sunset: require('../../assets/Images/sunset.png')
 }
 
 export const displayWeatherIcon = (icon: string) => {
@@ -66,6 +68,10 @@ export const displayWeatherIcon = (icon: string) => {
         
         case 'sunset':
             return loadedImages.sunsetIcon
+        case 'sunrise':
+            return loadedImages.sunrise
+        case 'sunset-png':
+            return loadedImages.sunset
 
         default:
             return loadedImages.clearSkyDay

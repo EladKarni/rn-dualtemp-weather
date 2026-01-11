@@ -41,18 +41,69 @@
           "languages": ["ar", "en", "es", "fr", "he", "zh"]
         }
       ],
-      ["expo-localization"]
+      ["expo-localization"],
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "project": "react-native",
+          "organization": "ek-solutions"
+        }
+      ],
+      [
+        "react-native-android-widget",
+        {
+          "widgets": [
+            {
+              "name": "WeatherCompact",
+              "label": "Weather (Compact)",
+              "minWidth": "40dp",
+              "minHeight": "40dp",
+              "targetCellWidth": 1,
+              "targetCellHeight": 1,
+              "description": "Essential weather info in 1x1 size",
+              "previewImage": "./assets/widget-preview/Compact.png",
+              "updatePeriodMillis": 1800000
+            },
+            {
+              "name": "WeatherStandard",
+              "label": "Weather (Standard)",
+              "minWidth": "40dp",
+              "minHeight": "110dp",
+              "targetCellWidth": 1,
+              "targetCellHeight": 2,
+              "description": "Current weather with mini forecast in 1x2 size",
+              "previewImage": "./assets/widget-preview/Standard.png",
+              "updatePeriodMillis": 1800000,
+              "resizeMode": "horizontal"
+            },
+            {
+              "name": "WeatherExtended",
+              "label": "Weather (Extended)",
+              "minWidth": "270dp",
+              "minHeight": "40dp",
+              "targetCellWidth": 3,
+              "targetCellHeight": 1,
+              "description": "Today's forecast with vertical expansion in 3x1+ size",
+              "previewImage": "./assets/widget-preview/Extended.png",
+              "updatePeriodMillis": 1800000,
+              "resizeMode": "vertical"
+            }
+          ]
+        }
+      ]
     ],
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "This app uses your location to show you the weather."
+        "NSLocationWhenInUseUsageDescription": "This app uses your location to show you the weather.",
+        "ExpoLocalization_supportsRTL": true,
+        "ITSAppUsesNonExemptEncryption": false
       },
       "bundleIdentifier": "com.ekarni.rndualtempweatherapp",
       "buildNumber": "1.2.2"
     },
     "android": {
-      "versionCode": 12,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#1C1B4D"

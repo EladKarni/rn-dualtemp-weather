@@ -1,16 +1,18 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet } from "react-native";
 
 export const CardFooterStyles = StyleSheet.create({
   cardFooter: {
     marginVertical: 5,
-    flexDirection: "row"
+    flexDirection: "row",
+    flex: 1,
+    justifyContent: "flex-start",
   },
-  footerText: {
-    fontSize: 14,
+  cardFooterRTL: {
+    justifyContent: "flex-end",
   },
   locationIcon: {
     width: 22,
     height: 22,
     marginRight: 10,
-  }
+  },
 });

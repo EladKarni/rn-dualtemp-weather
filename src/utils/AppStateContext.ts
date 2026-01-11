@@ -1,4 +1,4 @@
-import { createContext, Dispatch, SetStateAction } from 'react';
+import { createContext } from 'react';
 import { Weather } from '../types/WeatherTypes';
 import { Moment } from 'moment';
 
@@ -8,5 +8,4 @@ export type AppStateProviderPropTypes = {
   forecast: Weather | undefined;
   date: Moment;
   tempScale: string;
-  updateTempScale: () => void;
 }

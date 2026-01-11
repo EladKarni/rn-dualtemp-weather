@@ -1,8 +1,7 @@
 import { View, Text } from 'react-native'
 import React from 'react'
-import TempText, { TempTextStyleTypes } from '../TempText/TempText'
+import { TempTextStyleTypes } from '../TempText/TempText'
 import { DailyForecastExtendedItemStyles } from './DailyForecastExtendedItemStyles.Styles'
-import { FeelsLike } from '../../types/WeatherTypes'
 import DualTempText from '../TempText/DualTempText'
 type DailyExpandedFeelInfoPropTypes = {
     temp: number;
@@ -17,6 +16,7 @@ const DailyExpandedFeelInfo = ({ temp, label }: DailyExpandedFeelInfoPropTypes) 
                     temp={temp}
                     tempStyleC={TempTextStyleTypes.DAILY}
                     degree
+                    divider
                 />
             </View>
         </View>

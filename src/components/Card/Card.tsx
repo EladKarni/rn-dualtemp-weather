@@ -1,7 +1,7 @@
-import React from 'react'
-import { LinearGradient } from 'expo-linear-gradient'
-import { palette } from '../../Styles/Palette'
-import { CardStyles } from './Card.Styles';
+import React from "react";
+import { LinearGradient } from "expo-linear-gradient";
+import { palette } from "../../styles/Palette";
+import { CardStyles } from "./Card.Styles";
 
 type CardPropTypes = {
   cardType: CardStyleTypes;
@@ -9,24 +9,21 @@ type CardPropTypes = {
 };
 
 export enum CardStyleTypes {
-  MAIN = 'cardMain',
-  HOURLY = 'cardHourly',
-  DAILY = 'cardDaily',
-  DAILYXL = 'cardDailyExpanded'
+  MAIN = "cardMain",
+  HOURLY = "cardHourly",
+  DAILY = "cardDaily",
+  DAILYXL = "cardDailyExpanded",
 }
 
 const Card = ({ cardType, children }: CardPropTypes) => {
   return (
     <LinearGradient
-      colors={[
-        palette.primaryLight,
-        palette.primaryColor
-      ]}
+      colors={[palette.primaryLight, palette.primaryColor]}
       style={[CardStyles.card, CardStyles[cardType]]}
     >
       {children}
     </LinearGradient>
-  )
-}
+  );
+};
 
-export default Card
+export default Card;
