@@ -1,6 +1,6 @@
 import { StyleSheet } from "react-native";
-import { palette } from "../../Styles/Palette";
-import { spacing } from "../../Styles/Spacing";
+import { palette } from "../Palette";
+import { spacing } from "../Spacing";
 
 export const styles = StyleSheet.create({
   backdrop: {
@@ -53,16 +53,16 @@ export const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   errorBanner: {
-    backgroundColor: 'rgba(255, 69, 58, 0.1)',
+    backgroundColor: "rgba(255, 69, 58, 0.1)",
     borderLeftWidth: 4,
-    borderLeftColor: '#FF453A',
+    borderLeftColor: "#FF453A",
     padding: spacing.md,
     borderRadius: 8,
     marginBottom: spacing.sm,
   },
   errorContent: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+    flexDirection: "row",
+    alignItems: "flex-start",
     marginBottom: spacing.sm,
   },
   errorIcon: {
@@ -75,8 +75,8 @@ export const styles = StyleSheet.create({
     fontSize: 14,
   },
   errorActions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
+    flexDirection: "row",
+    justifyContent: "flex-end",
   },
   retryButton: {
     paddingHorizontal: spacing.md,
@@ -87,7 +87,7 @@ export const styles = StyleSheet.create({
   },
   retryText: {
     color: palette.primaryDark,
-    fontWeight: '600',
+    fontWeight: "600",
     fontSize: 13,
   },
   dismissButton: {
@@ -97,7 +97,7 @@ export const styles = StyleSheet.create({
   dismissText: {
     color: palette.textColor,
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   resultsContainer: {
     flex: 1,
@@ -107,21 +107,21 @@ export const styles = StyleSheet.create({
   },
   loadingState: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   loadingText: {
     fontSize: 16,
-    color: '#999',
+    color: "#999",
     marginTop: spacing.md,
   },
   emptyState: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   emptyText: {
     fontSize: 16,
-    color: '#999',
+    color: "#999",
   },
 });

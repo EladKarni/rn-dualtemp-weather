@@ -1,10 +1,10 @@
-import React from 'react';
-import { View, Text } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import AppHeader from '../components/AppHeader/AppHeader';
-import { loadingScreenStyles } from '../styles/screens/LoadingScreen.styles';
-import type { SavedLocation } from '../store/useLocationStore';
-import type { LocationWeatherState } from '../hooks/useMultiLocationWeather';
+import React from "react";
+import { View, Text } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import AppHeader from "../components/AppHeader/AppHeader";
+import type { SavedLocation } from "../store/useLocationStore";
+import type { LocationWeatherState } from "../hooks/useMultiLocationWeather";
+import { loadingScreenStyles } from "../styles/screens/LoadingScreen.styles";
 
 interface LoadingScreenProps {
   locationName: string;
@@ -34,7 +34,9 @@ export default function LoadingScreen({
           locationLoadingStates={locationLoadingStates}
         />
         <View style={loadingScreenStyles.errorContent}>
-          <Text style={loadingScreenStyles.loadingTitle}>Loading Weather...</Text>
+          <Text style={loadingScreenStyles.loadingTitle}>
+            Loading Weather...
+          </Text>
           <Text style={loadingScreenStyles.loadingMessage}>
             Fetching forecast for {locationName}
           </Text>
@@ -43,5 +45,3 @@ export default function LoadingScreen({
     </SafeAreaView>
   );
 }
-
-

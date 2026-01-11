@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity } from "react-native";
 import { useSettingsStore } from "../../store/useSettingsStore";
 import { i18n } from "../../localization/i18n";
 import { styles } from "./TempUnitSelector.Styles";
+import { updateAllWeatherWidgets } from "../../utils/widgetUpdater";
 
 export const TempUnitSelector = () => {
   const tempScale = useSettingsStore((state) => state.tempScale);
@@ -12,7 +13,10 @@ export const TempUnitSelector = () => {
     <View style={styles.container}>
       <TouchableOpacity
         style={[styles.button, tempScale === "C" && styles.buttonActive]}
-        onPress={() => setTempScale("C")}
+        onPress={async () => {
+          setTempScale("C");
+          await updateAllWeatherWidgets();
+        }}
         activeOpacity={0.7}
       >
         <Text
@@ -29,7 +33,10 @@ export const TempUnitSelector = () => {
 
       <TouchableOpacity
         style={[styles.button, tempScale === "F" && styles.buttonActive]}
-        onPress={() => setTempScale("F")}
+        onPress={async () => {
+          setTempScale("F");
+          await updateAllWeatherWidgets();
+        }}
         activeOpacity={0.7}
       >
         <Text

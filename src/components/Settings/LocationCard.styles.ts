@@ -1,7 +1,7 @@
-import { StyleSheet } from 'react-native';
-import { palette } from '../../Styles/Palette';
-import { spacing } from '../../Styles/Spacing';
-import { shadowProp } from '../../Styles/BoxShadow';
+import { StyleSheet } from "react-native";
+import { palette } from "../../styles/Palette";
+import { spacing } from "../../styles/Spacing";
+import { shadowProp } from "../../styles/BoxShadow";
 
 export const styles = StyleSheet.create({
   cardContainer: {
@@ -10,9 +10,9 @@ export const styles = StyleSheet.create({
     ...shadowProp,
   },
   gradientCard: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingVertical: spacing.lg,
     paddingHorizontal: spacing.xl,
     borderRadius: 16,
@@ -23,7 +23,7 @@ export const styles = StyleSheet.create({
   },
   locationName: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     color: palette.textColor,
     letterSpacing: 0.2,
   },

@@ -1,8 +1,8 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { AppError } from '../../utils/errors';
-import { i18n } from '../../localization/i18n';
-import { palette } from '../../Styles/Palette';
+import React from "react";
+import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { AppError } from "../../utils/errors";
+import { i18n } from "../../localization/i18n";
+import { palette } from "../../styles/Palette";
 
 interface ErrorBannerProps {
   error: AppError;
@@ -24,7 +24,7 @@ export const ErrorBanner: React.FC<ErrorBannerProps> = ({
       <View style={styles.actions}>
         {error.recoverable && onRetry && (
           <TouchableOpacity onPress={onRetry} style={styles.retryButton}>
-            <Text style={styles.retryText}>{i18n.t('Retry')}</Text>
+            <Text style={styles.retryText}>{i18n.t("Retry")}</Text>
           </TouchableOpacity>
         )}
         {onDismiss && (
@@ -39,17 +39,17 @@ export const ErrorBanner: React.FC<ErrorBannerProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: 'rgba(255, 69, 58, 0.1)',
+    backgroundColor: "rgba(255, 69, 58, 0.1)",
     borderLeftWidth: 4,
-    borderLeftColor: '#FF453A',
+    borderLeftColor: "#FF453A",
     padding: 12,
     marginHorizontal: 16,
     marginVertical: 8,
     borderRadius: 8,
   },
   content: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   icon: {
     fontSize: 20,
@@ -61,9 +61,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   actions: {
-    flexDirection: 'row',
+    flexDirection: "row",
     marginTop: 8,
-    justifyContent: 'flex-end',
+    justifyContent: "flex-end",
   },
   retryButton: {
     paddingHorizontal: 16,
@@ -73,8 +73,8 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   retryText: {
-    color: '#fff',
-    fontWeight: '600',
+    color: "#fff",
+    fontWeight: "600",
     fontSize: 14,
   },
   dismissButton: {
@@ -84,6 +84,6 @@ const styles = StyleSheet.create({
   dismissText: {
     color: palette.textColor,
     fontSize: 20,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 });

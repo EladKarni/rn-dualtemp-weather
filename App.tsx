@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 
 import {
@@ -25,10 +25,12 @@ if (sentryDsn) {
     enabled: !__DEV__, // Only send events in production builds
   });
   if (__DEV__) {
-    logger.info('Sentry initialized (dev mode - events disabled)');
+    logger.info("Sentry initialized (dev mode - events disabled)");
   }
 } else if (__DEV__) {
-  logger.info('Sentry not initialized: No DSN provided. Set EXPO_PUBLIC_SENTRY_DSN environment variable to enable.');
+  logger.info(
+    "Sentry not initialized: No DSN provided. Set EXPO_PUBLIC_SENTRY_DSN environment variable to enable."
+  );
 }
 
 // Stores
@@ -45,6 +47,7 @@ import { useWeatherLoadingState } from "./src/hooks/useWeatherLoadingState";
 import { useLocaleQuery } from "./src/hooks/useLocaleQuery";
 import { useScreenProps } from "./src/hooks/useScreenProps";
 import { useRenderDecision } from "./src/hooks/useRenderDecision";
+import { initializeForecastStore } from "./src/store/useForecastStore";
 
 // Screens
 import LoadingScreen from "./src/screens/LoadingScreen";
@@ -56,27 +59,32 @@ import MainWeatherWithModals from "./src/screens/MainWeatherWithModals";
 import ErrorBoundary from "./src/components/ErrorBoundary/ErrorBoundary";
 
 function App() {
-
+  // Initialize forecast store
+  useEffect(() => {
+    initializeForecastStore().catch((error) => {
+      console.error("Failed to initialize forecast store:", error);
+    });
+  }, []);
 
   // Store state
   const tempScale = useSettingsStore((state) => state.tempScale);
   const savedLocations = useLocationStore((state) => state.savedLocations);
   const activeLocationId = useLocationStore((state) => state.activeLocationId);
   const activeModal = useModalStore((state) => state.activeModal);
-  const openLocationDropdown = useModalStore((state) => state.openLocationDropdown);
+  const openLocationDropdown = useModalStore(
+    (state) => state.openLocationDropdown
+  );
   const openSettings = useModalStore((state) => state.openSettings);
   const openAddLocation = useModalStore((state) => state.openAddLocation);
 
-  const activeLocation = savedLocations.find(loc => loc.id === activeLocationId);
+  const activeLocation = savedLocations.find(
+    (loc) => loc.id === activeLocationId
+  );
 
   // Locale/date query - fetch locale settings and create moment object
   // NOTE: Locale is now managed by useLanguageStore (single source of truth)
-  const {
-    fetchedLocaleSuccessfully,
-    localeData,
-    isLocaleLoading,
-    date,
-  } = useLocaleQuery();
+  const { fetchedLocaleSuccessfully, localeData, isLocaleLoading, date } =
+    useLocaleQuery();
 
   // Custom hooks
   useGPSLocation();
@@ -90,13 +98,22 @@ function App() {
     error: forecastError,
     isError: hasForecastError,
     locationLoadingStates,
-  } = useMultiLocationWeather(savedLocations, activeLocationId, fetchedLocaleSuccessfully && !isLocaleLoading);
+  } = useMultiLocationWeather(
+    savedLocations,
+    activeLocationId,
+    fetchedLocaleSuccessfully && !isLocaleLoading
+  );
 
-  const setActiveLocation = useLocationStore((state) => state.setActiveLocation);
+  const setActiveLocation = useLocationStore(
+    (state) => state.setActiveLocation
+  );
 
-  const handleLocationSelect = React.useCallback((locationId: string) => {
-    setActiveLocation(locationId);
-  }, [setActiveLocation]);
+  const handleLocationSelect = React.useCallback(
+    (locationId: string) => {
+      setActiveLocation(locationId);
+    },
+    [setActiveLocation]
+  );
 
   const { splashTimeoutExpired, onLayoutRootView } = useSplashScreen(isFetched);
 
@@ -125,8 +142,9 @@ function App() {
 
   // Log query state for debugging
   React.useEffect(() => {
-    logger.debug('Forecast query state:', {
-      enabled: !!activeLocation && fetchedLocaleSuccessfully && !isLocaleLoading,
+    logger.debug("Forecast query state:", {
+      enabled:
+        !!activeLocation && fetchedLocaleSuccessfully && !isLocaleLoading,
       hasActiveLocation: !!activeLocation,
       fetchedLocaleSuccessfully,
       isLocaleLoading,
@@ -135,10 +153,18 @@ function App() {
       hasForecastError,
       localeData: localeData?.locale,
     });
-  }, [activeLocation, fetchedLocaleSuccessfully, isLocaleLoading, forecast, refreshing, hasForecastError, localeData]);
+  }, [
+    activeLocation,
+    fetchedLocaleSuccessfully,
+    isLocaleLoading,
+    forecast,
+    refreshing,
+    hasForecastError,
+    localeData,
+  ]);
 
   if (hasForecastError) {
-    logger.error('Forecast query error:', forecastError);
+    logger.error("Forecast query error:", forecastError);
   }
 
   const onRefresh = React.useCallback(() => {
@@ -202,16 +228,24 @@ function App() {
           )}
         >
           {/* CRITICAL SAFETY CHECK: Timeout expired but essential resources still loading */}
-          {splashTimeoutExpired && essentialResourcesLoading && <SkeletonScreen {...screenProps} />}
+          {splashTimeoutExpired && essentialResourcesLoading && (
+            <SkeletonScreen {...screenProps} />
+          )}
 
           {/* LOADING STATE: Initial fetch in progress */}
-          {refreshing && !forecast && !hasForecastError && <LoadingScreen {...screenProps} />}
+          {refreshing && !forecast && !hasForecastError && (
+            <LoadingScreen {...screenProps} />
+          )}
 
           {/* LOADING STATE: Post-timeout loading */}
-          {showSkeleton && !showErrorScreen && <SkeletonScreen {...screenProps} />}
+          {showSkeleton && !showErrorScreen && (
+            <SkeletonScreen {...screenProps} />
+          )}
 
           {/* ERROR STATE: Network/API error with no cached data */}
-          {showErrorScreen && hasForecastError && !forecast && (
+          {showErrorScreen &&
+            hasForecastError &&
+            !forecast &&
             (() => {
               const appError = forecastError ? toAppError(forecastError) : null;
               return (
@@ -221,11 +255,12 @@ function App() {
                   onRetry={() => refetch()}
                 />
               );
-            })()
-          )}
+            })()}
 
           {/* FALLBACK STATE: Safety net for missing data */}
-          {!forecast && !showErrorScreen && !refreshing && <SkeletonScreen {...screenProps} />}
+          {!forecast && !showErrorScreen && !refreshing && (
+            <SkeletonScreen {...screenProps} />
+          )}
 
           {/* SUCCESS STATE: All data loaded successfully (with optional error banner for cached data) */}
           {forecast && (
@@ -243,9 +278,13 @@ function App() {
               activeLocationId={activeLocationId}
               locationLoadingStates={locationLoadingStates}
               onLocationSelect={handleLocationSelect}
-              appError={hasForecastError && !dismissedError ? toAppError(forecastError) : null}
+              appError={
+                hasForecastError && !dismissedError
+                  ? toAppError(forecastError)
+                  : null
+              }
               onRetry={() => refetch()}
-              onDismissError={() => setDismissedError('dismissed')}
+              onDismissError={() => setDismissedError("dismissed")}
               lastUpdated={lastUpdated}
               {...screenProps}
             />

@@ -1,13 +1,11 @@
-import React from 'react';
-import { View, Text, TouchableOpacity, Alert } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import type { SavedLocation } from '../../store/useLocationStore';
-import { i18n } from '../../localization/i18n';
-import { palette } from '../../Styles/Palette';
-import { spacing } from '../../Styles/Spacing';
-import { shadowProp } from '../../Styles/BoxShadow';
-import { LocationCard } from './LocationCard';
-import { styles } from './LocationList.styles';
+import React from "react";
+import { View, Text, TouchableOpacity, Alert } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import type { SavedLocation } from "../../store/useLocationStore";
+import { i18n } from "../../localization/i18n";
+import { palette } from "../../styles/Palette";
+import { LocationCard } from "./LocationCard";
+import { styles } from "./LocationList.styles";
 
 interface LocationListProps {
   savedLocations: SavedLocation[];

@@ -1,13 +1,11 @@
-import React from 'react';
-import { View, Text, TouchableOpacity } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import type { SavedLocation } from '../../store/useLocationStore';
-import { i18n } from '../../localization/i18n';
-import { palette } from '../../Styles/Palette';
-import { spacing } from '../../Styles/Spacing';
-import { shadowProp } from '../../Styles/BoxShadow';
-import { DeleteButton } from './DeleteButton';
-import { styles } from './LocationCard.styles';
+import React from "react";
+import { View, Text, TouchableOpacity } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import type { SavedLocation } from "../../store/useLocationStore";
+import { i18n } from "../../localization/i18n";
+import { palette } from "../../styles/Palette";
+import { DeleteButton } from "./DeleteButton";
+import { styles } from "./LocationCard.styles";
 
 interface LocationCardProps {
   location: SavedLocation;
@@ -29,8 +27,8 @@ export const LocationCard: React.FC<LocationCardProps> = ({
   };
 
   return (
-    <TouchableOpacity 
-      style={styles.cardContainer} 
+    <TouchableOpacity
+      style={styles.cardContainer}
       onPress={handlePress}
       activeOpacity={0.8}
     >
@@ -45,17 +43,12 @@ export const LocationCard: React.FC<LocationCardProps> = ({
             {location.isGPS ? `📍 ${i18n.t("CurrentLocation")}` : location.name}
           </Text>
           {location.isGPS && (
-            <Text style={styles.locationSubtitle}>
-              {i18n.t("GPSLocation")}
-            </Text>
+            <Text style={styles.locationSubtitle}>{i18n.t("GPSLocation")}</Text>
           )}
         </View>
-        
+
         {!location.isGPS && (
-          <DeleteButton
-            onPress={handleDelete}
-            size="medium"
-          />
+          <DeleteButton onPress={handleDelete} size="medium" />
         )}
       </LinearGradient>
     </TouchableOpacity>

@@ -1,6 +1,6 @@
 import React, { useContext } from "react";
 import { LineChart } from "react-native-chart-kit";
-import { palette } from "../../Styles/Palette";
+import { palette } from "../../styles/Palette";
 import { AppStateContext } from "../../utils/AppStateContext";
 import { celsiusToFahrenheit } from "../../utils/temperature";
 
@@ -35,7 +35,12 @@ const TemperatureChart = ({ feelsLike, cardWidth }: TemperatureChartProps) => {
         labels: graphScale,
         datasets: [
           {
-            data: [feelsLike.morn, feelsLike.day, feelsLike.eve, feelsLike.night],
+            data: [
+              feelsLike.morn,
+              feelsLike.day,
+              feelsLike.eve,
+              feelsLike.night,
+            ],
           },
         ],
       }}

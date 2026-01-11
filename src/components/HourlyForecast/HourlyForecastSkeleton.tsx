@@ -1,9 +1,9 @@
-import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import Subtitle from '../Subtitle/Subtitle';
-import { HourlyForecastStyles } from './HourlyForecast.Styles';
-import { palette } from '../../Styles/Palette';
-import { i18n } from '../../localization/i18n';
+import React from "react";
+import { View, StyleSheet } from "react-native";
+import Subtitle from "../Subtitle/Subtitle";
+import { HourlyForecastStyles } from "./HourlyForecast.Styles";
+import { palette } from "../../styles/Palette";
+import { i18n } from "../../localization/i18n";
 
 /**
  * Skeleton placeholder for HourlyForecast
@@ -15,7 +15,7 @@ const HourlyForecastSkeleton = () => {
 
   return (
     <View style={HourlyForecastStyles.container}>
-      <Subtitle text={i18n.t('HourlyTitle')} />
+      <Subtitle text={i18n.t("HourlyTitle")} />
       <View style={styles.scrollContainer}>
         {skeletonItems.map((_, index) => (
           <View key={index} style={styles.skeletonItem}>
@@ -32,12 +32,12 @@ const HourlyForecastSkeleton = () => {
 
 const styles = StyleSheet.create({
   scrollContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 10,
   },
   skeletonItem: {
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    justifyContent: "space-between",
+    alignItems: "center",
     height: 120,
     width: 60,
     gap: 8,

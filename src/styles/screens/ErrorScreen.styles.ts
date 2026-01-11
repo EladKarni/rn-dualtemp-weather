@@ -1,5 +1,5 @@
-import { StyleSheet } from 'react-native';
-import { palette } from '../../Styles/Palette';
+import { StyleSheet } from "react-native";
+import { palette } from "../Palette";
 
 export const errorScreenStyles = StyleSheet.create({
   container: {
@@ -11,21 +11,21 @@ export const errorScreenStyles = StyleSheet.create({
   },
   errorContent: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 20,
   },
   errorTitle: {
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: palette.textColor,
     marginBottom: 12,
-    textAlign: 'center',
+    textAlign: "center",
   },
   errorMessage: {
     fontSize: 16,
     color: palette.highlightColor,
-    textAlign: 'center',
+    textAlign: "center",
     marginBottom: 24,
     paddingHorizontal: 20,
   },
@@ -38,17 +38,17 @@ export const errorScreenStyles = StyleSheet.create({
   retryButtonText: {
     color: palette.textColor,
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   supportText: {
     fontSize: 12,
     color: palette.highlightColor,
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: 32,
     opacity: 0.7,
   },
   supportEmail: {
     color: palette.primaryColor,
-    fontWeight: '500',
+    fontWeight: "500",
   },
 });

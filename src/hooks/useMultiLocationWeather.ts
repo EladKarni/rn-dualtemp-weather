@@ -4,8 +4,9 @@ import { i18n } from '../localization/i18n';
 import { logger } from '../utils/logger';
 import type { SavedLocation } from '../store/useLocationStore';
 import type { Weather } from '../types/WeatherTypes';
-import { useMemo, useEffect } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { useSettingsStore } from '../store/useSettingsStore';
+import { useForecastStore, initializeForecastStore } from '../store/useForecastStore';
 import { createCurrentDate } from '../utils/fetchLocale';
 
 export interface LocationWeatherState {
@@ -36,6 +37,27 @@ export function useMultiLocationWeather(
 ) {
   const activeLocation = savedLocations.find(loc => loc.id === activeLocationId);
   const setLastUpdated = useSettingsStore(state => state.setLastUpdated);
+  const forecastStore = useForecastStore();
+
+  // Initialize forecast store on first use
+  useEffect(() => {
+    initializeForecastStore().catch(error => {
+      logger.error('Failed to initialize forecast store:', error);
+    });
+  }, []);
+
+  // Check store for cached data first
+  const [cachedActiveWeather, setCachedActiveWeather] = useState<Weather | null>(null);
+  
+  useEffect(() => {
+    if (activeLocationId && fetchedLocaleSuccessfully) {
+      forecastStore.getWeatherData(activeLocationId).then(weather => {
+        setCachedActiveWeather(weather);
+      }).catch(error => {
+        logger.error('Failed to get cached weather data:', error);
+      });
+    }
+  }, [activeLocationId, fetchedLocaleSuccessfully, forecastStore]);
 
   // Active location: fetch with high priority
   const activeQuery = useQuery({
@@ -53,10 +75,20 @@ export function useMultiLocationWeather(
         activeLocation?.longitude || 0
       );
       logger.debug('Active forecast fetched:', !!result);
+      
+      // Persist to store for widgets and offline use
+      if (result && activeLocationId) {
+        try {
+          await forecastStore.setWeatherData(activeLocationId, result);
+        } catch (error) {
+          logger.error('Failed to persist weather data to store:', error);
+        }
+      }
+      
       return result;
     },
     enabled: !!activeLocation && fetchedLocaleSuccessfully,
-    placeholderData: (previousData) => previousData, // Keeps old data visible during location switch
+    placeholderData: cachedActiveWeather, // Use cached data as placeholder
     staleTime: 1000 * 60 * 30, // 30 minutes - data is considered fresh for this long
     gcTime: 1000 * 60 * 60, // 1 hour - keep unused data in cache for this long
     retry: 1, // Only retry once instead of 3 times (faster error display)
@@ -82,6 +114,16 @@ export function useMultiLocationWeather(
           location.longitude
         );
         logger.debug('Pre-fetched forecast:', location.name, !!result);
+        
+        // Persist to store for widgets and offline use
+        if (result) {
+          try {
+            await forecastStore.setWeatherData(location.id, result);
+          } catch (error) {
+            logger.error('Failed to persist prefetched weather data to store:', error);
+          }
+        }
+        
         return result;
       },
       enabled: !!activeLocation && fetchedLocaleSuccessfully && activeQuery.isSuccess,
@@ -150,9 +192,9 @@ export function useMultiLocationWeather(
   }, [activeQuery.isSuccess, activeQuery.data, setLastUpdated]);
 
   return {
-    // Active location data (for backwards compatibility with existing code)
-    activeWeather: activeQuery.data,
-    isFetched: activeQuery.isFetched,
+    // Active location data (enhanced with store integration)
+    activeWeather: activeQuery.data || cachedActiveWeather,
+    isFetched: activeQuery.isFetched || !!cachedActiveWeather,
     isFetching: activeQuery.isFetching,
     refetch: activeQuery.refetch,
     error: activeQuery.error,
@@ -162,6 +204,9 @@ export function useMultiLocationWeather(
     locationLoadingStates,
     getLocationWeather,
     allLocationsLoaded: prefetchQueries.every(q => q.isSuccess),
+
+    // Store state
+    cachedActiveWeather,
 
     // For debugging
     activeQuery,

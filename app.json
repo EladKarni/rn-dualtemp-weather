@@ -10,9 +10,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#1C1B4D"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "extra": {
       "supportsRTL": true
     },
@@ -40,25 +38,58 @@
       [
         "react-native-localization-settings",
         {
-          "languages": [
-            "ar",
-            "en",
-            "es",
-            "fr",
-            "he",
-            "zh"
-          ]
+          "languages": ["ar", "en", "es", "fr", "he", "zh"]
         }
       ],
-      [
-        "expo-localization"
-      ],
+      ["expo-localization"],
       [
         "@sentry/react-native/expo",
         {
           "url": "https://sentry.io/",
           "project": "react-native",
           "organization": "ek-solutions"
+        }
+      ],
+      [
+        "react-native-android-widget",
+        {
+          "widgets": [
+            {
+              "name": "WeatherCompact",
+              "label": "Weather (Compact)",
+              "minWidth": "40dp",
+              "minHeight": "40dp",
+              "targetCellWidth": 1,
+              "targetCellHeight": 1,
+              "description": "Essential weather info in 1x1 size",
+              "previewImage": "./assets/widget-preview/Compact.png",
+              "updatePeriodMillis": 1800000
+            },
+            {
+              "name": "WeatherStandard",
+              "label": "Weather (Standard)",
+              "minWidth": "40dp",
+              "minHeight": "110dp",
+              "targetCellWidth": 1,
+              "targetCellHeight": 2,
+              "description": "Current weather with mini forecast in 1x2 size",
+              "previewImage": "./assets/widget-preview/Standard.png",
+              "updatePeriodMillis": 1800000,
+              "resizeMode": "horizontal"
+            },
+            {
+              "name": "WeatherExtended",
+              "label": "Weather (Extended)",
+              "minWidth": "270dp",
+              "minHeight": "40dp",
+              "targetCellWidth": 3,
+              "targetCellHeight": 1,
+              "description": "Today's forecast with vertical expansion in 3x1+ size",
+              "previewImage": "./assets/widget-preview/Extended.png",
+              "updatePeriodMillis": 1800000,
+              "resizeMode": "vertical"
+            }
+          ]
         }
       ]
     ],
@@ -78,9 +109,7 @@
         "backgroundColor": "#1C1B4D"
       },
       "package": "com.ekarni.rndualtempweatherapp",
-      "permissions": [
-        "ACCESS_BACKGROUND_LOCATION"
-      ]
+      "permissions": ["ACCESS_BACKGROUND_LOCATION"]
     },
     "updates": {
       "url": "https://u.expo.dev/444bda66-1ab4-4665-ba53-c2b76743a33b"
