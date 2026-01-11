@@ -91,9 +91,11 @@
             }
           ]
         }
-      ]
+      ],
+      "@bacons/apple-targets"
     ],
     "ios": {
+      "appleTeamId": "RUW8C26QSP",
       "supportsTablet": true,
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "This app uses your location to show you the weather.",
@@ -101,7 +103,10 @@
         "ITSAppUsesNonExemptEncryption": false
       },
       "bundleIdentifier": "com.ekarni.rndualtempweatherapp",
-      "buildNumber": "1.2.2"
+      "buildNumber": "1.2.2",
+      "entitlements": {
+        "com.apple.security.application-groups": ["group.com.ekarni.rndualtempweatherapp.widget"]
+      }
     },
     "android": {
       "adaptiveIcon": {

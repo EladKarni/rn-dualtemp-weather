@@ -16,6 +16,7 @@
     "build:prod": "eas build --profile production"
   },
   "dependencies": {
+    "@bacons/apple-targets": "^3.0.7",
     "@expo-google-fonts/dm-sans": "^0.2.2",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@sentry/react-native": "~7.2.0",
