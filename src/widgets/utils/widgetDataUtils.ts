@@ -163,3 +163,22 @@ export const formatUVI = (uvi: number): string => {
   if (uvi <= 10) return `${uvi} (Very High)`;
   return `${uvi} (Extreme)`;
 };
+
+/**
+ * Format data age for widget display
+ * Returns a human-readable string like "2h ago" or "Just now"
+ * Returns null if data is fresh (< 30 minutes)
+ */
+export const formatDataAge = (ageMinutes: number): string | null => {
+  // Don't show age indicator if data is fresh (< 30 minutes)
+  if (ageMinutes < 30) return null;
+
+  if (ageMinutes < 1) return 'Just now';
+  if (ageMinutes < 60) return `${Math.round(ageMinutes)}m ago`;
+
+  const hours = Math.floor(ageMinutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+};

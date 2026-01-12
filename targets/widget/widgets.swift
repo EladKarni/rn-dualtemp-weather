@@ -26,6 +26,7 @@ struct WeatherData: Codable {
     let windUnit: String
     let locationName: String
     let lastUpdated: String
+    let lastUpdatedTimestamp: Int?  // Optional for backward compatibility
     let hourlyForecast: [HourlyForecast]
     let dailyForecast: [DailyForecast]
 }
@@ -94,6 +95,26 @@ func formatDualTemp(tempCelsius: Double, primaryScale: String) -> (primary: Stri
     } else {
         return ("\(celsius)°C", "\(fahrenheit)°F")
     }
+}
+
+// MARK: - Age Calculation
+
+/**
+ * Calculate data age and return formatted string
+ * Returns nil if data is fresh (< 30 minutes)
+ */
+func calculateDataAge(timestamp: Int) -> String? {
+    let now = Date().timeIntervalSince1970
+    let ageMinutes = Int((now - Double(timestamp)) / 60)
+
+    // Don't show age if fresh (< 30 min)
+    if ageMinutes < 30 { return nil }
+
+    if ageMinutes < 60 { return "\(ageMinutes)m ago" }
+    let hours = ageMinutes / 60
+    if hours < 24 { return "\(hours)h ago" }
+    let days = hours / 24
+    return "\(days)d ago"
 }
 
 // MARK: - Timeline Entry
@@ -171,6 +192,7 @@ struct WeatherCompactView: View {
     var body: some View {
         if let weather = entry.weatherData {
             let temps = formatDualTemp(tempCelsius: weather.temp, primaryScale: weather.tempScale)
+            let ageText = weather.lastUpdatedTimestamp.flatMap { calculateDataAge(timestamp: $0) }
 
             VStack(spacing: 2) {
                 Text(temps.primary)
@@ -185,6 +207,13 @@ struct WeatherCompactView: View {
                     .font(.system(size: 14))
                     .foregroundColor(WidgetColors.highlight)
                     .minimumScaleFactor(0.6)
+
+                // Age indicator (only if stale)
+                if let ageText = ageText {
+                    Text(ageText)
+                        .font(.system(size: 9))
+                        .foregroundColor(Color(red: 0.61, green: 0.64, blue: 0.69)) // #9CA3AF
+                }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(WidgetColors.background)
@@ -257,6 +286,8 @@ struct WeatherStandardView: View {
 
     var body: some View {
         if let weather = entry.weatherData {
+            let ageText = weather.lastUpdatedTimestamp.flatMap { calculateDataAge(timestamp: $0) }
+
             VStack(spacing: 4) {
                 // Hourly forecast row
                 HStack(spacing: 4) {
@@ -265,6 +296,12 @@ struct WeatherStandardView: View {
                     }
                 }
 
+                // Age indicator (only if stale)
+                if let ageText = ageText {
+                    Text(ageText)
+                        .font(.system(size: 9))
+                        .foregroundColor(Color(red: 0.61, green: 0.64, blue: 0.69)) // #9CA3AF
+                }
             }
             .padding(8)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -350,6 +387,8 @@ struct WeatherExtendedView: View {
 
     var body: some View {
         if let weather = entry.weatherData {
+            let ageText = weather.lastUpdatedTimestamp.flatMap { calculateDataAge(timestamp: $0) }
+
             VStack(spacing: 4) {
                 ForEach(Array(weather.dailyForecast.prefix(family == .systemLarge ? 5 : 3).enumerated()), id: \.element.dt) { index, forecast in
                     DailyItemView(
@@ -357,6 +396,13 @@ struct WeatherExtendedView: View {
                         tempScale: weather.tempScale,
                         isToday: index == 0
                     )
+                }
+
+                // Age indicator (only if stale)
+                if let ageText = ageText {
+                    Text(ageText)
+                        .font(.system(size: 9))
+                        .foregroundColor(Color(red: 0.61, green: 0.64, blue: 0.69)) // #9CA3AF
                 }
             }
             .padding(8)

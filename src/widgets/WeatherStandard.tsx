@@ -8,6 +8,7 @@ import { WeatherIcon } from "./components/shared/WeatherIcon";
 import { convertWindSpeed } from "../utils/temperature";
 import { calculateHourlyItemCount, getItemSpacing } from "./utils/widgetLayoutUtils";
 import { palette } from "../styles/Palette";
+import { formatDataAge } from "./utils/widgetDataUtils";
 
 interface WeatherStandardProps {
   weather: Weather;
@@ -15,6 +16,7 @@ interface WeatherStandardProps {
   locationName: string;
   width?: number;   // Widget width in pixels for responsive layout
   height?: number;  // Widget height in pixels
+  dataAge?: number; // Optional: Age of data in minutes (for stale data indicator)
 }
 
 // Helper component for hourly forecast item
@@ -98,6 +100,7 @@ export function WeatherStandard({
   locationName,
   width,
   height,
+  dataAge,
 }: WeatherStandardProps) {
   const { processedData, tempScale } = processWidgetData({
     weather,
@@ -117,6 +120,9 @@ export function WeatherStandard({
   // Check if widget is expanded (more than 1 cell wide)
   // Always use compact layout when itemCount is 1 or less
   const isExpanded = itemCount > 1;
+
+  // Format age indicator if data is stale
+  const ageText = dataAge !== undefined ? formatDataAge(dataAge) : null;
 
   return (
     <FlexWidget
@@ -161,6 +167,19 @@ export function WeatherStandard({
             showBackground={false}
           />
         )
+      )}
+
+      {/* Age Indicator - Only shown if data is stale (>30 min) */}
+      {ageText && (
+        <TextWidget
+          text={ageText}
+          style={{
+            fontSize: 9,
+            color: "#9CA3AF",
+            textAlign: "center",
+            marginTop: 4,
+          }}
+        />
       )}
 
       {/* Footer */}

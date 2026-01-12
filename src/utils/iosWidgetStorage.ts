@@ -28,7 +28,8 @@ interface IOSWeatherData {
   windSpeed: number;
   windUnit: string;
   locationName: string;
-  lastUpdated: string;
+  lastUpdated: string;  // Display string for backward compatibility
+  lastUpdatedTimestamp: number;  // Unix timestamp in seconds for age calculation
   hourlyForecast: Array<{
     dt: number;
     temp: number;
@@ -67,6 +68,7 @@ function transformWeatherForIOS(
       hour: '2-digit',
       minute: '2-digit',
     }),
+    lastUpdatedTimestamp: Math.floor(Date.now() / 1000),  // Unix timestamp in seconds
     hourlyForecast: weather.hourly.slice(0, 6).map((hour) => ({
       dt: hour.dt,
       temp: Math.round(hour.temp),

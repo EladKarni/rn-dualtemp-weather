@@ -196,6 +196,45 @@ export class WeatherDatabase {
     }
   }
 
+  async getWeatherDataWithAge(locationId: string): Promise<{
+    weatherData: WeatherData | null;
+    ageMinutes: number | null;
+  }> {
+    await this.ensureInitialized();
+
+    try {
+      const db = this.getDb();
+      const result = await db.getFirstAsync<WeatherCacheRow>(
+        `SELECT weather_data, last_updated, locale, latitude, longitude
+         FROM weather_cache
+         WHERE location_id = ?`,
+        [locationId]
+      );
+
+      if (!result) {
+        return { weatherData: null, ageMinutes: null };
+      }
+
+      const weather = JSON.parse(result.weather_data) as Weather;
+      const lastUpdated = result.last_updated;
+      const ageMinutes = (Date.now() - lastUpdated) / 60000;
+
+      return {
+        weatherData: {
+          weather,
+          lastUpdated,
+          locale: result.locale,
+          latitude: result.latitude,
+          longitude: result.longitude,
+        },
+        ageMinutes,
+      };
+    } catch (error) {
+      logger.error(`Failed to get weather data with age for ${locationId}:`, error);
+      return { weatherData: null, ageMinutes: null };
+    }
+  }
+
   async getAllFreshData(): Promise<Map<string, WeatherData>> {
     await this.ensureInitialized();
 

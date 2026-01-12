@@ -7,6 +7,7 @@ import { getActualDimensions, calculateOptimalFontSize } from './utils/widgetLay
 import { celsiusToFahrenheit } from '../utils/temperature';
 import { WeatherIcon } from './components/shared/WeatherIcon';
 import { palette } from '../styles/Palette';
+import { formatDataAge } from './utils/widgetDataUtils';
 
 interface WeatherCompactProps {
   weather: Weather;
@@ -14,6 +15,7 @@ interface WeatherCompactProps {
   locationName: string;
   width?: number;   // Optional: Widget width in pixels (unused, but accepted for compatibility)
   height?: number;  // Optional: Widget height in pixels (unused, but accepted for compatibility)
+  dataAge?: number; // Optional: Age of data in minutes (for stale data indicator)
 }
 
 // Helper function to format temperature with conversion (input is Celsius)
@@ -29,7 +31,8 @@ const formatTempForAbbreviation = (tempCelsius: number, scale: 'C' | 'F'): strin
 export function WeatherCompact({
   weather,
   lastUpdated,
-  locationName
+  locationName,
+  dataAge
 }: WeatherCompactProps) {
   // Use dimension-aware processing for true 1x1 behavior
   const { processedData, tempScale } = processWidgetData({
@@ -47,6 +50,9 @@ export function WeatherCompact({
   // Format temperatures for 1x1 space (abbreviated)
   const primaryTemp = formatTempForAbbreviation(processedData.temp, primaryScale);
   const secondaryTemp = formatTempForAbbreviation(processedData.temp, secondaryScale);
+
+  // Format age indicator if data is stale
+  const ageText = dataAge !== undefined ? formatDataAge(dataAge) : null;
 
   return (
     <FlexWidget
@@ -85,6 +91,19 @@ export function WeatherCompact({
           textAlign: 'center',
         }}
       />
+
+      {/* Age Indicator - Only shown if data is stale (>30 min) */}
+      {ageText && (
+        <TextWidget
+          text={ageText}
+          style={{
+            fontSize: 9,
+            color: '#9CA3AF',
+            textAlign: 'center',
+            marginTop: 2,
+          }}
+        />
+      )}
     </FlexWidget>
   );
 }

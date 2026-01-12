@@ -18,6 +18,10 @@ export interface ForecastStore {
   // SQLite persistence methods for widget support
   setWeatherData: (locationId: string, weather: Weather) => Promise<void>;
   getWeatherData: (locationId: string) => Promise<Weather | null>;
+  getWeatherDataWithAge: (locationId: string) => Promise<{
+    weather: Weather | null;
+    ageMinutes: number | null;
+  }>;
   isLocationDataFresh: (locationId: string) => Promise<boolean>;
   refreshWeather: (locationId: string, locale: string, lat: number, lon: number) => Promise<void>;
   
@@ -104,6 +108,22 @@ export const useForecastStore = create<ForecastStore>((set, get) => ({
     } catch (error) {
       logger.error(`Failed to get weather data for ${locationId}:`, error);
       return null;
+    }
+  },
+
+  getWeatherDataWithAge: async (locationId: string): Promise<{
+    weather: Weather | null;
+    ageMinutes: number | null;
+  }> => {
+    try {
+      const result = await weatherDatabase.getWeatherDataWithAge(locationId);
+      return {
+        weather: result.weatherData?.weather || null,
+        ageMinutes: result.ageMinutes,
+      };
+    } catch (error) {
+      logger.error(`Failed to get weather data with age for ${locationId}:`, error);
+      return { weather: null, ageMinutes: null };
     }
   },
 
