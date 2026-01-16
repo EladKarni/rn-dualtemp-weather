@@ -1,5 +1,6 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import moment from "moment";
 import { AppError } from "../../utils/errors";
 import { i18n } from "../../localization/i18n";
 import { palette } from "../../styles/Palette";
@@ -18,31 +19,14 @@ export const WeatherErrorBanner: React.FC<WeatherErrorBannerProps> = ({
   lastUpdated,
 }) => {
   const getTimeAgoText = (date: Date): string => {
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-
-    if (diffMins < 1) return i18n.t("JustNow") || "Just now";
-    if (diffMins === 1) return i18n.t("OneMinuteAgo") || "1 minute ago";
-    if (diffMins < 60)
-      return (
-        i18n.t("XMinutesAgo", { count: diffMins }) || `${diffMins} minutes ago`
-      );
-
-    const diffHours = Math.floor(diffMins / 60);
-    if (diffHours === 1) return i18n.t("OneHourAgo") || "1 hour ago";
-    return (
-      i18n.t("XHoursAgo", { count: diffHours }) || `${diffHours} hours ago`
-    );
+    return moment(date).fromNow();
   };
 
   const getErrorMessage = (): string => {
     let message = error.userMessage;
 
     if (lastUpdated) {
-      message +=
-        ". " + i18n.t("LastUpdated", { time: getTimeAgoText(lastUpdated) }) ||
-        `. Last updated ${getTimeAgoText(lastUpdated)}`;
+      message += `. ${getTimeAgoText(lastUpdated)}`;
     }
 
     return message;

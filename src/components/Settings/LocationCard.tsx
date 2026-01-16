@@ -42,8 +42,8 @@ export const LocationCard: React.FC<LocationCardProps> = ({
           <Text style={styles.locationName}>
             {location.isGPS ? `📍 ${i18n.t("CurrentLocation")}` : location.name}
           </Text>
-          {location.isGPS && (
-            <Text style={styles.locationSubtitle}>{i18n.t("GPSLocation")}</Text>
+          {location.isGPS && location.name && (
+            <Text style={styles.locationSubtitle}>{location.name}</Text>
           )}
         </View>
 

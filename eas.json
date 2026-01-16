@@ -24,7 +24,10 @@
       "channel": "preview-apk"
     },
     "production": {
-      "channel": "production"
+      "channel": "production",
+      "ios": {
+        "autoIncrement": true
+      }
     }
   },
 "submit": {
