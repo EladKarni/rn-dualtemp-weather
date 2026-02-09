@@ -1,6 +1,6 @@
 {
   "cli": {
-    "version": "16.28.0",
+    "version": "16.32.0",
     "promptToConfigurePushNotifications": false,
     "appVersionSource": "remote"
   },
@@ -30,7 +30,7 @@
       }
     }
   },
-"submit": {
+  "submit": {
     "production": {
       "android": {
         "serviceAccountKeyPath": "./serviceKey.json",
