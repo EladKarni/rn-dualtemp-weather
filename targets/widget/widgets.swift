@@ -444,6 +444,7 @@ struct WeatherExtendedWidget: Widget {
         windUnit: "m/s",
         locationName: "Tel Aviv",
         lastUpdated: "12:00",
+        lastUpdatedTimestamp: Int(Date().timeIntervalSince1970),
         hourlyForecast: [],
         dailyForecast: []
     ))
@@ -463,6 +464,7 @@ struct WeatherExtendedWidget: Widget {
         windUnit: "m/s",
         locationName: "Tel Aviv",
         lastUpdated: "12:00",
+        lastUpdatedTimestamp: Int(Date().timeIntervalSince1970),
         hourlyForecast: [
             HourlyForecast(dt: Int(Date().timeIntervalSince1970), temp: 22, weatherId: 800, pop: 0.1, windSpeed: 5),
             HourlyForecast(dt: Int(Date().timeIntervalSince1970) + 3600, temp: 24, weatherId: 801, pop: 0.2, windSpeed: 6),
@@ -487,6 +489,7 @@ struct WeatherExtendedWidget: Widget {
         windUnit: "m/s",
         locationName: "Tel Aviv",
         lastUpdated: "12:00",
+        lastUpdatedTimestamp: Int(Date().timeIntervalSince1970),
         hourlyForecast: [],
         dailyForecast: [
             DailyForecast(dt: Int(Date().timeIntervalSince1970), tempMax: 28, tempMin: 18, weatherId: 800),
