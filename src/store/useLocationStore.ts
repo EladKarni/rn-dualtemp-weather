@@ -16,16 +16,22 @@ interface LocationState {
   savedLocations: SavedLocation[];
   activeLocationId: string | null;
 
-  addLocation: (location: Omit<SavedLocation, "id" | "addedAt" | "isGPS">) => void;
+  addLocation: (
+    location: Omit<SavedLocation, "id" | "addedAt" | "isGPS">,
+  ) => void;
   removeLocation: (id: string) => void;
   setActiveLocation: (id: string) => void;
-  updateGPSLocation: (latitude: number, longitude: number, name: string) => void;
+  updateGPSLocation: (
+    latitude: number,
+    longitude: number,
+    name: string,
+  ) => void;
   getActiveLocation: () => SavedLocation | null;
   canAddMoreLocations: () => boolean;
 }
 
 export const GPS_LOCATION_ID = "gps-location";
-const MAX_SAVED_LOCATIONS = 5;
+const MAX_SAVED_LOCATIONS = 25;
 
 export const useLocationStore = create<LocationState>()(
   persist(
@@ -37,7 +43,9 @@ export const useLocationStore = create<LocationState>()(
         const state = get();
 
         // Check if we've reached the limit (excluding GPS location)
-        const nonGPSLocations = state.savedLocations.filter(loc => !loc.isGPS);
+        const nonGPSLocations = state.savedLocations.filter(
+          (loc) => !loc.isGPS,
+        );
         if (nonGPSLocations.length >= MAX_SAVED_LOCATIONS) {
           logger.warn("Maximum locations reached");
           return;
@@ -77,13 +85,14 @@ export const useLocationStore = create<LocationState>()(
         }
 
         const filteredLocations = state.savedLocations.filter(
-          (loc) => loc.id !== id
+          (loc) => loc.id !== id,
         );
 
         // If removing the active location, switch to GPS
-        const newActiveId = state.activeLocationId === id
-          ? GPS_LOCATION_ID
-          : state.activeLocationId;
+        const newActiveId =
+          state.activeLocationId === id
+            ? GPS_LOCATION_ID
+            : state.activeLocationId;
 
         set({
           savedLocations: filteredLocations,
@@ -92,9 +101,9 @@ export const useLocationStore = create<LocationState>()(
       },
 
       setActiveLocation: (id) => {
-        logger.trace('LocationStore.setActiveLocation', {
+        logger.trace("LocationStore.setActiveLocation", {
           newId: id,
-          currentId: get().activeLocationId
+          currentId: get().activeLocationId,
         });
         set({ activeLocationId: id });
       },
@@ -102,7 +111,7 @@ export const useLocationStore = create<LocationState>()(
       updateGPSLocation: (latitude, longitude, name) => {
         const state = get();
         const existingGPS = state.savedLocations.find(
-          (loc) => loc.id === GPS_LOCATION_ID
+          (loc) => loc.id === GPS_LOCATION_ID,
         );
 
         const gpsLocation: SavedLocation = {
@@ -118,7 +127,7 @@ export const useLocationStore = create<LocationState>()(
           // Update existing GPS location
           set({
             savedLocations: state.savedLocations.map((loc) =>
-              loc.id === GPS_LOCATION_ID ? gpsLocation : loc
+              loc.id === GPS_LOCATION_ID ? gpsLocation : loc,
             ),
           });
         } else {
@@ -133,20 +142,23 @@ export const useLocationStore = create<LocationState>()(
       getActiveLocation: () => {
         const state = get();
         return (
-          state.savedLocations.find((loc) => loc.id === state.activeLocationId) ||
-          null
+          state.savedLocations.find(
+            (loc) => loc.id === state.activeLocationId,
+          ) || null
         );
       },
 
       canAddMoreLocations: () => {
         const state = get();
-        const nonGPSLocations = state.savedLocations.filter(loc => !loc.isGPS);
+        const nonGPSLocations = state.savedLocations.filter(
+          (loc) => !loc.isGPS,
+        );
         return nonGPSLocations.length < MAX_SAVED_LOCATIONS;
       },
     }),
     {
       name: "@saved_locations",
       storage: createJSONStorage(() => AsyncStorage),
-    }
-  )
+    },
+  ),
 );
