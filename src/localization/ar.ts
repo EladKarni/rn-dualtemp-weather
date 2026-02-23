@@ -49,6 +49,8 @@ export const ar = {
     Language: "اللغة",
     AppLanguage: "لغة التطبيق",
     AutoDetect: "الكشف التلقائي (لغة الجهاز)",
+    PrecipitationUnit: "وحدة الهطول",
+    Auto: "تلقائي",
     ShowSunriseSunset: "إظهار شروق/غروب الشمس",
     Show: "إظهار",
     Hide: "إخفاء",

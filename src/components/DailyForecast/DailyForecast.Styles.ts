@@ -43,6 +43,8 @@ export const DailyForecastItemStyles = StyleSheet.create({
   tempIconContainer: {
     flexDirection: "row",
     alignItems: "center",
+    display: "flex",
+    gap: 10,
   },
   tempIconContainerRTL: {
     flexDirection: "row-reverse",

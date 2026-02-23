@@ -49,6 +49,8 @@ export const fr = {
     Language: "Langue",
     AppLanguage: "Langue de l'Application",
     AutoDetect: "Détection Automatique (Langue de l'Appareil)",
+    PrecipitationUnit: "Unité de Précipitation",
+    Auto: "Auto",
     ShowSunriseSunset: "Afficher Lever/Coucher du Soleil",
     Show: "Afficher",
     Hide: "Masquer",

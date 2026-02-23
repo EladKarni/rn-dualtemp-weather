@@ -10,6 +10,7 @@ import { AppStateContext } from '../../utils/AppStateContext';
 import PopType from "../PopType/PopType";
 import { useTimeFormatting } from '../../utils/dateFormatting';
 import { convertWindSpeed } from '../../utils/temperature';
+import { useSettingsStore } from '../../store/useSettingsStore';
 
 interface HourlyForecastItemProps {
   temp: number;
@@ -18,6 +19,7 @@ interface HourlyForecastItemProps {
   pop: number;
   wind: number;
   percType?: string;
+  precipAmount?: number;
 }
 
 const HourlyForecastItem = ({
@@ -27,10 +29,12 @@ const HourlyForecastItem = ({
   pop,
   wind,
   percType,
+  precipAmount,
 }: HourlyForecastItemProps) => {
   const context = useContext(AppStateContext);
   const tempScale = (context?.tempScale ?? 'C') as 'C' | 'F';
   const { formatTime } = useTimeFormatting();
+  const precipUnit = useSettingsStore((state) => state.getEffectivePrecipUnit());
 
   // Use centralized wind speed conversion
   const { value: windSpeedValue, unit: windSpeedUnit } = convertWindSpeed(wind, tempScale);
@@ -42,7 +46,7 @@ const HourlyForecastItem = ({
         <Text style={HourlyForecastItemStyles.HourText}>
           {formatTime(dt)}
         </Text>
-        <PopType pop={pop} percType={percType} />
+        <PopType pop={pop} percType={percType} precipAmount={precipAmount} precipUnit={precipUnit} />
         <View style={HourlyForecastItemStyles.HourWindInfo}>
           <Text style={HourlyForecastItemStyles.HourText}>{wind_speed}</Text>
           <Text style={HourlyForecastItemStyles.HourText}>

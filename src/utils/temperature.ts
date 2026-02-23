@@ -64,6 +64,38 @@ export const convertWindSpeed = (
 };
 
 /**
+ * Converts precipitation amount from mm to the specified unit
+ */
+export const convertPrecipitation = (
+  mm: number,
+  unit: 'mm' | 'in'
+): { value: number; unit: string } => {
+  if (unit === 'in') {
+    return { value: mm / 25.4, unit: 'in' };
+  }
+  return { value: mm, unit: 'mm' };
+};
+
+/**
+ * Extracts precipitation amount from rain/snow fields
+ * Handles both hourly format (object with "1h" key) and daily format (direct number)
+ */
+export const getPrecipitationAmount = (
+  rain: { "1h": number } | number | undefined,
+  snow: { "1h": number } | number | undefined,
+  isHourly: boolean
+): number => {
+  if (isHourly) {
+    const rainAmount = rain && typeof rain === 'object' ? rain["1h"] : 0;
+    const snowAmount = snow && typeof snow === 'object' ? snow["1h"] : 0;
+    return rainAmount + snowAmount;
+  }
+  const rainAmount = typeof rain === 'number' ? rain : 0;
+  const snowAmount = typeof snow === 'number' ? snow : 0;
+  return rainAmount + snowAmount;
+};
+
+/**
  * Converts Celsius to Kelvin
  * @param celsius Temperature in Celsius
  * @returns Temperature in Kelvin

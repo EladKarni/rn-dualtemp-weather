@@ -49,6 +49,8 @@ export const he = {
     Language: "שפה",
     AppLanguage: "שפת האפליקציה",
     AutoDetect: "זיהוי אוטומטי (שפת המכשיר)",
+    PrecipitationUnit: "יחידת משקעים",
+    Auto: "אוטומטי",
     ShowSunriseSunset: "הצג זריחה/שקיעה",
     Show: "הצג",
     Hide: "הסתר",

@@ -7,13 +7,16 @@ import { Moment } from "moment";
 interface SettingsState {
   tempScale: "C" | "F";
   clockFormat: "12hour" | "24hour" | "auto";
+  precipUnit: "auto" | "mm" | "in";
   showSunriseSunset: boolean;
   lastUpdated: Moment | null;
   setLastUpdated: (time: Moment) => void;
   setTempScale: (scale: "C" | "F") => void;
   setClockFormat: (format: "12hour" | "24hour" | "auto") => void;
+  setPrecipUnit: (unit: "auto" | "mm" | "in") => void;
   setShowSunriseSunset: (show: boolean) => void;
   getEffectiveClockFormat: () => "12hour" | "24hour";
+  getEffectivePrecipUnit: () => "mm" | "in";
   isHydrated: boolean;
   setHydrated: () => void;
 }
@@ -23,6 +26,7 @@ export const useSettingsStore = create<SettingsState>()(
     (set, get) => ({
       tempScale: "C",
       clockFormat: "auto",
+      precipUnit: "auto",
       showSunriseSunset: true,
       isHydrated: false,
       lastUpdated: null,
@@ -30,6 +34,8 @@ export const useSettingsStore = create<SettingsState>()(
       setTempScale: (scale: "C" | "F") => set({ tempScale: scale }),
       setClockFormat: (format: "12hour" | "24hour" | "auto") =>
         set({ clockFormat: format }),
+      setPrecipUnit: (unit: "auto" | "mm" | "in") =>
+        set({ precipUnit: unit }),
       setShowSunriseSunset: (show: boolean) => set({ showSunriseSunset: show }),
       getEffectiveClockFormat: () => {
         const clockFormat = get().clockFormat;
@@ -37,6 +43,13 @@ export const useSettingsStore = create<SettingsState>()(
           return uses24HourClock() ? "24hour" : "12hour";
         }
         return clockFormat;
+      },
+      getEffectivePrecipUnit: () => {
+        const precipUnit = get().precipUnit;
+        if (precipUnit === "auto") {
+          return get().tempScale === "F" ? "in" : "mm";
+        }
+        return precipUnit;
       },
       setHydrated: () => set({ isHydrated: true }),
     }),
@@ -46,6 +59,7 @@ export const useSettingsStore = create<SettingsState>()(
       partialize: (state) => ({
         tempScale: state.tempScale,
         clockFormat: state.clockFormat,
+        precipUnit: state.precipUnit,
         showSunriseSunset: state.showSunriseSunset,
         lastUpdated: state.lastUpdated,
       }),

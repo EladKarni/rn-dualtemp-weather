@@ -15,6 +15,7 @@ import SettingItem from "../components/SettingItem/SettingItem";
 import { TempUnitSelector } from "../components/TempUnitSelector/TempUnitSelector";
 import { ClockFormatSelector } from "../components/ClockFormatSelector/ClockFormatSelector";
 import { SunriseSunsetToggle } from "../components/SunriseSunsetToggle/SunriseSunsetToggle";
+import { PrecipUnitSelector } from "../components/PrecipUnitSelector/PrecipUnitSelector";
 import { LanguageSelector } from "../components/LanguageSelector/LanguageSelector";
 import { LocationList } from "../components/Settings/LocationList";
 import { useLocationStore } from "../store/useLocationStore";
@@ -77,6 +78,9 @@ const SettingsScreen = ({
               <Text style={styles.sectionTitle}>{i18n.t("Units")}</Text>
               <SettingItem label={i18n.t("TemperatureUnit")}>
                 <TempUnitSelector />
+              </SettingItem>
+              <SettingItem label={i18n.t("PrecipitationUnit")}>
+                <PrecipUnitSelector />
               </SettingItem>
               <SettingItem label={i18n.t("TimeFormat")}>
                 <ClockFormatSelector />

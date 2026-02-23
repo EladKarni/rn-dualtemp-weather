@@ -9,6 +9,7 @@ import { HourlyEntity } from '../../types/WeatherTypes';
 import { i18n } from "../../localization/i18n";
 import { useLanguageStore } from '../../store/useLanguageStore';
 import { useScrollPositionReset } from '../../hooks/useScrollPositionReset';
+import { getPrecipitationAmount } from '../../utils/temperature';
 
 type HourlyForecastProps = {
   hourlyForecast?: HourlyEntity[];
@@ -30,6 +31,7 @@ const HourlyForecast = (props: HourlyForecastProps) => {
         onScrollToIndexFailed={handleScrollToIndexFailed}
         renderItem={(hour) => {
           const percpType = hour.item?.snow ? "❄" : "💧";
+          const precipAmount = getPrecipitationAmount(hour.item.rain, hour.item.snow, true);
           return (
             <HourlyForecastItem
               temp={hour.item.temp}
@@ -38,6 +40,7 @@ const HourlyForecast = (props: HourlyForecastProps) => {
               pop={hour.item.pop}
               wind={hour.item.wind_speed}
               percType={percpType}
+              precipAmount={precipAmount}
             />
           );
         }}
