@@ -16,9 +16,14 @@ export enum CardStyleTypes {
 }
 
 const Card = ({ cardType, children }: CardPropTypes) => {
+  const colors =
+    cardType === CardStyleTypes.DAILYXL
+      ? ([palette.primaryColor, palette.primaryColor] as const)
+      : ([palette.primaryLight, palette.primaryColor] as const);
+
   return (
     <LinearGradient
-      colors={[palette.primaryLight, palette.primaryColor]}
+      colors={colors}
       style={[CardStyles.card, CardStyles[cardType]]}
     >
       {children}

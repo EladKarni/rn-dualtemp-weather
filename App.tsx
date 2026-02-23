@@ -1,5 +1,10 @@
 import React, { useEffect } from "react";
+import { Platform, UIManager } from "react-native";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
+
+if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 import {
   useFonts,

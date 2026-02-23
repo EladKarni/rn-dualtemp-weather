@@ -41,6 +41,7 @@ const DailyForecastItem = ({
       }
     >
       <TouchableOpacity
+        activeOpacity={1}
         onPress={() => setSelected(index)}
         style={DailyForecastItemStyles.container}
       >

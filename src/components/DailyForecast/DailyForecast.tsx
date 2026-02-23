@@ -2,7 +2,7 @@ import React, { useState } from 'react'
 import DailyForecastItem from './DailyForecastItem';
 import Subtitle from '../Subtitle/Subtitle';
 
-import { View } from 'react-native'
+import { View, LayoutAnimation } from 'react-native'
 import { DailyEntity } from '../../types/WeatherTypes';
 import { DailyForecastStyles } from './DailyForecast.Styles';
 import { i18n } from "../../localization/i18n";
@@ -15,6 +15,10 @@ const DailyForecast = ({ dailyForecast }: DailyForecastProps) => {
   const [currentlySelectedIndex, setCurrentlySelectedIndex] = useState(0)
 
   const setSelectedIndex = (index: number) => {
+    LayoutAnimation.configureNext({
+      duration: 300,
+      update: { type: LayoutAnimation.Types.easeInEaseOut },
+    });
     index !== currentlySelectedIndex
       ? setCurrentlySelectedIndex(index)
       : setCurrentlySelectedIndex(NaN)

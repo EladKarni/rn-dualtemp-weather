@@ -34,6 +34,7 @@ export const CardStyles = StyleSheet.create({
     borderRadius: 15,
     marginVertical: 7.5,
     shadowRadius: 10,
+    overflow: "hidden",
   },
   cardDailyExpanded: {
     paddingVertical: 7.5,
@@ -41,5 +42,6 @@ export const CardStyles = StyleSheet.create({
     borderRadius: 15,
     marginVertical: 7.5,
     shadowRadius: 10,
+    overflow: "hidden",
   },
 });
