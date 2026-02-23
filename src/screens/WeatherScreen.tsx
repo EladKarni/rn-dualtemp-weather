@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import { ScrollView, View, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AppHeader from "../components/AppHeader/AppHeader";
@@ -52,6 +52,8 @@ export default function WeatherScreen({
   onDismissError,
   lastUpdated,
 }: WeatherScreenProps) {
+  const scrollViewRef = useRef<ScrollView>(null);
+
   // Determine if we should show skeleton for hourly/daily forecasts
   // Show skeleton if forecast is still loading (initial load)
   const showForecastSkeleton =
@@ -61,6 +63,7 @@ export default function WeatherScreen({
     <SafeAreaView style={weatherScreenStyles.container}>
       <View onLayout={onLayoutRootView}>
         <ScrollView
+          ref={scrollViewRef}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
           }
@@ -100,7 +103,7 @@ export default function WeatherScreen({
             {showForecastSkeleton ? (
               <DailyForecastSkeleton />
             ) : (
-              <DailyForecast dailyForecast={forecast.daily} />
+              <DailyForecast dailyForecast={forecast.daily} scrollViewRef={scrollViewRef} />
             )}
           </AppStateContext.Provider>
           <AppFooter />
