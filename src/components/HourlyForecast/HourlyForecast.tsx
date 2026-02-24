@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, FlatList } from 'react-native';
+import React, { useState, useRef, useEffect } from 'react';
+import { View, ScrollView, LayoutAnimation } from 'react-native';
 import Subtitle from '../Subtitle/Subtitle';
 import HourlyForecastItem from './HourlyForecastItem';
 
@@ -8,8 +8,9 @@ import { HourlyForecastStyles } from './HourlyForecast.Styles';
 import { HourlyEntity } from '../../types/WeatherTypes';
 import { i18n } from "../../localization/i18n";
 import { useLanguageStore } from '../../store/useLanguageStore';
-import { useScrollPositionReset } from '../../hooks/useScrollPositionReset';
 import { getPrecipitationAmount } from '../../utils/temperature';
+
+const LAYOUT_ANIMATION_DURATION = 300;
 
 type HourlyForecastProps = {
   hourlyForecast?: HourlyEntity[];
@@ -17,34 +18,60 @@ type HourlyForecastProps = {
 
 const HourlyForecast = (props: HourlyForecastProps) => {
   const isRTL = useLanguageStore((state) => state.isRTL);
-  const { flatListRef, handleScrollToIndexFailed } = useScrollPositionReset(props.hourlyForecast);
+  const scrollViewRef = useRef<ScrollView>(null);
+  const [currentlySelectedIndex, setCurrentlySelectedIndex] = useState(0);
+
+  // Reset scroll position when RTL changes
+  useEffect(() => {
+    if (scrollViewRef.current && props.hourlyForecast && props.hourlyForecast.length > 0) {
+      scrollViewRef.current.scrollTo({ x: 0, animated: false });
+    }
+  }, [isRTL, props.hourlyForecast]);
+
+  const setSelectedIndex = (index: number) => {
+    LayoutAnimation.configureNext({
+      duration: LAYOUT_ANIMATION_DURATION,
+      update: { type: LayoutAnimation.Types.easeInEaseOut },
+    });
+    if (index !== currentlySelectedIndex) {
+      setCurrentlySelectedIndex(index);
+    } else {
+      setCurrentlySelectedIndex(NaN);
+    }
+  };
 
   return (
     <View style={HourlyForecastStyles.container}>
       <Subtitle text={i18n.t("HourlyTitle")} />
-      <FlatList
-        ref={flatListRef}
+      <ScrollView
+        ref={scrollViewRef}
         horizontal
-        inverted={isRTL}
-        data={props.hourlyForecast}
-        keyExtractor={(_item, index) => index.toString()}
-        onScrollToIndexFailed={handleScrollToIndexFailed}
-        renderItem={(hour) => {
-          const percpType = hour.item?.snow ? "❄" : "💧";
-          const precipAmount = getPrecipitationAmount(hour.item.rain, hour.item.snow, true);
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={isRTL ? { flexDirection: 'row-reverse' } : undefined}
+      >
+        {props.hourlyForecast?.map((hour, index) => {
+          const percpType = hour.snow ? "❄" : "💧";
+          const precipAmount = getPrecipitationAmount(hour.rain, hour.snow, true);
           return (
             <HourlyForecastItem
-              temp={hour.item.temp}
-              dt={hour.item.dt}
-              icon={hour.item.weather[0].icon}
-              pop={hour.item.pop}
-              wind={hour.item.wind_speed}
+              key={hour.dt}
+              temp={hour.temp}
+              dt={hour.dt}
+              icon={hour.weather[0].icon}
+              pop={hour.pop}
+              wind={hour.wind_speed}
               percType={percpType}
               precipAmount={precipAmount}
+              feelsLike={hour.feels_like}
+              humidity={hour.humidity}
+              uvi={hour.uvi}
+              index={index}
+              currSelected={currentlySelectedIndex}
+              setSelected={setSelectedIndex}
             />
           );
-        }}
-      />
+        })}
+      </ScrollView>
     </View>
   );
 };

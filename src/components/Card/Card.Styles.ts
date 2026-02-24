@@ -25,6 +25,17 @@ export const CardStyles = StyleSheet.create({
     margin: 7.5,
     shadowRadius: 15,
   },
+  cardHourlyExpanded: {
+    justifyContent: "space-between",
+    height: 170,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    borderRadius: 32,
+    margin: 7.5,
+    shadowRadius: 15,
+    borderWidth: 1,
+    borderColor: palette.highlightColor,
+  },
   cardDaily: {
     display: "flex",
     justifyContent: "center",

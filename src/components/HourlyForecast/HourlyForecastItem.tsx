@@ -1,16 +1,14 @@
-import React, { useContext } from 'react';
+import React from 'react';
 import WeatherIcon, { IconSizeTypes } from '../WeatherIcon/WeatherIcon';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { displayWeatherIcon } from '../../utils/Images';
 import { TempTextStyleTypes } from '../TempText/TempText';
 import Card, { CardStyleTypes } from '../Card/Card';
 import { HourlyForecastItemStyles } from './HourlyForecast.Styles';
 import DualTempText from '../TempText/DualTempText';
-import { AppStateContext } from '../../utils/AppStateContext';
-import PopType from "../PopType/PopType";
 import { useTimeFormatting } from '../../utils/dateFormatting';
-import { convertWindSpeed } from '../../utils/temperature';
-import { useSettingsStore } from '../../store/useSettingsStore';
+import HourlyForecastExpanded from './HourlyForecastExpanded';
+import { useLanguageStore } from '../../store/useLanguageStore';
 
 interface HourlyForecastItemProps {
   temp: number;
@@ -20,6 +18,12 @@ interface HourlyForecastItemProps {
   wind: number;
   percType?: string;
   precipAmount?: number;
+  feelsLike: number;
+  humidity: number;
+  uvi: number;
+  index: number;
+  currSelected: number;
+  setSelected: (index: number) => void;
 }
 
 const HourlyForecastItem = ({
@@ -30,41 +34,56 @@ const HourlyForecastItem = ({
   wind,
   percType,
   precipAmount,
+  feelsLike,
+  humidity,
+  uvi,
+  index,
+  currSelected,
+  setSelected,
 }: HourlyForecastItemProps) => {
-  const context = useContext(AppStateContext);
-  const tempScale = (context?.tempScale ?? 'C') as 'C' | 'F';
   const { formatTime } = useTimeFormatting();
-  const precipUnit = useSettingsStore((state) => state.getEffectivePrecipUnit());
+  const isRTL = useLanguageStore((state) => state.isRTL);
+  const isExpanded = index === currSelected;
 
-  // Use centralized wind speed conversion
-  const { value: windSpeedValue, unit: windSpeedUnit } = convertWindSpeed(wind, tempScale);
-  const wind_speed = windSpeedValue.toFixed(0);
-  const wind_speed_scale = windSpeedUnit;
   return (
-    <Card cardType={CardStyleTypes.HOURLY}>
-      <View style={HourlyForecastItemStyles.HourlyItem}>
-        <Text style={HourlyForecastItemStyles.HourText}>
-          {formatTime(dt)}
-        </Text>
-        <PopType pop={pop} percType={percType} precipAmount={precipAmount} precipUnit={precipUnit} />
-        <View style={HourlyForecastItemStyles.HourWindInfo}>
-          <Text style={HourlyForecastItemStyles.HourText}>{wind_speed}</Text>
+    <Card cardType={isExpanded ? CardStyleTypes.HOURLYXL : CardStyleTypes.HOURLY}>
+      <TouchableOpacity
+        activeOpacity={1}
+        onPress={() => setSelected(index)}
+        style={
+          isExpanded
+            ? [HourlyForecastItemStyles.HourlyItemExpanded, isRTL && HourlyForecastItemStyles.HourlyItemExpandedRTL]
+            : HourlyForecastItemStyles.HourlyItem
+        }
+      >
+        <View style={isExpanded ? HourlyForecastItemStyles.HourlyItemLeft : HourlyForecastItemStyles.HourlyItem}>
           <Text style={HourlyForecastItemStyles.HourText}>
-            {wind_speed_scale}
+            {formatTime(dt)}
           </Text>
-        </View>
-        <WeatherIcon
-          icon={displayWeatherIcon(icon)}
-          iconSize={IconSizeTypes.MEDIUM}
-        />
-        <View style={styles.temp}>
-          <DualTempText
-            temp={temp}
-            tempStyleC={TempTextStyleTypes.HOURLY}
-            degree
+          <WeatherIcon
+            icon={displayWeatherIcon(icon)}
+            iconSize={IconSizeTypes.MEDIUM}
           />
+          <View style={styles.temp}>
+            <DualTempText
+              temp={temp}
+              tempStyleC={TempTextStyleTypes.HOURLY}
+              degree
+            />
+          </View>
         </View>
-      </View>
+        {isExpanded && (
+          <HourlyForecastExpanded
+            feelsLike={feelsLike}
+            humidity={humidity}
+            uvi={uvi}
+            wind={wind}
+            pop={pop}
+            percType={percType}
+            precipAmount={precipAmount}
+          />
+        )}
+      </TouchableOpacity>
     </Card>
   );
 };
