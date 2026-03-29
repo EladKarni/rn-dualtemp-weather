@@ -1,0 +1,22 @@
+---
+title: "Everything You Need in a Weather App"
+features:
+  - icon: "🌡️"
+    title: "Dual Temperature Units"
+    description: "See both Celsius and Fahrenheit at a glance. No more mental math — just tap to switch between units instantly."
+  - icon: "📍"
+    title: "Multi-Location Tracking"
+    description: "Track weather across all the places that matter to you. Add, remove, and switch between locations effortlessly."
+  - icon: "📱"
+    title: "Home Screen Widgets"
+    description: "Beautiful widgets in three sizes — Compact, Standard, and Extended — so you can check the weather without opening the app."
+  - icon: "🌍"
+    title: "6 Languages"
+    description: "Available in English, Spanish, French, Arabic, Hebrew, and Chinese with full RTL support."
+  - icon: "⏰"
+    title: "Hourly & Daily Forecasts"
+    description: "Plan your day with detailed 24-hour forecasts and extended daily outlooks with temperature charts."
+  - icon: "🌅"
+    title: "Sunrise & Sunset"
+    description: "Know exactly when the sun rises and sets at any of your tracked locations."
+---

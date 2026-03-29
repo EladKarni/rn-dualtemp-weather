@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__playwright__playwright_navigate",
+      "mcp__playwright__playwright_get_visible_html",
+      "mcp__playwright__playwright_screenshot",
+      "Bash(grep -r \"netlify\\\\|website\\\\|landing\\\\|domain\\\\|http\" /home/light/projects/rn-dualtemp-weather/*.json)",
+      "mcp__playwright__playwright_get_visible_text",
+      "Bash(file /home/light/projects/rn-dualtemp-weather/assets/*.png)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(gh api:*)",
+      "WebFetch(domain:www.npmjs.com)",
+      "WebFetch(domain:registry.npmjs.org)",
+      "WebSearch",
+      "WebFetch(domain:api.github.com)",
+      "WebFetch(domain:unpkg.com)",
+      "WebFetch(domain:app.unpkg.com)",
+      "WebFetch(domain:cdn.jsdelivr.net)",
+      "Bash(yarn build:*)",
+      "Read(//home/light/Downloads/**)",
+      "mcp__playwright__playwright_click",
+      "mcp__playwright__playwright_evaluate",
+      "mcp__playwright__playwright_close",
+      "Bash(grep -r import.meta /home/light/projects/rn-dualtemp-weather/node_modules --include=*.js)",
+      "Bash(grep -r import.meta /home/light/projects/rn-dualtemp-weather/node_modules/@sentry/react-native --include=*.js)"
+    ],
+    "additionalDirectories": [
+      "/home/light/.claude/plans"
+    ]
+  }
+}
