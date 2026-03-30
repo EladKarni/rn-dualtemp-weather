@@ -59,7 +59,7 @@ export default function WeatherScreen({
 
   return (
     <SafeAreaView style={weatherScreenStyles.container}>
-      <View onLayout={onLayoutRootView}>
+      <View style={{ flex: 1 }} onLayout={onLayoutRootView}>
         <ScrollView
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />

@@ -23,7 +23,13 @@
       "mcp__playwright__playwright_evaluate",
       "mcp__playwright__playwright_close",
       "Bash(grep -r import.meta /home/light/projects/rn-dualtemp-weather/node_modules --include=*.js)",
-      "Bash(grep -r import.meta /home/light/projects/rn-dualtemp-weather/node_modules/@sentry/react-native --include=*.js)"
+      "Bash(grep -r import.meta /home/light/projects/rn-dualtemp-weather/node_modules/@sentry/react-native --include=*.js)",
+      "Bash(grep -r import.meta /home/light/projects/rn-dualtemp-weather/node_modules/@sentry/react-native --include=*.js --include=*.ts)",
+      "Bash(grep -r import.meta /home/light/projects/rn-dualtemp-weather/node_modules/@tanstack --include=*.js)",
+      "Bash(find /home/light/projects/rn-dualtemp-weather/website -type f \\\\\\(-name *Card* -o -name *shadow* \\\\\\))",
+      "Bash(grep -E \"\\\\.\\(ts|tsx\\)$\")",
+      "Bash(find /home/light/projects/rn-dualtemp-weather/assets -maxdepth 1 -type f \\\\\\(-name *.png -o -name *.jpg -o -name *.svg \\\\\\))",
+      "Bash(git ls-tree:*)"
     ],
     "additionalDirectories": [
       "/home/light/.claude/plans"

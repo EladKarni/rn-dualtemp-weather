@@ -1,4 +1,4 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, Platform } from "react-native";
 import { palette } from "../../styles/Palette";
 
 export const styles = StyleSheet.create({
@@ -21,6 +21,9 @@ export const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 8,
+    ...(Platform.OS === 'web' && {
+      boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.3)',
+    }),
   },
   locationsList: {
     maxHeight: 300,

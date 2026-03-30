@@ -1,5 +1,8 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, Platform } from "react-native";
 import { palette } from "../../styles/Palette";
+
+const webShadow = (radius: number) =>
+  Platform.OS === 'web' ? { boxShadow: `0px 4px ${radius}px rgba(113, 94, 245, 0.31)` } : {};
 
 export const CardStyles = StyleSheet.create({
   card: {
@@ -10,6 +13,7 @@ export const CardStyles = StyleSheet.create({
     shadowOpacity: 0.31,
     shadowRadius: 30,
     elevation: 10,
+    ...webShadow(30),
   },
   cardMain: {
     borderRadius: 26,
@@ -24,6 +28,7 @@ export const CardStyles = StyleSheet.create({
     borderRadius: 32,
     margin: 7.5,
     shadowRadius: 15,
+    ...webShadow(15),
   },
   cardDaily: {
     height: 50,
@@ -31,11 +36,13 @@ export const CardStyles = StyleSheet.create({
     borderRadius: 15,
     marginVertical: 7.5,
     shadowRadius: 10,
+    ...webShadow(10),
   },
   cardDailyExpanded: {
     paddingVertical: 7.5,
     borderRadius: 15,
     marginVertical: 7.5,
     shadowRadius: 10,
+    ...webShadow(10),
   },
 });
