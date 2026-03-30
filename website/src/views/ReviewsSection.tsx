@@ -1,4 +1,8 @@
+'use client';
+
 import ReviewCard from '@/components/ReviewCard';
+import ScrollReveal from '@/components/motion/ScrollReveal';
+import { StaggerContainer, StaggerItem } from '@/components/motion/StaggerChildren';
 
 const reviews = [
   {
@@ -47,15 +51,22 @@ const reviews = [
 
 export default function ReviewsSection() {
   return (
-    <section id="reviews" className="py-24 px-4 bg-base-100">
+    <section id="reviews" className="py-24 px-4 bg-[#0d1120]">
       <div className="container mx-auto max-w-6xl">
-        <h2 className="text-4xl font-bold text-center mb-4">What People Are Saying</h2>
-        <div className="divider mb-12 max-w-xs mx-auto" />
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <ScrollReveal>
+          <h2 className="font-serif text-3xl md:text-4xl text-white text-center mb-4">
+            What People Are Saying
+          </h2>
+          <div className="w-12 h-0.5 bg-dualtemp-500/50 mx-auto mb-12" />
+        </ScrollReveal>
+
+        <StaggerContainer className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
           {reviews.map((review, index) => (
-            <ReviewCard key={index} {...review} />
+            <StaggerItem key={index}>
+              <ReviewCard {...review} />
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerContainer>
       </div>
     </section>
   );

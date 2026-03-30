@@ -9,6 +9,10 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        serif: ['var(--font-dm-serif)', 'Georgia', 'serif'],
+        sans: ['var(--font-dm-sans)', 'system-ui', 'sans-serif'],
+      },
       colors: {
         dualtemp: {
           50: '#f0edff',
@@ -24,11 +28,46 @@ const config: Config = {
           950: '#0e0d28',
         },
       },
+      keyframes: {
+        'aurora-pulse': {
+          '0%, 100%': { opacity: '0.3', transform: 'scale(1)' },
+          '50%': { opacity: '0.6', transform: 'scale(1.1)' },
+        },
+        'gradient-shift': {
+          '0%': { backgroundPosition: '0% 50%' },
+          '50%': { backgroundPosition: '100% 50%' },
+          '100%': { backgroundPosition: '0% 50%' },
+        },
+      },
+      animation: {
+        'aurora-pulse': 'aurora-pulse 8s ease-in-out infinite',
+        'gradient-shift': 'gradient-shift 15s ease infinite',
+      },
     },
   },
   plugins: [require('daisyui')],
   daisyui: {
     themes: [
+      {
+        dark: {
+          'primary': '#6B58FF',
+          'primary-content': '#ffffff',
+          'secondary': '#715EF5',
+          'secondary-content': '#ffffff',
+          'accent': '#a894ff',
+          'accent-content': '#ffffff',
+          'neutral': '#0e0d28',
+          'neutral-content': '#EAEAF3',
+          'base-100': '#0b0f1a',
+          'base-200': '#131525',
+          'base-300': '#1C1B4D',
+          'base-content': '#E8E6F0',
+          'info': '#8b6fff',
+          'success': '#36d399',
+          'warning': '#fbbd23',
+          'error': '#f87272',
+        },
+      },
       {
         light: {
           'primary': '#3621dc',
@@ -44,26 +83,6 @@ const config: Config = {
           'base-300': '#e0dbff',
           'base-content': '#1C1B4D',
           'info': '#6B58FF',
-          'success': '#36d399',
-          'warning': '#fbbd23',
-          'error': '#f87272',
-        },
-      },
-      {
-        dark: {
-          'primary': '#6B58FF',
-          'primary-content': '#ffffff',
-          'secondary': '#715EF5',
-          'secondary-content': '#ffffff',
-          'accent': '#a894ff',
-          'accent-content': '#ffffff',
-          'neutral': '#0e0d28',
-          'neutral-content': '#EAEAF3',
-          'base-100': '#1C1B4D',
-          'base-200': '#151040',
-          'base-300': '#0e0d28',
-          'base-content': '#EAEAF3',
-          'info': '#8b6fff',
           'success': '#36d399',
           'warning': '#fbbd23',
           'error': '#f87272',

@@ -5,12 +5,18 @@ import matter from 'gray-matter';
 import './globals.css';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { DM_Sans } from 'next/font/google';
+import { DM_Sans, DM_Serif_Display } from 'next/font/google';
 
 const dmSans = DM_Sans({
   subsets: ['latin'],
   weight: ['400', '500', '700'],
   variable: '--font-dm-sans',
+});
+
+const dmSerif = DM_Serif_Display({
+  subsets: ['latin'],
+  weight: ['400'],
+  variable: '--font-dm-serif',
 });
 
 export const metadata: Metadata = {
@@ -59,8 +65,8 @@ export default function RootLayout({
   const siteConfig = getSiteConfig();
 
   return (
-    <html lang="en" data-theme="light" className={`${dmSans.variable}`}>
-      <body className="min-h-screen flex flex-col font-[family-name:var(--font-dm-sans)]">
+    <html lang="en" data-theme="dark" className={`${dmSans.variable} ${dmSerif.variable}`}>
+      <body className="min-h-screen flex flex-col font-sans">
         <Header logo={siteConfig.siteName} navItems={siteConfig.navItems} />
         <main className="flex-1">{children}</main>
         <Footer copyrightText={siteConfig.copyrightText} links={siteConfig.footerLinks} />

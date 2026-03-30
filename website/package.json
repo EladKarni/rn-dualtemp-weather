@@ -12,29 +12,30 @@
     "test:coverage": "jest --coverage"
   },
   "dependencies": {
+    "clsx": "^2.1.1",
+    "framer-motion": "^12.38.0",
+    "gray-matter": "^4.0.3",
+    "next": "^15.1.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "next": "^15.1.0",
-    "gray-matter": "^4.0.3",
-    "clsx": "^2.1.1",
     "tailwind-merge": "^2.5.4"
   },
   "devDependencies": {
-    "typescript": "^5.3.3",
+    "@testing-library/jest-dom": "^6.1.5",
+    "@testing-library/react": "^14.1.2",
+    "@testing-library/user-event": "^14.5.1",
+    "@types/jest": "^29.5.11",
     "@types/node": "^20.11.5",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
-    "tailwindcss": "^3.4.1",
-    "postcss": "^8.4.33",
     "autoprefixer": "^10.4.17",
     "daisyui": "^4.6.1",
     "eslint": "^8.56.0",
     "eslint-config-next": "^15.1.0",
-    "@testing-library/react": "^14.1.2",
-    "@testing-library/jest-dom": "^6.1.5",
-    "@testing-library/user-event": "^14.5.1",
     "jest": "^29.7.0",
     "jest-environment-jsdom": "^29.7.0",
-    "@types/jest": "^29.5.11"
+    "postcss": "^8.4.33",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5.3.3"
   }
 }

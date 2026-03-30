@@ -13,7 +13,7 @@ interface FooterProps {
 
 export default function Footer({ copyrightText, links }: FooterProps) {
   return (
-    <footer className="bg-base-200 text-base-content">
+    <footer className="bg-[#080b14] border-t border-white/[0.06]">
       <div className="container mx-auto max-w-6xl px-4 py-12">
         <div className="flex flex-col md:flex-row items-center md:items-start justify-between gap-8">
           {/* Brand */}
@@ -22,13 +22,13 @@ export default function Footer({ copyrightText, links }: FooterProps) {
               <Image
                 src="/images/app-icon.png"
                 alt="DualTemp Weather"
-                width={40}
-                height={40}
+                width={28}
+                height={28}
                 className="rounded-lg"
               />
-              <span className="text-lg font-bold">DualTemp Weather</span>
+              <span className="text-lg font-bold text-white tracking-tight">DualTemp Weather</span>
             </div>
-            <p className="text-sm text-base-content/60 max-w-xs text-center md:text-left">
+            <p className="text-sm text-white/40 max-w-xs text-center md:text-left">
               Your weather, your way. Available on iOS, Android, and the web.
             </p>
             <StoreBadges />
@@ -42,7 +42,7 @@ export default function Footer({ copyrightText, links }: FooterProps) {
                 href={link.href}
                 target={link.href.startsWith('http') ? '_blank' : undefined}
                 rel={link.href.startsWith('http') ? 'noopener noreferrer' : undefined}
-                className="link link-hover text-sm"
+                className="text-sm text-white/40 hover:text-white/70 transition-colors"
               >
                 {link.label}
               </a>
@@ -50,9 +50,21 @@ export default function Footer({ copyrightText, links }: FooterProps) {
           </nav>
         </div>
 
-        <div className="divider my-6" />
+        <div className="border-t border-white/[0.06] my-8" />
 
-        <p className="text-center text-sm text-base-content/50">{copyrightText}</p>
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <p className="text-sm text-white/30">{copyrightText}</p>
+          <div className="flex items-center gap-2">
+            <Image
+              src="/images/app-icon.png"
+              alt="DualTemp Weather"
+              width={20}
+              height={20}
+              className="rounded opacity-50"
+            />
+            <span className="text-xs text-white/30">DualTemp Weather</span>
+          </div>
+        </div>
       </div>
     </footer>
   );

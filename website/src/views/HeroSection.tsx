@@ -1,58 +1,56 @@
-import Image from 'next/image';
-import StoreBadges from '@/components/StoreBadges';
+'use client';
 
-interface CtaButton {
-  text: string;
-  href: string;
-  variant: 'primary' | 'secondary' | 'outline';
-}
+import Image from 'next/image';
+import ScrollReveal from '@/components/motion/ScrollReveal';
 
 interface HeroSectionProps {
   title: string;
   subtitle: string;
-  ctaButtons: CtaButton[];
+  ctaButtons?: { text: string; href: string; variant: string }[];
 }
 
 export default function HeroSection({ title, subtitle }: HeroSectionProps) {
   return (
-    <section className="relative min-h-screen bg-gradient-to-br from-primary via-secondary to-accent overflow-hidden flex items-center">
-      {/* Background decoration */}
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-white rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-white rounded-full blur-3xl" />
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-[#0b0f1a]">
+      {/* Background cityscape image */}
+      <Image
+        src="/images/hero-cityscape.jpg"
+        alt="City skyline with overcast sky"
+        fill
+        priority
+        className="object-cover object-bottom"
+      />
+
+      {/* Dark overlay for text readability - lighter to let image show */}
+      <div className="absolute inset-0 bg-[#0b0f1a]/40" />
+      <div className="absolute inset-0 bg-gradient-to-b from-[#0b0f1a]/60 via-transparent to-[#0b0f1a]/80" />
+
+      {/* Content */}
+      <div className="relative z-10 container mx-auto max-w-4xl px-4 text-center">
+        <ScrollReveal delay={0.1}>
+          <h1 className="font-serif text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-white leading-[1.1] mb-6 tracking-tight max-w-3xl mx-auto">
+            {title}
+          </h1>
+        </ScrollReveal>
+
+        <ScrollReveal delay={0.25}>
+          <p className="text-base sm:text-lg text-white/60 mb-10 leading-relaxed max-w-xl mx-auto">
+            {subtitle}
+          </p>
+        </ScrollReveal>
+
+        <ScrollReveal delay={0.4}>
+          <a
+            href="#features"
+            className="inline-flex items-center px-8 py-3.5 text-sm text-white/90 border border-white/25 rounded-full hover:bg-white/10 hover:border-white/40 transition-all duration-300 tracking-wide backdrop-blur-sm"
+          >
+            Explore the App
+          </a>
+        </ScrollReveal>
       </div>
 
-      <div className="container mx-auto max-w-4xl px-4 py-24 lg:py-32 relative z-10 text-center">
-        <Image
-          src="/images/app-icon.png"
-          alt="DualTemp Weather icon"
-          width={96}
-          height={96}
-          className="rounded-3xl shadow-2xl mx-auto mb-8"
-          priority
-        />
-
-        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white tracking-tight mb-6 leading-tight">
-          {title}
-        </h1>
-
-        <p className="text-lg sm:text-xl text-white/80 mb-10 leading-relaxed max-w-2xl mx-auto">
-          {subtitle}
-        </p>
-
-        <div className="flex justify-center mb-6">
-          <StoreBadges size="large" />
-        </div>
-
-        <a
-          href="https://dualtemp-weather.netlify.app/"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-block text-white/70 hover:text-white transition-colors text-sm underline underline-offset-4"
-        >
-          Or try the web demo
-        </a>
-      </div>
+      {/* Bottom fade to next section */}
+      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#0b0f1a] to-transparent z-[5]" />
     </section>
   );
 }
