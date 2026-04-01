@@ -26,6 +26,7 @@ interface LocationState {
     longitude: number,
     name: string,
   ) => void;
+  updateGPSLocationName: (name: string) => void;
   getActiveLocation: () => SavedLocation | null;
   canAddMoreLocations: () => boolean;
 }
@@ -137,6 +138,24 @@ export const useLocationStore = create<LocationState>()(
             activeLocationId: GPS_LOCATION_ID,
           });
         }
+      },
+
+      updateGPSLocationName: (name) => {
+        const state = get();
+        const existingGPS = state.savedLocations.find(
+          (loc) => loc.id === GPS_LOCATION_ID
+        );
+
+        if (!existingGPS) {
+          logger.warn("Cannot update GPS location name: no GPS location exists");
+          return;
+        }
+
+        set({
+          savedLocations: state.savedLocations.map((loc) =>
+            loc.id === GPS_LOCATION_ID ? { ...loc, name } : loc
+          ),
+        });
       },
 
       getActiveLocation: () => {

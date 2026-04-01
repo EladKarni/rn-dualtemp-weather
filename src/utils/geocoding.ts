@@ -11,9 +11,48 @@ export interface CityResult {
   state?: string;
 }
 
+/**
+ * Calculate distance between two coordinates using the Haversine formula
+ * @returns Distance in kilometers
+ */
+export function getDistanceKm(
+  lat1: number, lon1: number,
+  lat2: number, lon2: number
+): number {
+  const R = 6371; // Earth's radius in km
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) * Math.cos(lat2 * (Math.PI / 180)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+// In-memory cache for city search results
+const searchCitiesCache = new Map<string, {
+  results: CityResult[];
+  timestamp: number;
+}>();
+
+const SEARCH_CACHE_TTL = 10 * 60 * 1000; // 10 minutes
+const SEARCH_CACHE_MAX_SIZE = 50;
+
+function getSearchCacheKey(query: string, locale: string): string {
+  return `${query.trim().toLowerCase()}|${locale}`;
+}
+
 export const searchCities = async (query: string, locale: string = 'en'): Promise<CityResult[]> => {
   if (!query || query.trim().length < 3) {
     return [];
+  }
+
+  const cacheKey = getSearchCacheKey(query, locale);
+  const cached = searchCitiesCache.get(cacheKey);
+
+  if (cached && Date.now() - cached.timestamp < SEARCH_CACHE_TTL) {
+    logger.debug('City search cache hit for:', cacheKey);
+    return cached.results;
   }
 
   try {
@@ -27,7 +66,16 @@ export const searchCities = async (query: string, locale: string = 'en'): Promis
     }
 
     const data = await response.json();
-    return data as CityResult[];
+    const results = data as CityResult[];
+
+    // Cache the results, evict oldest if at capacity
+    if (searchCitiesCache.size >= SEARCH_CACHE_MAX_SIZE) {
+      const oldestKey = searchCitiesCache.keys().next().value;
+      if (oldestKey) searchCitiesCache.delete(oldestKey);
+    }
+    searchCitiesCache.set(cacheKey, { results, timestamp: Date.now() });
+
+    return results;
 
   } catch (error) {
     logger.error("Error searching cities:", error);

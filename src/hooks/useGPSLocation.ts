@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as Location from 'expo-location';
-import { useLocationStore } from '../store/useLocationStore';
+import { useLocationStore, GPS_LOCATION_ID } from '../store/useLocationStore';
 import { logger } from '../utils/logger';
 import {
   PermissionDeniedError,
@@ -11,16 +11,29 @@ import {
 } from '../utils/errors';
 import { useLanguageStore } from '../store/useLanguageStore';
 import { showErrorAlert, openDeviceSettings } from '../components/ErrorAlert/ErrorAlert';
+import { getDistanceKm } from '../utils/geocoding';
+
+const GPS_DISTANCE_THRESHOLD_KM = 1.6; // ~1 mile
 
 /**
- * Custom hook to handle GPS location fetching, permissions, and reverse geocoding
- * @returns Object containing GPS error state and refetch function
+ * Custom hook to handle GPS location fetching, permissions, and reverse geocoding.
+ *
+ * Split into two effects:
+ * - Effect 1: Fetches device GPS position and only updates the store if the user
+ *   has moved more than ~1 mile from the last stored position.
+ * - Effect 2: Re-localizes the GPS location name when the app language changes,
+ *   without re-fetching the device position.
+ *
+ * @returns Object containing GPS error state
  */
 export function useGPSLocation() {
   const updateGPSLocation = useLocationStore((state) => state.updateGPSLocation);
+  const updateGPSLocationName = useLocationStore((state) => state.updateGPSLocationName);
   const [gpsError, setGpsError] = useState<AppError | null>(null);
   const selectedLanguage = useLanguageStore((state) => state.selectedLanguage);
+  const initialLanguageRef = useRef(selectedLanguage);
 
+  // Effect 1: GPS position fetch with distance-based freshness check
   useEffect(() => {
     const fetchGPS = async () => {
       try {
@@ -43,35 +56,51 @@ export function useGPSLocation() {
           accuracy: Location.Accuracy.Balanced,
         });
 
-        // Get clean location name using Expo's reverse geocoding
+        const { latitude, longitude } = location.coords;
+
+        // Check if user has moved significantly from stored position
+        const storedGPS = useLocationStore.getState().savedLocations.find(
+          (loc) => loc.id === GPS_LOCATION_ID
+        );
+
+        if (storedGPS) {
+          const distance = getDistanceKm(
+            latitude, longitude,
+            storedGPS.latitude, storedGPS.longitude
+          );
+
+          if (distance < GPS_DISTANCE_THRESHOLD_KM) {
+            logger.debug('GPS distance below threshold, skipping update:', {
+              distanceKm: distance.toFixed(2),
+              thresholdKm: GPS_DISTANCE_THRESHOLD_KM,
+            });
+            setGpsError(null);
+            return;
+          }
+
+          logger.debug('GPS moved beyond threshold, updating:', {
+            distanceKm: distance.toFixed(2),
+          });
+        }
+
+        // Position is new or has moved — reverse geocode and update store
         let name: string;
         try {
           const locationInfo = await Location.reverseGeocodeAsync(location.coords);
           name = locationInfo[0]?.city || locationInfo[0]?.name || 'Current Location';
           logger.debug('Location name from Expo reverse geocoding:', name);
         } catch (geocodeError) {
-          // Fallback to generic name if reverse geocoding fails
           logger.warn('Reverse geocoding failed, using fallback:', geocodeError);
           name = 'Current Location';
         }
 
-        updateGPSLocation(
-          location.coords.latitude,
-          location.coords.longitude,
-          name
-        );
+        updateGPSLocation(latitude, longitude, name);
 
-        logger.debug('GPS location updated:', {
-          lat: location.coords.latitude,
-          lon: location.coords.longitude,
-          name,
-        });
-
-        setGpsError(null); // Clear any previous errors
+        logger.debug('GPS location updated:', { lat: latitude, lon: longitude, name });
+        setGpsError(null);
       } catch (error: any) {
         let appError: AppError;
 
-        // Map specific location errors
         if (error.code === 'E_LOCATION_UNAVAILABLE') {
           appError = new LocationUnavailableError();
         } else if (error.code === 'E_LOCATION_TIMEOUT') {
@@ -92,7 +121,39 @@ export function useGPSLocation() {
     };
 
     fetchGPS();
-  }, [updateGPSLocation, selectedLanguage]);
+  }, [updateGPSLocation]);
+
+  // Effect 2: Re-localize GPS name when language changes (no device GPS fetch)
+  useEffect(() => {
+    // Skip on initial mount — Effect 1 handles the first geocode
+    if (selectedLanguage === initialLanguageRef.current) {
+      return;
+    }
+
+    const relocalizeGPSName = async () => {
+      const storedGPS = useLocationStore.getState().savedLocations.find(
+        (loc) => loc.id === GPS_LOCATION_ID
+      );
+
+      if (!storedGPS) {
+        return; // No GPS location yet — Effect 1 will handle it
+      }
+
+      try {
+        const locationInfo = await Location.reverseGeocodeAsync({
+          latitude: storedGPS.latitude,
+          longitude: storedGPS.longitude,
+        });
+        const name = locationInfo[0]?.city || locationInfo[0]?.name || 'Current Location';
+        updateGPSLocationName(name);
+        logger.debug('GPS location name re-localized for language change:', name);
+      } catch (error) {
+        logger.warn('Failed to re-localize GPS name:', error);
+      }
+    };
+
+    relocalizeGPSName();
+  }, [selectedLanguage, updateGPSLocationName]);
 
   return { gpsError };
 }
