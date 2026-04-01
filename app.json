@@ -2,7 +2,7 @@
   "expo": {
     "name": "Dualtemp Weather",
     "slug": "dualtemp-weather",
-    "version": "2.0.0",
+    "version": "2.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "splash": {
@@ -103,7 +103,7 @@
         "ITSAppUsesNonExemptEncryption": false
       },
       "bundleIdentifier": "com.ekarni.rndualtempweatherapp",
-      "buildNumber": "2.0.0",
+      "buildNumber": "2.0.1",
       "entitlements": {
         "com.apple.security.application-groups": ["group.com.ekarni.rndualtempweatherapp.widget"]
       }

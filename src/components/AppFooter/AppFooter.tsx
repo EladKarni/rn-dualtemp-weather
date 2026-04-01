@@ -19,7 +19,7 @@ const AppFooter = () => {
         source={require("../../../assets/Images/OpenWeatherLogo.png")}
         style={styles.weatherLogo}
       />
-      <Text style={styles.versionNumber}>Version: 2.0.0</Text>
+      <Text style={styles.versionNumber}>Version: 2.0.1</Text>
     </View>
   );
 };
