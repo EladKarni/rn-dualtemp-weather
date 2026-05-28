@@ -7,7 +7,9 @@ import {
   toAppError,
 } from "./errors";
 
-export const base_url = `https://open-weather-proxy-pi.vercel.app/api/v1/`;
+export const base_url =
+  process.env.EXPO_PUBLIC_WEATHER_API_URL ??
+  "https://open-weather-proxy-pi.vercel.app/api/v1/";
 
 export const fetchForecast = async (
   locale: string,

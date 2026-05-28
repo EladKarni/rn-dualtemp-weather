@@ -79,7 +79,7 @@ export const searchCities = async (query: string, locale: string = 'en'): Promis
 
   } catch (error) {
     logger.error("Error searching cities:", error);
-    handleFetchError(error);
+    throw handleFetchError(error);
   }
 };
 
@@ -210,7 +210,7 @@ export const reverseGeocode = async (
 
   } catch (error) {
     logger.error("Error in reverse geocode:", error);
-    handleFetchError(error);
+    throw handleFetchError(error);
   }
 };
 
