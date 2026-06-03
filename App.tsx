@@ -29,7 +29,7 @@ if (sentryDsn) {
   }
 } else if (__DEV__) {
   logger.info(
-    "Sentry not initialized: No DSN provided. Set EXPO_PUBLIC_SENTRY_DSN environment variable to enable."
+    "Sentry not initialized: No DSN provided. Set EXPO_PUBLIC_SENTRY_DSN environment variable to enable.",
   );
 }
 
@@ -72,13 +72,13 @@ function App() {
   const activeLocationId = useLocationStore((state) => state.activeLocationId);
   const activeModal = useModalStore((state) => state.activeModal);
   const openLocationDropdown = useModalStore(
-    (state) => state.openLocationDropdown
+    (state) => state.openLocationDropdown,
   );
   const openSettings = useModalStore((state) => state.openSettings);
   const openAddLocation = useModalStore((state) => state.openAddLocation);
 
   const activeLocation = savedLocations.find(
-    (loc) => loc.id === activeLocationId
+    (loc) => loc.id === activeLocationId,
   );
 
   // Locale/date query - fetch locale settings and create moment object
@@ -101,18 +101,18 @@ function App() {
   } = useMultiLocationWeather(
     savedLocations,
     activeLocationId,
-    fetchedLocaleSuccessfully && !isLocaleLoading
+    fetchedLocaleSuccessfully && !isLocaleLoading,
   );
 
   const setActiveLocation = useLocationStore(
-    (state) => state.setActiveLocation
+    (state) => state.setActiveLocation,
   );
 
   const handleLocationSelect = React.useCallback(
     (locationId: string) => {
       setActiveLocation(locationId);
     },
-    [setActiveLocation]
+    [setActiveLocation],
   );
 
   const { splashTimeoutExpired, onLayoutRootView } = useSplashScreen(isFetched);
@@ -127,7 +127,7 @@ function App() {
     splashTimeoutExpired,
     refreshing,
     forecast,
-    hasForecastError
+    hasForecastError,
   );
 
   // Font loading
@@ -274,10 +274,6 @@ function App() {
               activeModal={activeModal}
               closeModal={() => useModalStore.getState().closeModal()}
               openAddLocation={openAddLocation}
-              savedLocations={savedLocations}
-              activeLocationId={activeLocationId}
-              locationLoadingStates={locationLoadingStates}
-              onLocationSelect={handleLocationSelect}
               appError={
                 hasForecastError && !dismissedError
                   ? toAppError(forecastError)
