@@ -30,3 +30,4 @@ ios/
 serviceKey.json
 
 .env.local
+.env
