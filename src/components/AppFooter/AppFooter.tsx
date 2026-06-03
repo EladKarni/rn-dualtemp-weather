@@ -6,19 +6,6 @@ import { i18n } from "../../localization/i18n";
 const AppFooter = () => {
   return (
     <View style={styles.footerContainer}>
-      <Text style={styles.openweatherText}>
-        <Text>{i18n.t("ProvidedBy")}</Text>
-        <Text
-          style={styles.linkText}
-          onPress={() => Linking.openURL("https://openweathermap.org/")}
-        >
-          {i18n.t("OpenWeather")}
-        </Text>
-      </Text>
-      <Image
-        source={require("../../../assets/Images/OpenWeatherLogo.png")}
-        style={styles.weatherLogo}
-      />
       <Text style={styles.versionNumber}>Version: 2.0.1</Text>
     </View>
   );
