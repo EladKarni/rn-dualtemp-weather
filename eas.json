@@ -12,6 +12,7 @@
     "preview": {
       "distribution": "internal",
       "channel": "preview",
+      "environment": "preview",
       "env": {
         "SENTRY_DISABLE_AUTO_UPLOAD": "true"
       }
