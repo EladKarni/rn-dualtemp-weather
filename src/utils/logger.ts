@@ -20,6 +20,12 @@ const PREFIX = '[RN-Weather]';
 const formatMessage = (args: any[]): string => {
   return args
     .map(arg => {
+      // Errors have non-enumerable name/message/stack, so JSON.stringify(error)
+      // returns "{}". Render the real message so logged errors are
+      // self-describing instead of an empty object.
+      if (arg instanceof Error) {
+        return `${arg.name}: ${arg.message}`;
+      }
       if (typeof arg === 'object') {
         try {
           return JSON.stringify(arg, null, 2);

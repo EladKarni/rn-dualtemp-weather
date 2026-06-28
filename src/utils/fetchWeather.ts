@@ -1,9 +1,11 @@
+import * as Network from "expo-network";
 import { Weather } from "../types/WeatherTypes";
 import { logger } from "./logger";
 import {
   ApiError,
   AuthenticationError,
   BadRequestError,
+  NoConnectionError,
   NotFoundError,
   RateLimitError,
   ServerError,
@@ -33,6 +35,20 @@ export const fetchForecast = async (
   try {
     const url = `${base_url}get-weather?lat=${latitude}&long=${longitude}&lang=${locale}`;
     logger.debug("Fetching weather data");
+
+    // Skip the fetch when the device is known to be offline. The Android widget
+    // update runs on an OS schedule (~every 30 min) regardless of connectivity,
+    // so without this guard an offline device throws a raw "TypeError: Network
+    // request failed" that ends up in Sentry as noise. NoConnectionError is an
+    // expected/recoverable state (we fall back to cached data) and is excluded
+    // from Sentry reporting in the catch below.
+    const networkState = await Network.getNetworkStateAsync();
+    if (
+      networkState.isConnected === false ||
+      networkState.isInternetReachable === false
+    ) {
+      throw new NoConnectionError();
+    }
 
     const response = await fetch(url);
 
@@ -121,10 +137,17 @@ export const fetchForecast = async (
     logger.debug("Weather data received successfully");
     return data as Weather;
   } catch (e: any) {
-    logger.error("Error fetching weather data:", e);
-
-    // Send network/unexpected errors to Sentry (API errors already sent above)
-    if (!(e instanceof AuthenticationError || e instanceof RateLimitError || e instanceof ServerError)) {
+    // Send network/unexpected errors to Sentry. API errors are already reported
+    // above, and an offline NoConnectionError is expected (we fall back to
+    // cached data), so neither is re-reported here.
+    if (
+      !(
+        e instanceof AuthenticationError ||
+        e instanceof RateLimitError ||
+        e instanceof ServerError ||
+        e instanceof NoConnectionError
+      )
+    ) {
       logger.exception(e, {
         tags: {
           error_type: 'weather_fetch_network_error',
