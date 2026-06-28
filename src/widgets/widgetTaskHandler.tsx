@@ -200,6 +200,19 @@ async function handleWidgetRender(
  * Handles manual refresh from widget tap
  */
 async function handleWidgetRefresh(props: WidgetTaskHandlerProps): Promise<void> {
+  // Breadcrumb: confirms the tap actually reached the headless JS task. This is
+  // the decisive signal when debugging "widget not updating on click" — if this
+  // never shows up (in logcat on a dev build, or as a breadcrumb on a Sentry
+  // event), the click is being dropped before JS, not in our refresh logic.
+  // NOTE: logger.debug is stripped in production builds, so use logger.info here
+  // (it always records a Sentry breadcrumb) rather than logger.debug.
+  logger.info('Widget refresh triggered (click reached headless task)', {
+    widgetName: props.widgetInfo.widgetName,
+    widgetId: props.widgetInfo.widgetId,
+  });
+  // Tag the scope so any Sentry event raised below is attributable to this flow.
+  logger.setTag('widget_flow', 'refresh');
+
   try {
     // Initialize database
     await useForecastStore.getState().initializeDatabase();
@@ -212,7 +225,11 @@ async function handleWidgetRefresh(props: WidgetTaskHandlerProps): Promise<void>
     );
 
     if (!gpsLocation) {
-      logger.warn('No active location found for widget refresh');
+      logger.exception('Widget refresh: no GPS location found', {
+        tags: { error_type: 'widget_refresh_no_location' },
+        extra: { widgetName: props.widgetInfo.widgetName, locationId: GPS_LOCATION_ID },
+        level: 'warning',
+      });
       renderFallbackWidget(props.renderWidget, 'Weather data unavailable', 'Tap to retry');
       return;
     }
@@ -231,13 +248,32 @@ async function handleWidgetRefresh(props: WidgetTaskHandlerProps): Promise<void>
       );
       refreshSucceeded = true;
     } catch (refreshError) {
-      logger.warn('Refresh failed, will try to show cached data:', refreshError);
+      // Most common silent failure behind "tap does nothing visible": the fetch
+      // failed and we quietly fall back to cached (unchanged) data. Report it to
+      // Sentry instead of swallowing it as a breadcrumb-only warning.
+      logger.exception(
+        refreshError instanceof Error ? refreshError : new Error(String(refreshError)),
+        {
+          tags: { error_type: 'widget_refresh_failed' },
+          extra: { widgetName: props.widgetInfo.widgetName, locationId: GPS_LOCATION_ID },
+          level: 'warning',
+        }
+      );
     }
 
     // Get weather data with age (fresh if refresh succeeded, or cached)
     const { weather, ageMinutes } = await weatherStore.getWeatherDataWithAge(GPS_LOCATION_ID);
 
     if (!weather) {
+      logger.exception('Widget refresh: no weather data available after refresh', {
+        tags: { error_type: 'widget_refresh_no_data' },
+        extra: {
+          widgetName: props.widgetInfo.widgetName,
+          locationId: GPS_LOCATION_ID,
+          refreshSucceeded,
+        },
+        level: 'warning',
+      });
       renderFallbackWidget(props.renderWidget, 'Weather data unavailable', 'Tap to retry');
       return;
     }
@@ -260,7 +296,13 @@ async function handleWidgetRefresh(props: WidgetTaskHandlerProps): Promise<void>
       }
     }
   } catch (error) {
-    logger.error('Manual widget refresh failed:', error);
+    logger.exception(
+      error instanceof Error ? error : new Error(String(error)),
+      {
+        tags: { error_type: 'widget_refresh_unexpected' },
+        extra: { widgetName: props.widgetInfo.widgetName, locationId: GPS_LOCATION_ID },
+      }
+    );
 
     // Try to render with cached data before showing error
     try {
@@ -322,6 +364,13 @@ export async function widgetTaskHandler(props: WidgetTaskHandlerProps) {
       break;
 
     case 'WIDGET_CLICK':
+      // Breadcrumb at the dispatch point: records that a click was delivered to
+      // JS and what clickAction came with it. If clicks "do nothing", check
+      // whether this shows clickAction !== 'REFRESH' (wiring/library mismatch).
+      logger.info('Widget click received', {
+        widgetName,
+        clickAction: props.clickAction,
+      });
       // OPEN_APP action is handled automatically by library
       if (props.clickAction === 'REFRESH') {
         await handleWidgetRefresh(props);
