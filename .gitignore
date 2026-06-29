@@ -26,8 +26,9 @@ ios/
 android/
 ios/
 
-# Play Store
-serviceKey.json
+# Play Store — never commit the real service-account key (eas submit writes it here)
+serviceKey*.json
+!serviceKey.example.json
 
 .env.local
 .env
