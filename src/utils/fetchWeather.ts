@@ -27,6 +27,13 @@ const parseJsonSafely = (body: string): any | null => {
   }
 };
 
+/**
+ * Round a coordinate to ~1 decimal place (~11 km, city level) so error reports
+ * keep a coarse "which region failed" signal without exporting the user's
+ * precise GPS position to a third party (Sentry). See audit issue S2.
+ */
+const coarsenCoord = (n: number): number => Math.round(n * 10) / 10;
+
 export const fetchForecast = async (
   locale: string,
   latitude: number,
@@ -97,11 +104,11 @@ export const fetchForecast = async (
           error_type: 'weather_api_error',
         },
         extra: {
-          api_url: url,
+          api_path: "get-weather",
           api_status: response.status,
           api_message: message,
-          latitude,
-          longitude,
+          lat_approx: coarsenCoord(latitude),
+          lon_approx: coarsenCoord(longitude),
           locale,
         },
       });
@@ -122,12 +129,12 @@ export const fetchForecast = async (
           error_type: 'weather_api_invalid_response',
         },
         extra: {
-          api_url: url,
+          api_path: "get-weather",
           api_status: response.status,
           content_type: contentType,
           body_preview: rawBody.slice(0, 200),
-          latitude,
-          longitude,
+          lat_approx: coarsenCoord(latitude),
+          lon_approx: coarsenCoord(longitude),
           locale,
         },
       });
@@ -153,8 +160,8 @@ export const fetchForecast = async (
           error_type: 'weather_fetch_network_error',
         },
         extra: {
-          latitude,
-          longitude,
+          lat_approx: coarsenCoord(latitude),
+          lon_approx: coarsenCoord(longitude),
           locale,
         },
       });

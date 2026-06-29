@@ -23,6 +23,25 @@ if (sentryDsn) {
     dsn: sentryDsn,
     debug: __DEV__, // Enable debug mode in development
     enabled: !__DEV__, // Only send events in production builds
+    sendDefaultPii: false, // don't let Sentry attach IP / default identifiers
+    // Defense-in-depth scrubber: strip any precise-coordinate fields or URL
+    // query strings a call site may have attached, before the event leaves the
+    // device — so location can't reach Sentry even if a call site forgets. (S2)
+    beforeSend(event) {
+      const extra = event.extra;
+      if (extra) {
+        for (const key of ["latitude", "longitude", "lat", "long", "lon", "lng"]) {
+          delete extra[key];
+        }
+        for (const key of Object.keys(extra)) {
+          const val = extra[key];
+          if (typeof val === "string" && /url/i.test(key)) {
+            extra[key] = val.split("?")[0];
+          }
+        }
+      }
+      return event;
+    },
   });
   if (__DEV__) {
     logger.info("Sentry initialized (dev mode - events disabled)");
