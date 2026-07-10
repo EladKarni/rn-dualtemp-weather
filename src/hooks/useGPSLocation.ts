@@ -10,6 +10,7 @@ import {
   AppError,
 } from '../utils/errors';
 import { useLanguageStore } from '../store/useLanguageStore';
+import { useModalStore } from '../store/useModalStore';
 import { showErrorAlert, openDeviceSettings } from '../components/ErrorAlert/ErrorAlert';
 import { getDistanceKm } from '../utils/geocoding';
 
@@ -101,6 +102,11 @@ export function useGPSLocation() {
               error,
               onOpenSettings: openDeviceSettings,
               onDismiss: () => setGpsError(null),
+              // Web: the alert doubles as the entry point for manual add
+              onAddManually: () => {
+                setGpsError(null);
+                useModalStore.getState().openAddLocation();
+              },
             });
           }
 

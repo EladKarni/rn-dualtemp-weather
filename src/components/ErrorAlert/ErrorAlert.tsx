@@ -1,13 +1,15 @@
 
-import { Alert, Platform, Linking } from 'react-native';
+import { Platform, Linking } from 'react-native';
 import { AppError } from '../../utils/errors';
 import { i18n } from '../../localization/i18n';
+import { showAlert } from '../../utils/alert';
 
 interface ErrorAlertOptions {
   error: AppError;
   onRetry?: () => void;
   onDismiss?: () => void;
   onOpenSettings?: () => void;
+  onAddManually?: () => void;
 }
 
 export const showErrorAlert = ({
@@ -15,6 +17,7 @@ export const showErrorAlert = ({
   onRetry,
   onDismiss,
   onOpenSettings,
+  onAddManually,
 }: ErrorAlertOptions) => {
   const buttons: any[] = [];
 
@@ -27,11 +30,22 @@ export const showErrorAlert = ({
     });
   }
 
-  // Add settings button for permission errors
-  if (error.code === 'PERMISSION_DENIED' && onOpenSettings) {
+  // Add settings button for permission errors (not on web — the browser
+  // has no app-settings screen to deep-link into)
+  if (error.code === 'PERMISSION_DENIED' && onOpenSettings && Platform.OS !== 'web') {
     buttons.push({
       text: i18n.t('OpenSettings'),
       onPress: onOpenSettings,
+      style: 'default',
+    });
+  }
+
+  // Web only: offer manual city entry as the alert's action, since the
+  // browser dialog is the sole GPS-failure surface there
+  if (onAddManually && Platform.OS === 'web') {
+    buttons.push({
+      text: i18n.t('AddLocation'),
+      onPress: onAddManually,
       style: 'default',
     });
   }
@@ -43,7 +57,7 @@ export const showErrorAlert = ({
     style: 'cancel',
   });
 
-  Alert.alert(
+  showAlert(
     i18n.t('Error'),
     error.userMessage,
     buttons,
