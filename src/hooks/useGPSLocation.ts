@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { Platform } from 'react-native';
 import * as Location from 'expo-location';
 import { useLocationStore, GPS_LOCATION_ID } from '../store/useLocationStore';
 import { logger } from '../utils/logger';
@@ -97,12 +98,25 @@ export function useGPSLocation() {
           const error = new PermissionDeniedError();
           setGpsError(error);
 
+          if (Platform.OS === 'web') {
+            // Web: a denied permission means the persisted GPS position can
+            // never update again — drop it so the app doesn't keep showing
+            // weather for a location the user never shared this session
+            await waitForLocationHydration();
+            useLocationStore.getState().removeGPSLocation();
+          }
+
           if (await shouldShowGpsAlert()) {
             showErrorAlert({
               error,
               onOpenSettings: openDeviceSettings,
               onDismiss: () => setGpsError(null),
-              // Web: the alert doubles as the entry point for manual add
+              // Web: OK re-requests the browser permission, Cancel falls
+              // back to manual city entry
+              onEnableLocation: () => {
+                setGpsError(null);
+                fetchGPS();
+              },
               onAddManually: () => {
                 setGpsError(null);
                 useModalStore.getState().openAddLocation();

@@ -28,13 +28,17 @@ export const showAlert = (
     return;
   }
 
-  // Name the OK action whenever OK means more than "dismiss", so the
+  // Name each choice whenever it means more than "dismiss", so the
   // two-choice confirm stays unambiguous
   const primary = actionable[0];
-  const prompt =
-    primary.text && (actionable.length > 1 || cancel)
-      ? `${text}\n\nOK: ${primary.text}`
-      : text;
+  const hints: string[] = [];
+  if (primary.text && (actionable.length > 1 || cancel)) {
+    hints.push(`OK: ${primary.text}`);
+  }
+  if (cancel?.text && cancel.onPress) {
+    hints.push(`Cancel: ${cancel.text}`);
+  }
+  const prompt = hints.length ? `${text}\n\n${hints.join("\n")}` : text;
 
   if (window.confirm(prompt)) {
     primary.onPress?.();

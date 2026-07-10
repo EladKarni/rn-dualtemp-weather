@@ -9,6 +9,7 @@ interface ErrorAlertOptions {
   onRetry?: () => void;
   onDismiss?: () => void;
   onOpenSettings?: () => void;
+  onEnableLocation?: () => void;
   onAddManually?: () => void;
 }
 
@@ -17,6 +18,7 @@ export const showErrorAlert = ({
   onRetry,
   onDismiss,
   onOpenSettings,
+  onEnableLocation,
   onAddManually,
 }: ErrorAlertOptions) => {
   const buttons: any[] = [];
@@ -40,22 +42,32 @@ export const showErrorAlert = ({
     });
   }
 
-  // Web only: offer manual city entry as the alert's action, since the
-  // browser dialog is the sole GPS-failure surface there
-  if (onAddManually && Platform.OS === 'web') {
+  // Web only: the browser can re-show its permission prompt, so offer that
+  // as the primary action for permission errors
+  if (error.code === 'PERMISSION_DENIED' && onEnableLocation && Platform.OS === 'web') {
     buttons.push({
-      text: i18n.t('AddLocation'),
-      onPress: onAddManually,
+      text: i18n.t('EnableLocation'),
+      onPress: onEnableLocation,
       style: 'default',
     });
   }
 
-  // Always add dismiss/cancel button
-  buttons.push({
-    text: i18n.t(buttons.length > 0 ? 'Cancel' : 'OK'),
-    onPress: onDismiss,
-    style: 'cancel',
-  });
+  // Web only: manual city entry takes the Cancel slot when available, since
+  // the two-button browser confirm is the sole GPS-failure surface there
+  if (onAddManually && Platform.OS === 'web') {
+    buttons.push({
+      text: i18n.t('AddLocation'),
+      onPress: onAddManually,
+      style: 'cancel',
+    });
+  } else {
+    // Always add dismiss/cancel button
+    buttons.push({
+      text: i18n.t(buttons.length > 0 ? 'Cancel' : 'OK'),
+      onPress: onDismiss,
+      style: 'cancel',
+    });
+  }
 
   showAlert(
     i18n.t('Error'),

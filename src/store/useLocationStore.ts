@@ -20,6 +20,7 @@ interface LocationState {
     location: Omit<SavedLocation, "id" | "addedAt" | "isGPS">,
   ) => void;
   removeLocation: (id: string) => void;
+  removeGPSLocation: () => void;
   setActiveLocation: (id: string) => void;
   updateGPSLocation: (
     latitude: number,
@@ -106,6 +107,24 @@ export const useLocationStore = create<LocationState>()(
         set({
           savedLocations: filteredLocations,
           activeLocationId: newActiveId,
+        });
+      },
+
+      removeGPSLocation: () => {
+        const state = get();
+        const gps = state.savedLocations.find((loc) => loc.isGPS);
+        if (!gps) return;
+
+        const filteredLocations = state.savedLocations.filter(
+          (loc) => !loc.isGPS,
+        );
+
+        set({
+          savedLocations: filteredLocations,
+          activeLocationId:
+            state.activeLocationId === gps.id
+              ? (filteredLocations[0]?.id ?? null)
+              : state.activeLocationId,
         });
       },
 

@@ -42,6 +42,7 @@ export const ar = {
     StartTyping: "ابدأ الكتابة للبحث...",
     Searching: "جاري البحث...",
     SearchError: "فشل البحث. حاول مرة أخرى.",
+    EnableLocation: "تفعيل الموقع",
     NoLocationTitle: "لا يوجد موقع بعد",
     NoLocationDescription: "أضف مدينة لعرض حالة الطقس فيها. لا حاجة لتفعيل الوصول إلى الموقع.",
     DeleteLocation: "حذف الموقع",
