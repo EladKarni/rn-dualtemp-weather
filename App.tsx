@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 
 import {
@@ -54,6 +54,9 @@ import LoadingScreen from "./src/screens/LoadingScreen";
 import ErrorScreen from "./src/screens/ErrorScreen";
 import SkeletonScreen from "./src/screens/SkeletonScreen";
 import MainWeatherWithModals from "./src/screens/MainWeatherWithModals";
+import EmptyLocationScreen from "./src/screens/EmptyLocationScreen";
+import AddLocationScreen from "./src/screens/AddLocationScreen";
+import SettingsScreen from "./src/screens/SettingsScreen";
 
 // Error Boundary
 import ErrorBoundary from "./src/components/ErrorBoundary/ErrorBoundary";
@@ -87,8 +90,31 @@ function App() {
     useLocaleQuery();
 
   // Custom hooks
-  useGPSLocation();
+  const { gpsResolved } = useGPSLocation();
   useAppLifecycle();
+
+  // Track persisted-store rehydration reactively — persist finishing with an
+  // empty store doesn't trigger a re-render on its own, so a bare
+  // hasHydrated() call in render could stay false forever
+  const [locationsHydrated, setLocationsHydrated] = useState(() =>
+    useLocationStore.persist.hasHydrated()
+  );
+  useEffect(() => {
+    const unsubscribe = useLocationStore.persist.onFinishHydration(() =>
+      setLocationsHydrated(true)
+    );
+    // Hydration may have finished between first render and this effect
+    if (useLocationStore.persist.hasHydrated()) {
+      setLocationsHydrated(true);
+    }
+    // Bounded wait: a failed hydration never fires onFinishHydration, and
+    // the empty state must not stay locked behind it forever
+    const timer = setTimeout(() => setLocationsHydrated(true), 3000);
+    return () => {
+      clearTimeout(timer);
+      unsubscribe();
+    };
+  }, []);
 
   const {
     activeWeather: forecast,
@@ -171,6 +197,11 @@ function App() {
     refetch();
   }, [refetch]);
 
+  const closeModal = React.useCallback(
+    () => useModalStore.getState().closeModal(),
+    []
+  );
+
   // Common props for all screen components
   const screenProps = useScreenProps({
     activeLocation,
@@ -194,6 +225,18 @@ function App() {
     localeData,
     fontsLoaded,
   });
+
+  // No saved location at all (e.g. GPS denied on first run) — show a
+  // reachable "add a city" screen instead of an endless skeleton. Waits for
+  // store rehydration and the initial GPS attempt to settle so it can't
+  // flash during normal startup, and wins over every other branch so a
+  // stale forecast can never mask it.
+  const showEmptyState =
+    splashTimeoutExpired &&
+    locationsHydrated &&
+    gpsResolved &&
+    !refreshing &&
+    savedLocations.length === 0;
 
   // Block on splash screen if timeout hasn't expired AND resources not ready
   if (shouldBlockOnSplash) {
@@ -227,8 +270,16 @@ function App() {
             />
           )}
         >
+          {/* EMPTY STATE: no saved locations (e.g. GPS denied) — reachable manual add */}
+          {showEmptyState && (
+            <EmptyLocationScreen
+              onAddLocation={openAddLocation}
+              {...screenProps}
+            />
+          )}
+
           {/* CRITICAL SAFETY CHECK: Timeout expired but essential resources still loading */}
-          {splashTimeoutExpired && essentialResourcesLoading && (
+          {splashTimeoutExpired && essentialResourcesLoading && !showEmptyState && (
             <SkeletonScreen {...screenProps} />
           )}
 
@@ -238,7 +289,7 @@ function App() {
           )}
 
           {/* LOADING STATE: Post-timeout loading */}
-          {showSkeleton && !showErrorScreen && (
+          {showSkeleton && !showErrorScreen && !showEmptyState && (
             <SkeletonScreen {...screenProps} />
           )}
 
@@ -246,6 +297,7 @@ function App() {
           {showErrorScreen &&
             hasForecastError &&
             !forecast &&
+            !showEmptyState &&
             (() => {
               const appError = forecastError ? toAppError(forecastError) : null;
               return (
@@ -258,12 +310,12 @@ function App() {
             })()}
 
           {/* FALLBACK STATE: Safety net for missing data */}
-          {!forecast && !showErrorScreen && !refreshing && (
+          {!forecast && !showErrorScreen && !refreshing && !showEmptyState && (
             <SkeletonScreen {...screenProps} />
           )}
 
           {/* SUCCESS STATE: All data loaded successfully (with optional error banner for cached data) */}
-          {forecast && (
+          {forecast && !showEmptyState && (
             <MainWeatherWithModals
               forecast={forecast}
               date={date}
@@ -272,7 +324,7 @@ function App() {
               onRefresh={onRefresh}
               onLayoutRootView={onLayoutRootView}
               activeModal={activeModal}
-              closeModal={() => useModalStore.getState().closeModal()}
+              closeModal={closeModal}
               openAddLocation={openAddLocation}
               savedLocations={savedLocations}
               activeLocationId={activeLocationId}
@@ -289,6 +341,20 @@ function App() {
               {...screenProps}
             />
           )}
+
+          {/* GLOBAL MODALS: mounted outside the forecast-gated branches so
+              settings and manual city add stay reachable from every screen
+              state, including the empty state. RN Modal renders nothing
+              while visible is false. */}
+          <SettingsScreen
+            visible={activeModal === "settings"}
+            onClose={closeModal}
+            onAddLocationPress={openAddLocation}
+          />
+          <AddLocationScreen
+            visible={activeModal === "addLocation"}
+            onClose={closeModal}
+          />
         </ErrorBoundary>
       )}
     </QueryErrorResetBoundary>

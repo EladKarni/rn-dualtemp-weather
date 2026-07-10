@@ -42,6 +42,8 @@ export const zh = {
   StartTyping: "开始输入以搜索...",
   Searching: "搜索中...",
   SearchError: "搜索失败。请重试。",
+  NoLocationTitle: "暂无位置",
+  NoLocationDescription: "添加城市即可查看其天气，无需开启位置权限。",
   DeleteLocation: "删除地点",
   DeleteLocationConfirm: "您确定要删除",
   Cancel: "取消",

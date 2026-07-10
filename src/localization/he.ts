@@ -42,6 +42,8 @@ export const he = {
     StartTyping: "התחל להקליד כדי לחפש...",
     Searching: "מחפש...",
     SearchError: "החיפוש נכשל. נסה שוב.",
+    NoLocationTitle: "עדיין אין מיקום",
+    NoLocationDescription: "הוסף עיר כדי לראות את מזג האוויר שלה. אין צורך להפעיל גישה למיקום.",
     DeleteLocation: "מחק מיקום",
     DeleteLocationConfirm: "האם אתה בטוח שברצונך למחוק",
     Cancel: "ביטול",

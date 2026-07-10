@@ -43,24 +43,26 @@ export const useLocationStore = create<LocationState>()(
       addLocation: (location) => {
         const state = get();
 
+        // Check for duplicate locations (within ~1km radius) before the cap
+        // check — re-picking a saved city should activate it, not error out
+        const existing = state.savedLocations.find((loc) => {
+          const latDiff = Math.abs(loc.latitude - location.latitude);
+          const lonDiff = Math.abs(loc.longitude - location.longitude);
+          return latDiff < 0.01 && lonDiff < 0.01; // Roughly 1km
+        });
+
+        if (existing) {
+          logger.warn("Location already saved");
+          set({ activeLocationId: existing.id });
+          return;
+        }
+
         // Check if we've reached the limit (excluding GPS location)
         const nonGPSLocations = state.savedLocations.filter(
           (loc) => !loc.isGPS,
         );
         if (nonGPSLocations.length >= MAX_SAVED_LOCATIONS) {
           logger.warn("Maximum locations reached");
-          return;
-        }
-
-        // Check for duplicate locations (within ~1km radius)
-        const isDuplicate = state.savedLocations.some((loc) => {
-          const latDiff = Math.abs(loc.latitude - location.latitude);
-          const lonDiff = Math.abs(loc.longitude - location.longitude);
-          return latDiff < 0.01 && lonDiff < 0.01; // Roughly 1km
-        });
-
-        if (isDuplicate) {
-          logger.warn("Location already saved");
           return;
         }
 
@@ -71,8 +73,10 @@ export const useLocationStore = create<LocationState>()(
           isGPS: false,
         };
 
+        // Adding is an explicit user choice — make it the active location
         set({
           savedLocations: [...state.savedLocations, newLocation],
+          activeLocationId: newLocation.id,
         });
       },
 
@@ -89,10 +93,14 @@ export const useLocationStore = create<LocationState>()(
           (loc) => loc.id !== id,
         );
 
-        // If removing the active location, switch to GPS
+        // If removing the active location, fall back to GPS if it exists,
+        // else the first remaining location, else none. Never point at an
+        // id that isn't actually in the list.
         const newActiveId =
           state.activeLocationId === id
-            ? GPS_LOCATION_ID
+            ? (filteredLocations.find((loc) => loc.isGPS)?.id ??
+              filteredLocations[0]?.id ??
+              null)
             : state.activeLocationId;
 
         set({
@@ -132,10 +140,17 @@ export const useLocationStore = create<LocationState>()(
             ),
           });
         } else {
-          // Add GPS location for the first time
+          // Add GPS location for the first time. Only take over activation
+          // when the current active id doesn't resolve to a saved location
+          // (first run's placeholder id) — a manually chosen city stays active
+          const activeExists = state.savedLocations.some(
+            (loc) => loc.id === state.activeLocationId,
+          );
           set({
             savedLocations: [gpsLocation, ...state.savedLocations],
-            activeLocationId: GPS_LOCATION_ID,
+            activeLocationId: activeExists
+              ? state.activeLocationId
+              : GPS_LOCATION_ID,
           });
         }
       },
@@ -178,6 +193,27 @@ export const useLocationStore = create<LocationState>()(
     {
       name: "@saved_locations",
       storage: createJSONStorage(() => AsyncStorage),
+      onRehydrateStorage: () => (state) => {
+        // Self-heal installs whose persisted activeLocationId points at a
+        // location that no longer exists (e.g. the old phantom GPS id left
+        // behind when locations were saved without GPS ever granting)
+        if (
+          !state ||
+          !Array.isArray(state.savedLocations) ||
+          state.savedLocations.length === 0
+        )
+          return;
+        const resolves = state.savedLocations.some(
+          (loc) => loc.id === state.activeLocationId,
+        );
+        if (!resolves) {
+          useLocationStore.setState({
+            activeLocationId:
+              state.savedLocations.find((loc) => loc.isGPS)?.id ??
+              state.savedLocations[0].id,
+          });
+        }
+      },
     },
   ),
 );

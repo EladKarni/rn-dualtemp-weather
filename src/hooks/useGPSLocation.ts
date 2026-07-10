@@ -14,6 +14,46 @@ import { showErrorAlert, openDeviceSettings } from '../components/ErrorAlert/Err
 import { getDistanceKm } from '../utils/geocoding';
 
 const GPS_DISTANCE_THRESHOLD_KM = 1.6; // ~1 mile
+const GPS_RESOLVE_TIMEOUT_MS = 15000; // escape hatch if the position fetch hangs
+const HYDRATION_WAIT_TIMEOUT_MS = 3000;
+
+/**
+ * Waits (bounded) for the persisted location store to finish rehydrating so
+ * alert decisions are made against real data, not the initial empty state.
+ */
+const waitForLocationHydration = async (): Promise<void> => {
+  if (useLocationStore.persist.hasHydrated()) return;
+  await new Promise<void>((resolve) => {
+    let unsubscribe: (() => void) | undefined;
+    const timer = setTimeout(() => {
+      unsubscribe?.();
+      resolve();
+    }, HYDRATION_WAIT_TIMEOUT_MS);
+    unsubscribe = useLocationStore.persist.onFinishHydration(() => {
+      clearTimeout(timer);
+      unsubscribe?.();
+      resolve();
+    });
+    // Hydration may have finished between the check above and subscribing
+    if (useLocationStore.persist.hasHydrated()) {
+      clearTimeout(timer);
+      unsubscribe();
+      resolve();
+    }
+  });
+};
+
+/**
+ * GPS failure alerts are only worth an interruption when the user has no
+ * manually saved city to fall back on. GPS-only users still get alerted —
+ * their only data source just broke.
+ */
+const shouldShowGpsAlert = async (): Promise<boolean> => {
+  await waitForLocationHydration();
+  return !useLocationStore
+    .getState()
+    .savedLocations.some((loc) => !loc.isGPS);
+};
 
 /**
  * Custom hook to handle GPS location fetching, permissions, and reverse geocoding.
@@ -24,30 +64,45 @@ const GPS_DISTANCE_THRESHOLD_KM = 1.6; // ~1 mile
  * - Effect 2: Re-localizes the GPS location name when the app language changes,
  *   without re-fetching the device position.
  *
- * @returns Object containing GPS error state
+ * @returns Object containing GPS error state and whether the initial GPS
+ *   attempt has settled (granted, denied, failed, or timed out)
  */
 export function useGPSLocation() {
   const updateGPSLocation = useLocationStore((state) => state.updateGPSLocation);
   const updateGPSLocationName = useLocationStore((state) => state.updateGPSLocationName);
   const [gpsError, setGpsError] = useState<AppError | null>(null);
+  const [gpsResolved, setGpsResolved] = useState(false);
   const selectedLanguage = useLanguageStore((state) => state.selectedLanguage);
   const initialLanguageRef = useRef(selectedLanguage);
 
   // Effect 1: GPS position fetch with distance-based freshness check
   useEffect(() => {
+    let safetyTimer: ReturnType<typeof setTimeout> | null = null;
+
     const fetchGPS = async () => {
       try {
         const { status } = await Location.requestForegroundPermissionsAsync();
+
+        // Permission has settled; from here only a hung position fetch can
+        // keep the app in limbo, so bound it. Armed after the permission
+        // request so time spent on the OS dialog doesn't eat the window
+        // (getCurrentPositionAsync has no timeout of its own).
+        safetyTimer = setTimeout(
+          () => setGpsResolved(true),
+          GPS_RESOLVE_TIMEOUT_MS,
+        );
 
         if (status !== 'granted') {
           const error = new PermissionDeniedError();
           setGpsError(error);
 
-          showErrorAlert({
-            error,
-            onOpenSettings: openDeviceSettings,
-            onDismiss: () => setGpsError(null),
-          });
+          if (await shouldShowGpsAlert()) {
+            showErrorAlert({
+              error,
+              onOpenSettings: openDeviceSettings,
+              onDismiss: () => setGpsError(null),
+            });
+          }
 
           return;
         }
@@ -112,15 +167,24 @@ export function useGPSLocation() {
         setGpsError(appError);
         logger.error('Error fetching GPS location:', error);
 
-        showErrorAlert({
-          error: appError,
-          onRetry: fetchGPS,
-          onDismiss: () => setGpsError(null),
-        });
+        if (await shouldShowGpsAlert()) {
+          showErrorAlert({
+            error: appError,
+            onRetry: fetchGPS,
+            onDismiss: () => setGpsError(null),
+          });
+        }
       }
     };
 
-    fetchGPS();
+    fetchGPS().finally(() => {
+      if (safetyTimer) clearTimeout(safetyTimer);
+      setGpsResolved(true);
+    });
+
+    return () => {
+      if (safetyTimer) clearTimeout(safetyTimer);
+    };
   }, [updateGPSLocation]);
 
   // Effect 2: Re-localize GPS name when language changes (no device GPS fetch)
@@ -155,5 +219,5 @@ export function useGPSLocation() {
     relocalizeGPSName();
   }, [selectedLanguage, updateGPSLocationName]);
 
-  return { gpsError };
+  return { gpsError, gpsResolved };
 }

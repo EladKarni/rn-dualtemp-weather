@@ -42,6 +42,8 @@ export const es = {
     StartTyping: "Comienza a escribir para buscar...",
     Searching: "Buscando...",
     SearchError: "Error al buscar. Inténtalo de nuevo.",
+    NoLocationTitle: "Aún no hay ninguna ubicación",
+    NoLocationDescription: "Añade una ciudad para ver su tiempo. No necesitas activar el acceso a la ubicación.",
     DeleteLocation: "Eliminar Ubicación",
     DeleteLocationConfirm: "¿Estás seguro de que quieres eliminar",
     Cancel: "Cancelar",

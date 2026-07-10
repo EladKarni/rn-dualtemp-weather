@@ -50,14 +50,29 @@ export function useMultiLocationWeather(
   const [cachedActiveWeather, setCachedActiveWeather] = useState<Weather | null>(null);
   
   useEffect(() => {
-    if (activeLocationId && fetchedLocaleSuccessfully) {
-      forecastStore.getWeatherData(activeLocationId).then(weather => {
-        setCachedActiveWeather(weather);
+    if (!activeLocation) {
+      // Active id doesn't resolve to a saved location (e.g. the last
+      // location was removed) — drop the stale cache so activeWeather
+      // goes falsy instead of showing a deleted location's forecast
+      setCachedActiveWeather(null);
+      return;
+    }
+    if (fetchedLocaleSuccessfully) {
+      // Cancellation guard: a late-resolving read must not overwrite a
+      // newer location's cache or the null-clear above
+      let cancelled = false;
+      forecastStore.getWeatherData(activeLocation.id).then(weather => {
+        if (!cancelled) {
+          setCachedActiveWeather(weather);
+        }
       }).catch(error => {
         logger.error('Failed to get cached weather data:', error);
       });
+      return () => {
+        cancelled = true;
+      };
     }
-  }, [activeLocationId, fetchedLocaleSuccessfully, forecastStore]);
+  }, [activeLocation, fetchedLocaleSuccessfully, forecastStore]);
 
   // Active location: fetch with high priority
   const activeQuery = useQuery({

@@ -42,6 +42,8 @@ export const en = {
     StartTyping: "Start typing to search...",
     Searching: "Searching...",
     SearchError: "Failed to search. Try again.",
+    NoLocationTitle: "No location yet",
+    NoLocationDescription: "Add a city to see its weather. You don't need to turn on location access.",
     DeleteLocation: "Delete Location",
     DeleteLocationConfirm: "Are you sure you want to delete",
     Cancel: "Cancel",
