@@ -43,6 +43,7 @@ export const ar = {
     Searching: "جاري البحث...",
     SearchError: "فشل البحث. حاول مرة أخرى.",
     EnableLocation: "تفعيل الموقع",
+    LocationPermissionMessage: "الوصول إلى الموقع معطّل. فعّله لاستخدام موقعك الحالي، أو أضف مدينة يدويًا.",
     NoLocationTitle: "لا يوجد موقع بعد",
     NoLocationDescription: "أضف مدينة لعرض حالة الطقس فيها. لا حاجة لتفعيل الوصول إلى الموقع.",
     DeleteLocation: "حذف الموقع",

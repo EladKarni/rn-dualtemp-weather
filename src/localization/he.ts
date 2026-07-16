@@ -43,6 +43,7 @@ export const he = {
     Searching: "מחפש...",
     SearchError: "החיפוש נכשל. נסה שוב.",
     EnableLocation: "הפעל מיקום",
+    LocationPermissionMessage: "הגישה למיקום כבויה. הפעל אותה כדי להשתמש במיקום הנוכחי, או הוסף עיר באופן ידני.",
     NoLocationTitle: "עדיין אין מיקום",
     NoLocationDescription: "הוסף עיר כדי לראות את מזג האוויר שלה. אין צורך להפעיל גישה למיקום.",
     DeleteLocation: "מחק מיקום",

@@ -43,6 +43,7 @@ export const es = {
     Searching: "Buscando...",
     SearchError: "Error al buscar. Inténtalo de nuevo.",
     EnableLocation: "Activar ubicación",
+    LocationPermissionMessage: "El acceso a la ubicación está desactivado. Actívalo para usar tu ubicación actual o añade una ciudad manualmente.",
     NoLocationTitle: "Aún no hay ninguna ubicación",
     NoLocationDescription: "Añade una ciudad para ver su tiempo. No necesitas activar el acceso a la ubicación.",
     DeleteLocation: "Eliminar Ubicación",

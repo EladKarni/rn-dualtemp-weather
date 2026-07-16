@@ -61,7 +61,10 @@ export class PermissionDeniedError extends LocationError {
   constructor() {
     super(
       'Location permission denied',
-      'Location access is required. Please enable it in your device settings.',
+      // English fallback; the alert prefers the localized
+      // 'LocationPermissionMessage' key (see ErrorAlert). Location is not
+      // required — manual city entry is always available.
+      'Location access is off. Turn it on to use your current location, or add a city manually instead.',
       'PERMISSION_DENIED'
     );
     this.recoverable = false; // Requires user action in settings

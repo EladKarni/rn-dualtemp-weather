@@ -43,6 +43,7 @@ export const fr = {
     Searching: "Recherche...",
     SearchError: "Échec de la recherche. Réessayez.",
     EnableLocation: "Activer la localisation",
+    LocationPermissionMessage: "L'accès à la localisation est désactivé. Activez-le pour utiliser votre position actuelle, ou ajoutez une ville manuellement.",
     NoLocationTitle: "Aucun lieu pour l'instant",
     NoLocationDescription: "Ajoutez une ville pour voir sa météo. Pas besoin d'activer l'accès à la localisation.",
     DeleteLocation: "Supprimer l'Emplacement",

@@ -43,6 +43,7 @@ export const en = {
     Searching: "Searching...",
     SearchError: "Failed to search. Try again.",
     EnableLocation: "Enable Location",
+    LocationPermissionMessage: "Location access is off. Turn it on to use your current location, or add a city manually instead.",
     NoLocationTitle: "No location yet",
     NoLocationDescription: "Add a city to see its weather. You don't need to turn on location access.",
     DeleteLocation: "Delete Location",

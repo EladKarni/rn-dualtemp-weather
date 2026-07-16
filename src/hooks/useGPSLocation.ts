@@ -192,6 +192,12 @@ export function useGPSLocation() {
             error: appError,
             onRetry: fetchGPS,
             onDismiss: () => setGpsError(null),
+            // A GPS timeout/unavailable failure strands a no-location user just
+            // like a denied permission does — offer the same manual escape.
+            onAddManually: () => {
+              setGpsError(null);
+              useModalStore.getState().openAddLocation();
+            },
           });
         }
       }
