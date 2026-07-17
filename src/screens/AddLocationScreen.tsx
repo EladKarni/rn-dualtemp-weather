@@ -24,7 +24,7 @@ import { AppError, toAppError } from "../utils/errors";
 import { useModalAnimation } from "../hooks/useModalAnimation";
 import { palette } from "../styles/Palette";
 import { CityResultItem } from "../components/AddLocation/CityResultItem/CityResultItem";
-import { styles } from "../styles/screens/AddLocationScreen.styles";
+import { styles } from "./AddLocationScreen.styles";
 
 type AddLocationScreenProps = {
   visible: boolean;

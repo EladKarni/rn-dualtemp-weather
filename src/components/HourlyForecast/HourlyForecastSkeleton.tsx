@@ -2,7 +2,7 @@ import React from "react";
 import { View, StyleSheet } from "react-native";
 import Subtitle from "../Subtitle/Subtitle";
 import { SkeletonBox } from "../LoadingSkeleton/SkeletonBox";
-import { HourlyForecastStyles } from "./HourlyForecast.Styles";
+import { HourlyForecastStyles } from "./HourlyForecast.styles";
 import { i18n } from "../../localization/i18n";
 
 /**

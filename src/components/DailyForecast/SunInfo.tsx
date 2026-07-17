@@ -1,5 +1,5 @@
 import { View, Text } from "react-native";
-import { DailyForecastExtendedItemStyles } from "./DailyForecastExtendedItemStyles.Styles";
+import { DailyForecastExtendedItemStyles } from "./DailyForecastExtendedItem.styles";
 import WeatherIcon, { IconSizeTypes } from "../WeatherIcon/WeatherIcon";
 import { displayWeatherIcon } from "../../utils/Images";
 import { i18n } from "../../localization/i18n";

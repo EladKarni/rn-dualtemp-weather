@@ -19,7 +19,7 @@ import { LanguageSelector } from "../components/LanguageSelector/LanguageSelecto
 import { LocationList } from "../components/Settings/LocationList";
 import { useLocationStore } from "../store/useLocationStore";
 import { useModalAnimation } from "../hooks/useModalAnimation";
-import { styles } from "../styles/screens/SettingsScreen.styles";
+import { styles } from "./SettingsScreen.styles";
 type SettingsScreenProps = {
   visible: boolean;
   onClose: () => void;

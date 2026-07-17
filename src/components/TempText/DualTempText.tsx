@@ -1,7 +1,7 @@
 import React, { useContext } from 'react'
 import { Text } from 'react-native'
-import { AppStateContext } from '../../utils/AppStateContext'
-import { DailyForecastItemStyles } from '../DailyForecast/DailyForecast.Styles'
+import { AppStateContext } from '../../contexts/AppStateContext'
+import { DailyForecastItemStyles } from '../DailyForecast/DailyForecast.styles'
 import TempText, { TempTextStyleTypes } from './TempText'
 
 type DualTempTextProps = {

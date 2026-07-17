@@ -1,10 +1,10 @@
 import { create } from 'zustand';
-import { weatherDatabase, type WeatherData } from '../utils/database';
+import { weatherDatabase, type WeatherData } from '../services/db/database';
 import type { Weather } from '../types/WeatherTypes';
 import { fetchForecast } from '../utils/fetchWeather';
 import { logger } from '../utils/logger';
 import { i18n } from '../localization/i18n';
-import { updateAllWeatherWidgets } from '../utils/widgetUpdater';
+import { updateAllWeatherWidgets } from '../widgets/widgetUpdater';
 
 export interface ForecastStore {
   // Runtime state (what you originally requested)
@@ -91,8 +91,9 @@ export const useForecastStore = create<ForecastStore>((set, get) => ({
 
       logger.debug(`Weather data persisted for location: ${locationId}`);
 
-      // Update widgets with new weather data
-      updateAllWeatherWidgets().catch((error) => {
+      // Update widgets with the freshly-saved weather. Passing the payload here
+      // means widgetUpdater does not import this store, breaking the cycle.
+      updateAllWeatherWidgets(weather).catch((error) => {
         logger.error('Failed to update widgets after weather save:', error);
       });
     } catch (error) {

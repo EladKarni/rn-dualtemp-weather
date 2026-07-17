@@ -1,6 +1,6 @@
 import { Text } from "react-native";
 import React from "react";
-import { PopTypeStyles } from "./PopTypeStyles.Styles";
+import { PopTypeStyles } from "./PopType.styles";
 
 interface PopTypeProps {
   pop: number;

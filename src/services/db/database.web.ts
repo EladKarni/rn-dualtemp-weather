@@ -1,5 +1,5 @@
-import type { Weather } from '../types/WeatherTypes';
-import { logger } from './logger';
+import type { Weather } from '../../types/WeatherTypes';
+import { logger } from '../../utils/logger';
 
 export interface WeatherData {
   weather: Weather;

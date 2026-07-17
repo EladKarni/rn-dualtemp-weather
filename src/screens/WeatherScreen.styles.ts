@@ -1,5 +1,5 @@
 import { StyleSheet } from "react-native";
-import { palette } from "../Palette";
+import { palette } from "../styles/Palette";
 
 export const weatherScreenStyles = StyleSheet.create({
   container: {

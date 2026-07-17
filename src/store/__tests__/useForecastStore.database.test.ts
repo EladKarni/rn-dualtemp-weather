@@ -173,7 +173,7 @@ jest.mock('expo-sqlite', () => {
   };
 });
 
-jest.mock('../../utils/widgetUpdater', () => ({
+jest.mock('../../widgets/widgetUpdater', () => ({
   updateAllWeatherWidgets: jest.fn().mockResolvedValue(undefined),
   ensureStoresHydrated: jest.fn().mockResolvedValue(undefined),
 }));

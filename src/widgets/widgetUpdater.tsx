@@ -1,14 +1,14 @@
 import { Platform } from 'react-native';
 import { requestWidgetUpdate } from 'react-native-android-widget';
-import { WeatherCompact } from '../widgets/WeatherCompact';
-import { WeatherStandard } from '../widgets/WeatherStandard';
-import { WeatherExtended } from '../widgets/WeatherExtended';
-import { useForecastStore } from '../store/useForecastStore';
+import { WeatherCompact } from './WeatherCompact';
+import { WeatherStandard } from './WeatherStandard';
+import { WeatherExtended } from './WeatherExtended';
 import { useLocationStore, GPS_LOCATION_ID } from '../store/useLocationStore';
 import { useLanguageStore } from '../store/useLanguageStore';
 import { useSettingsStore } from '../store/useSettingsStore';
-import { logger } from './logger';
-import { updateIOSWidgetData } from './iosWidgetStorage';
+import type { Weather } from '../types/WeatherTypes';
+import { logger } from '../utils/logger';
+import { updateIOSWidgetData } from './utils/iosWidgetStorage';
 import React from 'react';
 
 /**
@@ -36,17 +36,33 @@ export const ensureStoresHydrated = async (): Promise<void> => {
 };
 
 /**
- * Request immediate update of all weather widgets
- * Call this when settings change that affect widget display
+ * Runtime type guard. A callback such as SegmentedControl's `onAfterChange`
+ * forwards its selected option value (a temp-scale string) to whatever it is
+ * wired to. This guard ensures such a stray value is never mistaken for a
+ * Weather payload — non-Weather input is ignored (widgets are not updated).
  */
-export const updateAllWeatherWidgets = async () => {
+const isWeather = (value: unknown): value is Weather =>
+  typeof value === 'object' &&
+  value !== null &&
+  'current' in value &&
+  'daily' in value;
+
+/**
+ * Request immediate update of all weather widgets.
+ *
+ * @param weather The weather payload to render. Callers own reading it:
+ *   `useForecastStore.setWeatherData` passes the weather it just persisted, and
+ *   the settings UI passes the cached GPS weather. Because the payload is passed
+ *   in, this module never imports the forecast store — that breaks the
+ *   `useForecastStore <-> widgetUpdater` require cycle. A missing or non-Weather
+ *   value (e.g. a segment string forwarded by a naive callback) is ignored.
+ */
+export const updateAllWeatherWidgets = async (weather?: Weather) => {
   try {
     // Hydrate persisted stores before reading savedLocations / locale / settings
     // in this (potentially headless) context.
     await ensureStoresHydrated();
 
-    // Get weather data from store
-    const weatherStore = useForecastStore.getState();
     const locationStore = useLocationStore.getState();
 
     const gpsLocation = locationStore.savedLocations.find(
@@ -58,9 +74,10 @@ export const updateAllWeatherWidgets = async () => {
       return;
     }
 
-    const weather = await weatherStore.getWeatherData(GPS_LOCATION_ID);
+    // Guard against a non-Weather value being forwarded by a callback.
+    const weatherData: Weather | null = isWeather(weather) ? weather : null;
 
-    if (!weather) {
+    if (!weatherData) {
       logger.warn('No weather data found for widget update');
       return;
     }
@@ -69,7 +86,7 @@ export const updateAllWeatherWidgets = async () => {
 
     if (Platform.OS === 'ios') {
       // Update iOS widgets via App Groups
-      await updateIOSWidgetData(weather, gpsLocation.name);
+      await updateIOSWidgetData(weatherData, gpsLocation.name);
       logger.debug('iOS widgets updated successfully');
     } else {
       // Update Android widgets via react-native-android-widget
@@ -78,7 +95,7 @@ export const updateAllWeatherWidgets = async () => {
           widgetName: 'WeatherCompact',
           renderWidget: (widgetInfo) => (
             <WeatherCompact
-              weather={weather}
+              weather={weatherData}
               lastUpdated={lastUpdated}
               locationName={gpsLocation.name}
             />
@@ -88,7 +105,7 @@ export const updateAllWeatherWidgets = async () => {
           widgetName: 'WeatherStandard',
           renderWidget: (widgetInfo) => (
             <WeatherStandard
-              weather={weather}
+              weather={weatherData}
               lastUpdated={lastUpdated}
               locationName={gpsLocation.name}
               width={widgetInfo.width}
@@ -100,7 +117,7 @@ export const updateAllWeatherWidgets = async () => {
           widgetName: 'WeatherExtended',
           renderWidget: (widgetInfo) => (
             <WeatherExtended
-              weather={weather}
+              weather={weatherData}
               lastUpdated={lastUpdated}
               locationName={gpsLocation.name}
               height={widgetInfo.height}

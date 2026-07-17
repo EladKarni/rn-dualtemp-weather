@@ -3,9 +3,9 @@
  * Uses @bacons/apple-targets ExtensionStorage to share data with iOS widgets via App Groups
  */
 import { Platform } from 'react-native';
-import { Weather } from '../types/WeatherTypes';
-import { useSettingsStore } from '../store/useSettingsStore';
-import { convertWindSpeed } from './temperature';
+import { Weather } from '../../types/WeatherTypes';
+import { useSettingsStore } from '../../store/useSettingsStore';
+import { convertWindSpeed } from '../../utils/temperature';
 
 // Only import ExtensionStorage on iOS
 let ExtensionStorage: any = null;

@@ -10,7 +10,7 @@ import {
   Alert,
 } from "react-native";
 import { i18n } from "../../localization/i18n";
-import { styles } from "./LocationDropdown.Styles";
+import { styles } from "./LocationDropdown.styles";
 import {
   useLocationStore,
   SavedLocation,

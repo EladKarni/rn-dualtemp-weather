@@ -10,7 +10,7 @@ import HourlyForecastSkeleton from "../components/HourlyForecast/HourlyForecastS
 import DailyForecastSkeleton from "../components/DailyForecast/DailyForecastSkeleton";
 import type { SavedLocation } from "../store/useLocationStore";
 import type { LocationWeatherState } from "../hooks/useMultiLocationWeather";
-import { skeletonScreenStyles } from "../styles/screens/SkeletonScreen.styles";
+import { skeletonScreenStyles } from "./SkeletonScreen.styles";
 
 interface SkeletonScreenProps {
   onSettingsPress: () => void;

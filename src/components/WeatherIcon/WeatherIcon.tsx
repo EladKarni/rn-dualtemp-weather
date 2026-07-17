@@ -1,7 +1,7 @@
 import { View, Text, Image, ImageSourcePropType } from 'react-native'
 import React from 'react'
 
-import { WeatherIconStyles } from './WeatherIcon.Styles'
+import { WeatherIconStyles } from './WeatherIcon.styles'
 
 type weatherIconPropsType = {
     icon: ImageSourcePropType;

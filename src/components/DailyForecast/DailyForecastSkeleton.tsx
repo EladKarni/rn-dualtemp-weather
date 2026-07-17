@@ -2,7 +2,7 @@ import React from "react";
 import { View, StyleSheet } from "react-native";
 import Subtitle from "../Subtitle/Subtitle";
 import { SkeletonBox } from "../LoadingSkeleton/SkeletonBox";
-import { DailyForecastStyles } from "./DailyForecast.Styles";
+import { DailyForecastStyles } from "./DailyForecast.styles";
 import { palette } from "../../styles/Palette";
 import { i18n } from "../../localization/i18n";
 

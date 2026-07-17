@@ -1,5 +1,5 @@
 import { View, Text } from "react-native";
-import { DailyForecastExtendedItemStyles } from "./DailyForecastExtendedItemStyles.Styles";
+import { DailyForecastExtendedItemStyles } from "./DailyForecastExtendedItem.styles";
 import { DailyEntity } from "../../types/WeatherTypes";
 import React, { useState } from "react";
 import DailyExpandedFeelInfo from "./DailyExpandedFeelInfo";

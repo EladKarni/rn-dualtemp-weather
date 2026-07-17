@@ -4,7 +4,7 @@ import Subtitle from '../Subtitle/Subtitle';
 
 import { View } from 'react-native'
 import { DailyEntity } from '../../types/WeatherTypes';
-import { DailyForecastStyles } from './DailyForecast.Styles';
+import { DailyForecastStyles } from './DailyForecast.styles';
 import { i18n } from "../../localization/i18n";
 
 type DailyForecastProps = {

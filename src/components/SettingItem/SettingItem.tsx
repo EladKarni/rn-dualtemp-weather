@@ -1,6 +1,6 @@
 import React, { ReactNode } from "react";
 import { View, Text } from "react-native";
-import { styles } from "./SettingItem.Styles";
+import { styles } from "./SettingItem.styles";
 
 type SettingItemProps = {
   label: string;

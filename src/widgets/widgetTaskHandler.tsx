@@ -9,7 +9,7 @@ import { useForecastStore } from '../store/useForecastStore';
 import { i18n } from '../localization/i18n';
 import { logger } from '../utils/logger';
 import { fetchForecast } from '../utils/fetchWeather';
-import { ensureStoresHydrated } from '../utils/widgetUpdater';
+import { ensureStoresHydrated } from './widgetUpdater';
 import { NoConnectionError } from '../utils/errors';
 import { palette } from '../styles/Palette';
 import type { Weather } from '../types/WeatherTypes';

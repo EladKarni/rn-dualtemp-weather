@@ -22,7 +22,7 @@ import { useLocationStore } from '../../store/useLocationStore';
 import { useForecastStore } from '../../store/useForecastStore';
 import { logger } from '../../utils/logger';
 import { fetchForecast } from '../../utils/fetchWeather';
-import { ensureStoresHydrated } from '../../utils/widgetUpdater';
+import { ensureStoresHydrated } from '../widgetUpdater';
 
 // jest.mock() calls are hoisted above the imports by babel-plugin-jest-hoist,
 // so the imports above resolve to these mocks at runtime.
@@ -76,10 +76,10 @@ jest.mock('../../utils/logger', () => ({
 jest.mock('../../utils/fetchWeather', () => ({ fetchForecast: jest.fn() }));
 
 // The hydration gate itself is unit-tested against the real implementation in
-// utils/__tests__/widgetUpdater.test.tsx. Here it is a controllable stand-in
+// widgets/__tests__/widgetUpdater.test.tsx. Here it is a controllable stand-in
 // that reveals the persisted GPS location only when awaited — modelling the
 // headless race the gate exists to close.
-jest.mock('../../utils/widgetUpdater', () => ({
+jest.mock('../widgetUpdater', () => ({
   ensureStoresHydrated: jest.fn(),
   updateAllWeatherWidgets: jest.fn(),
 }));

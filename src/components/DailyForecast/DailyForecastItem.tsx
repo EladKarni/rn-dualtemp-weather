@@ -1,7 +1,7 @@
 import React from 'react'
 import { View, Text, TouchableOpacity } from 'react-native'
 import { DailyEntity } from '../../types/WeatherTypes';
-import { DailyForecastItemStyles } from './DailyForecast.Styles';
+import { DailyForecastItemStyles } from './DailyForecast.styles';
 import Card, { CardStyleTypes } from '../Card/Card';
 import WeatherIcon, { IconSizeTypes } from '../WeatherIcon/WeatherIcon';
 import { displayWeatherIcon } from '../../utils/Images';

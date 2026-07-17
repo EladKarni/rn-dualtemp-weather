@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { useLanguageStore } from "../../store/useLanguageStore";
-import { styles } from "./LanguageSelector.Styles";
+import { styles } from "./LanguageSelector.styles";
 
 export const LanguageSelector = () => {
   const [isExpanded, setIsExpanded] = useState(false);

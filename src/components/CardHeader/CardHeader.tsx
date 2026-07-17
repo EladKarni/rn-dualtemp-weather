@@ -1,9 +1,9 @@
 import React, { useContext } from "react";
 import { View, Text } from "react-native";
-import { AppStateContext } from "../../utils/AppStateContext";
+import { AppStateContext } from "../../contexts/AppStateContext";
 import { formatCurrentDate } from "../../utils/dateFormatting";
 
-import { cardHeaderStyles } from "./CardHeader.Styles";
+import { cardHeaderStyles } from "./CardHeader.styles";
 import { typography } from "../../styles/Typography";
 import { i18n } from "../../localization/i18n";
 import { useLanguageStore } from "../../store/useLanguageStore";

@@ -6,7 +6,7 @@ import WeatherIcon, { IconSizeTypes } from '../WeatherIcon/WeatherIcon';
 import { TempTextStyleTypes } from '../TempText/TempText';
 import Card, { CardStyleTypes } from '../Card/Card';
 
-import { CurrentWeatherStyles } from './CurrentWeatherCard.Styles'
+import { CurrentWeatherStyles } from './CurrentWeatherCard.styles'
 import CardHeader from '../CardHeader/CardHeader';
 import CardFooter from '../CardFooter/CardFooter';
 import DualTempText from '../TempText/DualTempText';

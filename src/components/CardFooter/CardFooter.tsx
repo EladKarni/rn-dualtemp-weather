@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { View, Text } from "react-native";
 import moment from "moment";
 import { useLanguageStore } from "../../store/useLanguageStore";
-import { CardFooterStyles } from "./CardFooter.Styles";
+import { CardFooterStyles } from "./CardFooter.styles";
 import { typography } from "../../styles/Typography";
 import { i18n } from "../../localization/i18n";
 import "intl";

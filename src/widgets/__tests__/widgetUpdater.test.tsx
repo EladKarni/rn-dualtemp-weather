@@ -2,27 +2,30 @@
  * Worker C — hydration-gate unit tests for the real `ensureStoresHydrated`
  * helper and its use in `updateAllWeatherWidgets` (finding 5).
  *
- * Proves the helper rehydrates ALL THREE persisted stores (location, language,
- * settings) and never touches the non-persisted forecast store's (absent)
- * `.persist` API, and that `updateAllWeatherWidgets` hydrates before it reads
- * `savedLocations`.
+ * Worker L — cycle-break coverage: `setWeatherData` now passes the fresh weather
+ * payload into `updateAllWeatherWidgets(weather)` so this module never statically
+ * imports the forecast store. These tests prove (a) a passed payload is used
+ * directly with no store read, and (b) a stray non-Weather value (the temp-scale
+ * string a naive `onAfterChange` would forward) is rejected by the guard and the
+ * cached-store fallback runs instead.
  */
 import { ensureStoresHydrated, updateAllWeatherWidgets } from '../widgetUpdater';
 import { useLocationStore } from '../../store/useLocationStore';
 import { useLanguageStore } from '../../store/useLanguageStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { useForecastStore } from '../../store/useForecastStore';
-import { logger } from '../logger';
+import { logger } from '../../utils/logger';
+import type { Weather } from '../../types/WeatherTypes';
 
 // jest.mock() calls are hoisted above the imports by babel-plugin-jest-hoist,
 // so the imports above resolve to these mocks at runtime.
 jest.mock('react-native-android-widget', () => ({ requestWidgetUpdate: jest.fn() }));
-jest.mock('../../widgets/WeatherCompact', () => ({ WeatherCompact: 'WeatherCompact' }));
-jest.mock('../../widgets/WeatherStandard', () => ({ WeatherStandard: 'WeatherStandard' }));
-jest.mock('../../widgets/WeatherExtended', () => ({ WeatherExtended: 'WeatherExtended' }));
-jest.mock('../iosWidgetStorage', () => ({ updateIOSWidgetData: jest.fn() }));
+jest.mock('../WeatherCompact', () => ({ WeatherCompact: 'WeatherCompact' }));
+jest.mock('../WeatherStandard', () => ({ WeatherStandard: 'WeatherStandard' }));
+jest.mock('../WeatherExtended', () => ({ WeatherExtended: 'WeatherExtended' }));
+jest.mock('../utils/iosWidgetStorage', () => ({ updateIOSWidgetData: jest.fn() }));
 
-jest.mock('../logger', () => ({
+jest.mock('../../utils/logger', () => ({
   logger: {
     debug: jest.fn(),
     info: jest.fn(),
@@ -32,6 +35,8 @@ jest.mock('../logger', () => ({
   },
 }));
 
+// The forecast store is only reached via a LAZY dynamic import in the no-payload
+// fallback path; jest still intercepts it because the resolved module is mocked.
 jest.mock('../../store/useForecastStore', () => ({
   useForecastStore: { getState: jest.fn() },
 }));
@@ -52,6 +57,14 @@ const settingsRehydrate = useSettingsStore.persist.rehydrate as unknown as jest.
 const locationGetState = useLocationStore.getState as unknown as jest.Mock;
 const forecastGetState = useForecastStore.getState as unknown as jest.Mock;
 const mockedLogger = logger as unknown as Record<string, jest.Mock>;
+
+const gpsWeather = {
+  current: { temp: 20 },
+  daily: [],
+  hourly: [],
+  lat: 1,
+  lon: 2,
+} as unknown as Weather;
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -97,6 +110,41 @@ describe('updateAllWeatherWidgets', () => {
     // Empty freshly-hydrated store → warn + early return (no widget update).
     expect(mockedLogger.warn).toHaveBeenCalledWith(
       'No GPS location found for widget update'
+    );
+  });
+
+  it('uses the passed weather payload and never reads the forecast store (cycle break)', async () => {
+    const getWeatherData = jest.fn().mockResolvedValue(null);
+    forecastGetState.mockReturnValue({ getWeatherData });
+    locationGetState.mockReturnValue({
+      savedLocations: [{ id: 'gps-location', name: 'Here' }],
+    });
+
+    await updateAllWeatherWidgets(gpsWeather);
+
+    // widgetUpdater must not consult the forecast store at all — the payload is
+    // passed in by the caller. The weather-missing warning never fires.
+    expect(getWeatherData).not.toHaveBeenCalled();
+    expect(mockedLogger.warn).not.toHaveBeenCalledWith(
+      'No weather data found for widget update'
+    );
+  });
+
+  it('ignores a non-Weather argument (the temp-scale string a naive callback would forward)', async () => {
+    const getWeatherData = jest.fn().mockResolvedValue(null);
+    forecastGetState.mockReturnValue({ getWeatherData });
+    locationGetState.mockReturnValue({
+      savedLocations: [{ id: 'gps-location', name: 'Here' }],
+    });
+
+    // Simulate the runtime bug: a temp-scale string forwarded as "weather".
+    await updateAllWeatherWidgets('F' as unknown as Weather);
+
+    // The guard rejects the string, so no widget is rendered with a bogus payload
+    // and the store is never touched (widgetUpdater has no store dependency).
+    expect(getWeatherData).not.toHaveBeenCalled();
+    expect(mockedLogger.warn).toHaveBeenCalledWith(
+      'No weather data found for widget update'
     );
   });
 });

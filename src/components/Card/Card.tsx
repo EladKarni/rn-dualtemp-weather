@@ -1,7 +1,7 @@
 import React from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import { palette } from "../../styles/Palette";
-import { CardStyles } from "./Card.Styles";
+import { CardStyles } from "./Card.styles";
 
 type CardPropTypes = {
   cardType: CardStyleTypes;

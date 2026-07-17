@@ -3,7 +3,7 @@ import { View, FlatList } from 'react-native';
 import Subtitle from '../Subtitle/Subtitle';
 import HourlyForecastItem from './HourlyForecastItem';
 
-import { HourlyForecastStyles } from './HourlyForecast.Styles';
+import { HourlyForecastStyles } from './HourlyForecast.styles';
 
 import { HourlyEntity } from '../../types/WeatherTypes';
 import { i18n } from "../../localization/i18n";

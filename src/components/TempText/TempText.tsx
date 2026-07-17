@@ -1,6 +1,6 @@
 import { Text } from "react-native";
 import React from "react";
-import { TempTextStyles } from "./TempText.Styles";
+import { TempTextStyles } from "./TempText.styles";
 import { typography } from "../../styles/Typography";
 import { celsiusToFahrenheit } from "../../utils/temperature";
 

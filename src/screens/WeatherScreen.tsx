@@ -9,13 +9,13 @@ import HourlyForecastSkeleton from "../components/HourlyForecast/HourlyForecastS
 import DailyForecastSkeleton from "../components/DailyForecast/DailyForecastSkeleton";
 import AppFooter from "../components/AppFooter/AppFooter";
 import { WeatherErrorBanner } from "../components/ErrorAlert/WeatherErrorBanner";
-import { AppStateContext } from "../utils/AppStateContext";
+import { AppStateContext } from "../contexts/AppStateContext";
 import type { Weather } from "../types/WeatherTypes";
 import type { AppError } from "../utils/errors";
 import type { Moment } from "moment";
 import type { SavedLocation } from "../store/useLocationStore";
 import type { LocationWeatherState } from "../hooks/useMultiLocationWeather";
-import { weatherScreenStyles } from "../styles/screens/WeatherScreen.styles";
+import { weatherScreenStyles } from "./WeatherScreen.styles";
 
 interface WeatherScreenProps {
   forecast: Weather;

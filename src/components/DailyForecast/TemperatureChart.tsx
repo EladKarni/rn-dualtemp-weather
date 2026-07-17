@@ -1,7 +1,7 @@
 import React, { useContext } from "react";
 import { LineChart } from "react-native-chart-kit";
 import { palette } from "../../styles/Palette";
-import { AppStateContext } from "../../utils/AppStateContext";
+import { AppStateContext } from "../../contexts/AppStateContext";
 import { celsiusToFahrenheit } from "../../utils/temperature";
 
 const CHART_WIDTH_RATIO = 1.45;
