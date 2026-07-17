@@ -155,7 +155,21 @@ function clientIp(req: Request): string {
 
 export default async function handler(req: Request): Promise<Response> {
   const ip = clientIp(req);
-  const { success, limit, remaining, reset } = await ratelimit.limit(ip);
+
+  // FAIL OPEN (§4 step 2 invariant): if Redis is unreachable, @upstash/ratelimit
+  // rejects — without this try/catch the handler would throw, Vercel would
+  // return 500, and a Redis outage would take the weather app down. On limiter
+  // failure we serve the request unthrottled instead.
+  let verdict: { success: boolean; limit: number; remaining: number; reset: number };
+  try {
+    verdict = await ratelimit.limit(ip);
+    // If analytics: true, flush pending writes without blocking the response:
+    // ctx.waitUntil(verdict.pending)  (edge handler's 2nd arg / RequestContext).
+  } catch (err) {
+    console.warn("rate limiter unavailable — failing open", err);
+    verdict = { success: true, limit: 0, remaining: 0, reset: 0 };
+  }
+  const { success, limit, remaining, reset } = verdict;
 
   if (!success) {
     const retryAfter = Math.max(1, Math.ceil((reset - Date.now()) / 1000));
@@ -193,6 +207,11 @@ Caveats to keep the limit from over-blocking real users:
 - **`x-forwarded-for` spoofing:** on Vercel the platform sets this header from the
   real connection, so trust it; do not accept a caller-supplied XFF from your own
   code paths.
+- **Fail open on limiter failure (§4 step 2 invariant):** keep the try/catch
+  around `ratelimit.limit()` — a Redis outage must degrade to "unthrottled" (serve
+  the request), never to a 500 that takes the weather app down. If you enable
+  `analytics: true`, flush the returned `pending` promise via
+  `ctx.waitUntil(verdict.pending)` instead of awaiting it in the request path.
 
 #### 1B · Vercel Firewall rate-limit rule (no-code alternative)
 
