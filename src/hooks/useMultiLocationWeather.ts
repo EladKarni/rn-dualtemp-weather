@@ -4,10 +4,9 @@ import { i18n } from '../localization/i18n';
 import { logger } from '../utils/logger';
 import type { SavedLocation } from '../store/useLocationStore';
 import type { Weather } from '../types/WeatherTypes';
-import { useMemo, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSettingsStore } from '../store/useSettingsStore';
 import { useForecastStore, initializeForecastStore } from '../store/useForecastStore';
-import { createCurrentDate } from '../utils/fetchLocale';
 
 export interface LocationWeatherState {
   hasCurrentWeather: boolean;
@@ -15,6 +14,52 @@ export interface LocationWeatherState {
   isLoading: boolean;
   isFetching: boolean;
   error: Error | null;
+}
+
+const EMPTY_LOCATION_STATE: LocationWeatherState = {
+  hasCurrentWeather: false,
+  hasFullForecast: false,
+  isLoading: false,
+  isFetching: false,
+  error: null,
+};
+
+/**
+ * Rounded-coordinate precision baked into the forecast query key (finding 4a,
+ * decision D9). 2 decimals ≈ 1.1 km: small GPS jitter keeps the same key (cache
+ * hit, no refetch), while a real move past the rounding boundary changes the key
+ * and triggers a background refetch. The SQLite `placeholderData` still paints
+ * instantly, so the one-time persisted-cache invalidation has no visible cost.
+ */
+export const COORD_KEY_DECIMALS = 2;
+
+/** Rounded `lat,lon` fragment used inside the forecast query key. Pure — unit tested. */
+export function buildCoordKey(latitude?: number, longitude?: number): string {
+  return `${(latitude ?? 0).toFixed(COORD_KEY_DECIMALS)},${(longitude ?? 0).toFixed(
+    COORD_KEY_DECIMALS
+  )}`;
+}
+
+/** Full forecast query key: locale + location id + rounded coords. Pure — unit tested. */
+export function buildForecastQueryKey(
+  locale: string,
+  locationId: string | undefined,
+  latitude?: number,
+  longitude?: number
+): (string | undefined)[] {
+  return ['forecast', locale, locationId, buildCoordKey(latitude, longitude)];
+}
+
+/**
+ * Location-switch race guard (finding 9). SQLite-cached weather is tagged with the
+ * location it belongs to; it is only valid for display/placeholder when that tag
+ * matches the currently active location. Pure — unit tested.
+ */
+export function selectCachedWeather(
+  cached: { locationId: string; weather: Weather } | null,
+  activeLocationId: string | null
+): Weather | null {
+  return cached && cached.locationId === activeLocationId ? cached.weather : null;
 }
 
 /**
@@ -37,7 +82,6 @@ export function useMultiLocationWeather(
 ) {
   const activeLocation = savedLocations.find(loc => loc.id === activeLocationId);
   const setLastUpdated = useSettingsStore(state => state.setLastUpdated);
-  const forecastStore = useForecastStore();
 
   // Initialize forecast store on first use
   useEffect(() => {
@@ -46,22 +90,62 @@ export function useMultiLocationWeather(
     });
   }, []);
 
-  // Check store for cached data first
-  const [cachedActiveWeather, setCachedActiveWeather] = useState<Weather | null>(null);
-  
+  // SQLite-cached weather for the active location, tagged with its locationId so a
+  // slow read from a previously-active location can never paint under the new one
+  // (finding 9). Read via the `selectCachedWeather` guard below.
+  const [cachedActive, setCachedActive] = useState<{
+    locationId: string;
+    weather: Weather;
+  } | null>(null);
+
   useEffect(() => {
-    if (activeLocationId && fetchedLocaleSuccessfully) {
-      forecastStore.getWeatherData(activeLocationId).then(weather => {
-        setCachedActiveWeather(weather);
-      }).catch(error => {
+    if (!activeLocationId || !fetchedLocaleSuccessfully) {
+      return;
+    }
+
+    // Clear synchronously on switch: drop any cache that isn't for this location so
+    // the fallback shows nothing (not the old location) until this read lands.
+    setCachedActive(prev =>
+      prev && prev.locationId === activeLocationId ? prev : null
+    );
+
+    // Cancelled flag: a slow SQLite read that resolves after a switch must not
+    // resurrect the previous location's weather.
+    let cancelled = false;
+    useForecastStore
+      .getState()
+      .getWeatherData(activeLocationId)
+      .then(weather => {
+        if (cancelled || !weather) {
+          return;
+        }
+        setCachedActive({ locationId: activeLocationId, weather });
+      })
+      .catch(error => {
         logger.error('Failed to get cached weather data:', error);
       });
-    }
-  }, [activeLocationId, fetchedLocaleSuccessfully, forecastStore]);
 
-  // Active location: fetch with high priority
+    return () => {
+      cancelled = true;
+    };
+  }, [activeLocationId, fetchedLocaleSuccessfully]);
+
+  // Only surface the cache when it belongs to the active location.
+  const cachedActiveWeather = selectCachedWeather(cachedActive, activeLocationId);
+
+  // Active location: fetch with high priority. refetchOnWindowFocus stays at its
+  // default (true) so a stale-on-resume active query refetches when the app
+  // returns to the foreground (finding 4b — focusManager is wired in
+  // useAppLifecycle.ts). buildCoordKey is called inline so the raw lat/lon appear
+  // in the key (satisfies @tanstack/query/exhaustive-deps) while the key value
+  // stays rounded (decision D9).
   const activeQuery = useQuery({
-    queryKey: ['forecast', i18n.locale, activeLocation?.id],
+    queryKey: [
+      'forecast',
+      i18n.locale,
+      activeLocation?.id,
+      buildCoordKey(activeLocation?.latitude, activeLocation?.longitude),
+    ],
     queryFn: async () => {
       logger.debug('Fetching forecast for active location:', {
         locale: i18n.locale,
@@ -75,16 +159,16 @@ export function useMultiLocationWeather(
         activeLocation?.longitude || 0
       );
       logger.debug('Active forecast fetched:', !!result);
-      
+
       // Persist to store for widgets and offline use
-      if (result && activeLocationId) {
+      if (result && activeLocation?.id) {
         try {
-          await forecastStore.setWeatherData(activeLocationId, result);
+          await useForecastStore.getState().setWeatherData(activeLocation.id, result);
         } catch (error) {
           logger.error('Failed to persist weather data to store:', error);
         }
       }
-      
+
       return result;
     },
     enabled: !!activeLocation && fetchedLocaleSuccessfully,
@@ -94,13 +178,41 @@ export function useMultiLocationWeather(
     retry: 1, // Only retry once instead of 3 times (faster error display)
   });
 
-  // Background pre-fetch: all other locations (lower priority)
-  // Only start pre-fetching after active location succeeds
-  const otherLocations = savedLocations.filter(loc => loc.id !== activeLocationId);
+  const {
+    data: activeData,
+    isLoading: activeIsLoading,
+    isFetching: activeIsFetching,
+    isFetched: activeIsFetched,
+    isSuccess: activeIsSuccess,
+    isError: activeIsError,
+    error: activeError,
+    refetch: activeRefetch,
+  } = activeQuery;
 
-  const prefetchQueries = useQueries({
+  // Background pre-fetch: all other locations (lower priority). Memoized so the
+  // queries array and everything derived from it stay stable across unrelated
+  // renders.
+  const otherLocations = useMemo(
+    () => savedLocations.filter(loc => loc.id !== activeLocationId),
+    [savedLocations, activeLocationId]
+  );
+
+  // `combine` folds the unstable useQueries result into structurally-shared,
+  // referentially-stable slices. Consuming those (never the raw result) keeps the
+  // tanstack no-unstable-deps rule satisfied and lets LocationPill's React.memo
+  // actually hold.
+  const {
+    locationStates: prefetchStates,
+    weatherData: prefetchData,
+    allLoaded: prefetchAllLoaded,
+  } = useQueries({
     queries: otherLocations.map(location => ({
-      queryKey: ['forecast', i18n.locale, location.id],
+      queryKey: [
+        'forecast',
+        i18n.locale,
+        location.id,
+        buildCoordKey(location.latitude, location.longitude),
+      ],
       queryFn: async () => {
         logger.debug('Pre-fetching forecast for:', {
           locale: i18n.locale,
@@ -114,19 +226,19 @@ export function useMultiLocationWeather(
           location.longitude
         );
         logger.debug('Pre-fetched forecast:', location.name, !!result);
-        
+
         // Persist to store for widgets and offline use
         if (result) {
           try {
-            await forecastStore.setWeatherData(location.id, result);
+            await useForecastStore.getState().setWeatherData(location.id, result);
           } catch (error) {
             logger.error('Failed to persist prefetched weather data to store:', error);
           }
         }
-        
+
         return result;
       },
-      enabled: !!activeLocation && fetchedLocaleSuccessfully && activeQuery.isSuccess,
+      enabled: !!activeLocation && fetchedLocaleSuccessfully && activeIsSuccess,
       staleTime: 1000 * 60 * 30, // 30 minutes
       gcTime: 1000 * 60 * 60, // 1 hour
       retry: 1,
@@ -134,82 +246,100 @@ export function useMultiLocationWeather(
       refetchOnMount: false,
       refetchOnWindowFocus: false,
     })),
+    combine: results => ({
+      locationStates: results.map(
+        (query): LocationWeatherState => ({
+          hasCurrentWeather: !!query.data?.current,
+          hasFullForecast: !!query.data,
+          isLoading: query.isLoading,
+          isFetching: query.isFetching,
+          error: (query.error as Error | null) ?? null,
+        })
+      ),
+      weatherData: results.map(query => query.data),
+      allLoaded: results.every(query => query.isSuccess),
+    }),
   });
 
-  // Track loading states per location
+  // Track loading states per location. Rebuilt only when the active-query flags or
+  // the (structurally-shared) prefetch states change, so the Map identity is stable
+  // across unrelated renders.
   const locationLoadingStates = useMemo(() => {
     const states = new Map<string, LocationWeatherState>();
 
-    savedLocations.forEach((loc) => {
+    savedLocations.forEach(loc => {
       if (loc.id === activeLocationId) {
         // Active location state
         states.set(loc.id, {
-          hasCurrentWeather: !!activeQuery.data?.current,
-          hasFullForecast: !!activeQuery.data,
-          isLoading: activeQuery.isLoading,
-          isFetching: activeQuery.isFetching,
-          error: activeQuery.error as Error | null,
+          hasCurrentWeather: !!activeData?.current,
+          hasFullForecast: !!activeData,
+          isLoading: activeIsLoading,
+          isFetching: activeIsFetching,
+          error: (activeError as Error | null) ?? null,
         });
       } else {
         // Pre-fetched location state
         const prefetchIndex = otherLocations.findIndex(l => l.id === loc.id);
-        const query = prefetchQueries[prefetchIndex];
-
-        states.set(loc.id, {
-          hasCurrentWeather: !!query?.data?.current,
-          hasFullForecast: !!query?.data,
-          isLoading: query?.isLoading || false,
-          isFetching: query?.isFetching || false,
-          error: query?.error as Error | null || null,
-        });
+        states.set(loc.id, prefetchStates[prefetchIndex] ?? EMPTY_LOCATION_STATE);
       }
     });
 
     return states;
-  }, [savedLocations, activeLocationId, activeQuery, prefetchQueries, otherLocations]);
+  }, [
+    savedLocations,
+    activeLocationId,
+    otherLocations,
+    activeData,
+    activeIsLoading,
+    activeIsFetching,
+    activeError,
+    prefetchStates,
+  ]);
 
-  // Get weather data for a specific location
-  const getLocationWeather = useMemo(() => {
-    return (locationId: string): Weather | undefined => {
+  // Get weather data for a specific location. Stable across renders so consumers
+  // that memoize on it are not needlessly invalidated.
+  const getLocationWeather = useCallback(
+    (locationId: string): Weather | undefined => {
       if (locationId === activeLocationId) {
-        return activeQuery.data;
+        return activeData;
       }
 
       const prefetchIndex = otherLocations.findIndex(l => l.id === locationId);
       if (prefetchIndex >= 0) {
-        return prefetchQueries[prefetchIndex]?.data;
+        return prefetchData[prefetchIndex];
       }
 
       return undefined;
-    };
-  }, [activeLocationId, activeQuery.data, otherLocations, prefetchQueries]);
+    },
+    [activeLocationId, activeData, otherLocations, prefetchData]
+  );
 
-  // Update lastUpdated timestamp when data is successfully fetched
+  // Update lastUpdated timestamp when data is successfully fetched. Written as an
+  // ISO string (coordinates with Worker F's lastUpdated store-type change).
   useEffect(() => {
-    if (activeQuery.isSuccess && activeQuery.data) {
-      setLastUpdated(createCurrentDate());
+    if (activeIsSuccess && activeData) {
+      setLastUpdated(new Date().toISOString());
     }
-  }, [activeQuery.isSuccess, activeQuery.data, setLastUpdated]);
+  }, [activeIsSuccess, activeData, setLastUpdated]);
 
   return {
     // Active location data (enhanced with store integration)
-    activeWeather: activeQuery.data || cachedActiveWeather,
-    isFetched: activeQuery.isFetched || !!cachedActiveWeather,
-    isFetching: activeQuery.isFetching,
-    refetch: activeQuery.refetch,
-    error: activeQuery.error,
-    isError: activeQuery.isError,
+    activeWeather: activeData ?? cachedActiveWeather,
+    isFetched: activeIsFetched || !!cachedActiveWeather,
+    isFetching: activeIsFetching,
+    refetch: activeRefetch,
+    error: activeError,
+    isError: activeIsError,
 
     // Multi-location state
     locationLoadingStates,
     getLocationWeather,
-    allLocationsLoaded: prefetchQueries.every(q => q.isSuccess),
+    allLocationsLoaded: prefetchAllLoaded,
 
     // Store state
     cachedActiveWeather,
 
     // For debugging
     activeQuery,
-    prefetchQueries,
   };
 }
