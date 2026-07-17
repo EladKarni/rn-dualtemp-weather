@@ -4,8 +4,6 @@ export const zh = {
   Title: "天气预报",
   PoweredBy: "反向地理编码提供由： ",
   Geoapify: "Geoapify",
-  ProvidedBy: "天气数据提供由： ",
-  OpenWeather: "OpenWeather",
   HourlyTitle: "每小时预报",
   DailyTitle: "全天预报",
   Feels: "体感",

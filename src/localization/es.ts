@@ -4,8 +4,6 @@ export const es = {
     Title: "Pronóstico del tiempo",
     PoweredBy: "Geocodificación inversa proporcionado por ",
     Geoapify: "Geoapify",
-    ProvidedBy: "Datos meteorológicos proporcionados por ",
-    OpenWeather: "OpenWeather",
     HourlyTitle: 'Pronóstico por hora',
     DailyTitle: 'Pronóstico diario',
     Feels: 'Se siente como',

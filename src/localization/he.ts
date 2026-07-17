@@ -4,8 +4,6 @@ export const he = {
     Title: "מזג האוויר",
     PoweredBy: "קידוד גיאוגרפי הפוך מופעל על ידי ",
     Geoapify: "Geoapify",
-    ProvidedBy: "נתוני מזג אוויר מסופקים על ידי ",
-    OpenWeather: "OpenWeather",
     HourlyTitle: 'תחזית שעתית',
     DailyTitle: 'תחזית לימים הקרובים',
     Feels: 'מרגיש כמו',

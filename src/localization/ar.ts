@@ -4,8 +4,6 @@ export const ar = {
     Title: "النشرة الجوية",
     PoweredBy: "التشفير الجيوغرافي العكسي المُشغّل من قبل ",
     Geoapify: "Geoapify",
-    ProvidedBy: "بيانات حالة الطقس مقدمة من ",
-    OpenWeather: "OpenWeather",
     HourlyTitle: 'التوقعات الجوية كل ساعة',
     DailyTitle: 'العنوان اليومي',
     Feels: 'ستشعر كأنه/يبدو كأنه',

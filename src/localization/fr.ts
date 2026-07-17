@@ -4,8 +4,6 @@ export const fr = {
     Title: "Météo",
     PoweredBy: "Géocodage inversé avec ",
     Geoapify: "Geoapify",
-    ProvidedBy: "Données météorologiques fournies par ",
-    OpenWeather: "OpenWeather",
     HourlyTitle: 'Heure par heure',
     DailyTitle: 'Semaine',
     Feels: 'Ressentie',
