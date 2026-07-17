@@ -1,8 +1,7 @@
 import React from "react";
-import { View, Text, TouchableOpacity } from "react-native";
 import { useSettingsStore } from "../../store/useSettingsStore";
 import { i18n } from "../../localization/i18n";
-import { styles } from "./TempUnitSelector.Styles";
+import { SegmentedControl } from "../SegmentedControl/SegmentedControl";
 import { updateAllWeatherWidgets } from "../../utils/widgetUpdater";
 
 export const TempUnitSelector = () => {
@@ -10,44 +9,14 @@ export const TempUnitSelector = () => {
   const setTempScale = useSettingsStore((state) => state.setTempScale);
 
   return (
-    <View style={styles.container}>
-      <TouchableOpacity
-        style={[styles.button, tempScale === "C" && styles.buttonActive]}
-        onPress={async () => {
-          setTempScale("C");
-          await updateAllWeatherWidgets();
-        }}
-        activeOpacity={0.7}
-      >
-        <Text
-          style={[
-            styles.buttonText,
-            tempScale === "C" && styles.buttonTextActive,
-          ]}
-        >
-          {i18n.t("Celsius")} (°C)
-        </Text>
-      </TouchableOpacity>
-
-      <View style={styles.divider} />
-
-      <TouchableOpacity
-        style={[styles.button, tempScale === "F" && styles.buttonActive]}
-        onPress={async () => {
-          setTempScale("F");
-          await updateAllWeatherWidgets();
-        }}
-        activeOpacity={0.7}
-      >
-        <Text
-          style={[
-            styles.buttonText,
-            tempScale === "F" && styles.buttonTextActive,
-          ]}
-        >
-          {i18n.t("Fahrenheit")} (°F)
-        </Text>
-      </TouchableOpacity>
-    </View>
+    <SegmentedControl
+      value={tempScale}
+      onChange={setTempScale}
+      onAfterChange={updateAllWeatherWidgets}
+      options={[
+        { value: "C", label: `${i18n.t("Celsius")} (°C)` },
+        { value: "F", label: `${i18n.t("Fahrenheit")} (°F)` },
+      ]}
+    />
   );
 };

@@ -70,73 +70,80 @@ export const processWeatherData = (
 };
 
 /**
- * Get weather icon mapping based on weather ID
+ * Emoji icon per OpenWeather condition-code ID.
+ * Module-scoped single source of truth: shared by getWeatherIcon() and the
+ * widget WeatherIcon component so the mapping isn't rebuilt per render and can't
+ * drift between the two consumers. (Comments reference the OpenWeather condition
+ * numbering — that describes the upstream data format, not a credit.)
+ */
+export const WEATHER_ICON_MAP: Record<number, string> = {
+  // Clear sky
+  800: '☀️',
+  // Few clouds
+  801: '⛅',
+  // Scattered clouds
+  802: '☁️',
+  // Broken clouds
+  803: '☁️',
+  // Overcast clouds
+  804: '☁️',
+  // Rain
+  500: '🌦️',
+  501: '🌧️',
+  502: '🌧️',
+  503: '🌧️',
+  504: '🌧️',
+  // Drizzle
+  300: '🌦️',
+  301: '🌦️',
+  302: '🌦️',
+  313: '🌦️',
+  314: '🌦️',
+  321: '🌦️',
+  // Thunderstorm
+  200: '⛈️',
+  201: '⛈️',
+  202: '⛈️',
+  210: '⛈️',
+  211: '⛈️',
+  212: '⛈️',
+  221: '⛈️',
+  230: '⛈️',
+  231: '⛈️',
+  232: '⛈️',
+  // Snow
+  600: '🌨️',
+  601: '🌨️',
+  602: '❄️',
+  611: '🌨️',
+  612: '🌨️',
+  613: '🌨️',
+  615: '❄️',
+  616: '❄️',
+  620: '🌨️',
+  621: '🌨️',
+  622: '❄️',
+  // Atmosphere
+  701: '🌫️',
+  711: '🌫️',
+  721: '🌫️',
+  731: '🌪️',
+  741: '🌫️',
+  751: '🌫️',
+  761: '🌪️',
+  762: '🌪️',
+  771: '🌪️',
+};
+
+/**
+ * Get weather icon for a condition ID, falling back to the category's base icon
+ * (e.g. 5xx → 500) and finally a generic icon.
  */
 export const getWeatherIcon = (weatherId: number): string => {
-  // Simple mapping for now - can be expanded with proper icon set
-  const iconMap: Record<number, string> = {
-    // Clear sky
-    800: '☀️',
-    // Few clouds
-    801: '⛅',
-    // Scattered clouds
-    802: '☁️',
-    // Broken clouds
-    803: '☁️',
-    // Overcast clouds
-    804: '☁️',
-    // Rain
-    500: '🌦️',
-    501: '🌧️',
-    502: '🌧️',
-    503: '🌧️',
-    504: '🌧️',
-    // Drizzle
-    300: '🌦️',
-    301: '🌦️',
-    302: '🌦️',
-    313: '🌦️',
-    314: '🌦️',
-    321: '🌦️',
-    // Thunderstorm
-    200: '⛈️',
-    201: '⛈️',
-    202: '⛈️',
-    210: '⛈️',
-    211: '⛈️',
-    212: '⛈️',
-    221: '⛈️',
-    230: '⛈️',
-    231: '⛈️',
-    232: '⛈️',
-    // Snow
-    600: '🌨️',
-    601: '🌨️',
-    602: '❄️',
-    611: '🌨️',
-    612: '🌨️',
-    613: '🌨️',
-    615: '❄️',
-    616: '❄️',
-    620: '🌨️',
-    621: '🌨️',
-    622: '❄️',
-    // Atmosphere
-    701: '🌫️',
-    711: '🌫️',
-    721: '🌫️',
-    731: '🌪️',
-    741: '🌫️',
-    751: '🌫️',
-    761: '🌪️',
-    762: '🌪️',
-    771: '🌪️',
-  };
-  
   // Get first digit for general category
   const category = Math.floor(weatherId / 100);
-  
-  return iconMap[weatherId] || iconMap[category * 100] || '🌤️';
+
+  return WEATHER_ICON_MAP[weatherId] || WEATHER_ICON_MAP[category * 100] || '🌤️';
 };
 
 /**

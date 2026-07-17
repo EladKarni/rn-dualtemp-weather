@@ -1,8 +1,13 @@
 import React from "react";
-import { ScrollView } from "react-native";
+import { ScrollView, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import AppHeader from "../components/AppHeader/AppHeader";
-import { WeatherLoadingSkeleton } from "../components/LoadingSkeleton/LoadingSkeleton";
+import {
+  LoadingSpinner,
+  WeatherSkeletonCard,
+} from "../components/LoadingSkeleton/LoadingSkeleton";
+import HourlyForecastSkeleton from "../components/HourlyForecast/HourlyForecastSkeleton";
+import DailyForecastSkeleton from "../components/DailyForecast/DailyForecastSkeleton";
 import type { SavedLocation } from "../store/useLocationStore";
 import type { LocationWeatherState } from "../hooks/useMultiLocationWeather";
 import { skeletonScreenStyles } from "../styles/screens/SkeletonScreen.styles";
@@ -32,7 +37,12 @@ export default function SkeletonScreen({
           onLocationSelect={onLocationSelect}
           locationLoadingStates={locationLoadingStates}
         />
-        <WeatherLoadingSkeleton />
+        <View style={skeletonScreenStyles.content}>
+          <LoadingSpinner />
+          <WeatherSkeletonCard />
+          <HourlyForecastSkeleton />
+          <DailyForecastSkeleton />
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

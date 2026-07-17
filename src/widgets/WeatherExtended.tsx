@@ -19,100 +19,61 @@ interface WeatherExtendedProps {
   dataAge?: number; // Optional: Age of data in minutes (for stale data indicator)
 }
 
-// Compact horizontal row for single day (used at min height)
-const CompactDailyRow = ({
+type DailyRowVariant = "compact" | "card";
+
+// Single daily-forecast row. `compact` is the borderless single-row layout used
+// at min height; `card` is the boxed layout used in the expanded vertical list.
+// Only the outer container and the day-label style differ between the two.
+const DailyForecastRow = ({
   forecast,
   tempScale,
   isToday,
+  variant,
 }: {
   forecast: any;
   tempScale: "C" | "F";
   isToday: boolean;
+  variant: DailyRowVariant;
 }) => {
   const dayText = isToday ? "Today" : moment(forecast.dt * 1000).format("ddd");
+  const isCompact = variant === "compact";
 
+  // Only the outer container and the day-label style differ between variants;
+  // kept inline so react-native-android-widget's style props stay contextually
+  // typed (its FlexWidgetStyle/TextWidgetStyle aren't re-exported to annotate).
   return (
     <FlexWidget
-      style={{
-        width: "match_parent",
-        height: "match_parent",
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-        paddingLeft: 4,
-        paddingRight: 4,
-      }}
+      style={
+        isCompact
+          ? {
+              width: "match_parent",
+              height: "match_parent",
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              paddingLeft: 4,
+              paddingRight: 4,
+            }
+          : {
+              width: "match_parent",
+              height: 56,
+              backgroundColor: "rgba(255, 255, 255, 0.1)",
+              borderRadius: 8,
+              padding: 8,
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }
+      }
     >
       {/* Day name */}
       <TextWidget
         text={dayText}
-        style={{
-          fontSize: 14,
-          fontWeight: "bold",
-          color: palette.textColor,
-        }}
-      />
-
-      {/* Weather Icon */}
-      <WeatherIcon weatherId={forecast.weather[0].id} size="small" />
-
-      {/* High Temp */}
-      <FlexWidget style={{ flexDirection: "row", alignItems: "center" }}>
-        <TextWidget text="Hi " style={{ color: palette.highlightColor, fontSize: 16 }} />
-        <DualTemperatureDisplay
-          temp={forecast.temp.max}
-          size="small"
-          tempScale={tempScale}
-          separator=" / "
-        />
-      </FlexWidget>
-
-      {/* Low Temp */}
-      <FlexWidget style={{ flexDirection: "row", alignItems: "center" }}>
-        <TextWidget text="Lo " style={{ color: palette.highlightColor, fontSize: 16 }} />
-        <DualTemperatureDisplay
-          temp={forecast.temp.min}
-          size="small"
-          tempScale={tempScale}
-          separator=" / "
-        />
-      </FlexWidget>
-    </FlexWidget>
-  );
-};
-
-// Helper component for daily forecast item (used when expanded)
-const DailyItem = ({
-  forecast,
-  tempScale,
-  isToday,
-}: {
-  forecast: any;
-  tempScale: "C" | "F";
-  isToday: boolean;
-}) => {
-  const dayText = isToday ? "Today" : moment(forecast.dt * 1000).format("ddd");
-
-  return (
-    <FlexWidget
-      style={{
-        width: "match_parent",
-        height: 56,
-        backgroundColor: "rgba(255, 255, 255, 0.1)",
-        borderRadius: 8,
-        padding: 8,
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-      }}
-    >
-      {/* Day name */}
-      <TextWidget
-        text={dayText}
-        style={{
-          fontSize: 14,
-          color: palette.highlightColor,
-        }}
+        style={
+          isCompact
+            ? { fontSize: 14, fontWeight: "bold", color: palette.textColor }
+            : { fontSize: 14, color: palette.highlightColor }
+        }
       />
 
       {/* Weather Icon */}
@@ -184,7 +145,12 @@ export function WeatherExtended({
         }}
         clickAction="REFRESH"
       >
-        <CompactDailyRow forecast={todayForecast} tempScale={tempScale} isToday={true} />
+        <DailyForecastRow
+          forecast={todayForecast}
+          tempScale={tempScale}
+          isToday={true}
+          variant="compact"
+        />
 
         {/* Age Indicator for compact mode - positioned at end of row */}
         {ageText && (
@@ -225,7 +191,13 @@ export function WeatherExtended({
         }}
       >
         {forecastItems.map((forecast, index) => (
-          <DailyItem key={forecast.dt} forecast={forecast} tempScale={tempScale} isToday={index === 0} />
+          <DailyForecastRow
+            key={forecast.dt}
+            forecast={forecast}
+            tempScale={tempScale}
+            isToday={index === 0}
+            variant="card"
+          />
         ))}
       </FlexWidget>
 

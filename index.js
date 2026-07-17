@@ -1,6 +1,5 @@
 import { registerRootComponent } from 'expo';
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import * as SplashScreen from 'expo-splash-screen';
 import {
@@ -11,6 +10,7 @@ import { createAsyncStoragePersister } from "@tanstack/query-async-storage-persi
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { registerWidgetTaskHandler } from 'react-native-android-widget';
 import { widgetTaskHandler } from './src/widgets/widgetTaskHandler';
+import { ErrorFallback } from './src/components/ErrorBoundary/ErrorFallback';
 import App from './App';
 
 // Basic error boundary for root level
@@ -37,53 +37,18 @@ class RootErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       return (
-        <View style={styles.container}>
-          <Text style={styles.title}>App Error</Text>
-          <Text style={styles.message}>
-            {this.state.error?.message || 'An unexpected error occurred'}
-          </Text>
-          <TouchableOpacity style={styles.button} onPress={this.resetError}>
-            <Text style={styles.buttonText}>Restart App</Text>
-          </TouchableOpacity>
-        </View>
+        <ErrorFallback
+          title="App Error"
+          message={this.state.error?.message || 'An unexpected error occurred'}
+          buttonText="Restart App"
+          onReset={this.resetError}
+        />
       );
     }
 
     return this.props.children;
   }
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 20,
-    backgroundColor: '#1a1a1a',
-  },
-  title: {
-    fontSize: 18,
-    marginBottom: 10,
-    color: '#fff',
-    textAlign: 'center',
-  },
-  message: {
-    textAlign: 'center',
-    marginBottom: 20,
-    color: '#ccc',
-  },
-  button: {
-    backgroundColor: '#007AFF',
-    paddingVertical: 12,
-    paddingHorizontal: 32,
-    borderRadius: 8,
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-});
 
 const queryClient = new QueryClient({
   defaultOptions: {

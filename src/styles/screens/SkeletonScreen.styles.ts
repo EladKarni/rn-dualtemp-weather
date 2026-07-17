@@ -6,4 +6,7 @@ export const skeletonScreenStyles = StyleSheet.create({
     flex: 1,
     backgroundColor: palette.primaryDark,
   },
+  content: {
+    paddingHorizontal: 16,
+  },
 });
