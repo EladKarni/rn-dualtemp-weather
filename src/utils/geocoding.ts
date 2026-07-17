@@ -1,5 +1,6 @@
 import { base_url } from "./fetchWeather";
 import { logger } from "./logger";
+import { ApiError } from "./errors";
 import { fetchWithTimeout, handleFetchError, mapHttpError } from "./httpClient";
 
 export interface CityResult {
@@ -66,6 +67,28 @@ export const searchCities = async (query: string, locale: string = 'en'): Promis
     }
 
     const data = await response.json();
+
+    // The proxy is expected to return a JSON array of city matches. A non-array
+    // body (error object, HTML error page parsed as JSON, null, etc.) is a
+    // server/proxy fault — never a valid "no results" set. Surface it as a
+    // recoverable invalid-response error so the AddLocationScreen caller renders
+    // a retryable error banner instead of the misleading "No locations found"
+    // empty state (mirrors fetchWeather's 200-but-wrong-shape handling: a
+    // malformed body is never treated as truth).
+    if (!Array.isArray(data)) {
+      logger.warn(
+        'searchCities: expected an array response, received:',
+        typeof data
+      );
+      const invalidResponse = new ApiError(
+        `Invalid search response: expected array, received ${typeof data}`,
+        response.status,
+        'Received invalid data from server. Please try again.'
+      );
+      invalidResponse.recoverable = true;
+      throw invalidResponse;
+    }
+
     const results = data as CityResult[];
 
     // Cache the results, evict oldest if at capacity

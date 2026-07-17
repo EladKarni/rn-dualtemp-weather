@@ -19,7 +19,12 @@
     "gate": "tsc --noEmit && eslint . && jest --ci"
   },
   "jest": {
-    "preset": "jest-expo"
+    "preset": "jest-expo",
+    "collectCoverageFrom": [
+      "src/utils/**",
+      "src/hooks/**",
+      "src/store/**"
+    ]
   },
   "dependencies": {
     "@bacons/apple-targets": "^3.0.7",
