@@ -27,17 +27,14 @@ module.exports = [
     },
   },
   {
-    // Pre-existing @tanstack/query correctness violations live only in these two
-    // files, both owned by later phases:
-    //   - useMultiLocationWeather.ts -> Worker E (Phase 2, finding 4: query-key
-    //     redesign with coords + memoization of the useMemo deps)
-    //   - useForecastQuery.ts        -> Worker I (Phase 3, dead-code deletion)
-    // Downgraded to warn (not off) here ONLY, so the Phase-0 gate is green
-    // without pre-empting those substantive fixes. The rules stay at error
-    // everywhere else, so new violations still break the gate. Worker E's
-    // finding-4 fix clears the exhaustive-deps + no-unstable-deps warnings.
+    // Pre-existing @tanstack/query correctness violations, downgraded to warn
+    // (not off) here ONLY so the gate stays green without pre-empting the
+    // owning phase's substantive fix. The rules stay at error everywhere else.
+    //   - useForecastQuery.ts -> Worker I (Phase 3, dead-code deletion);
+    //     remove this whole block when the file is deleted.
+    // (useMultiLocationWeather.ts was covered here until Worker E's Phase-2
+    // finding-4 rework cleared its violations; entry removed.)
     files: [
-      "src/hooks/useMultiLocationWeather.ts",
       "src/hooks/useForecastQuery.ts",
     ],
     rules: {
