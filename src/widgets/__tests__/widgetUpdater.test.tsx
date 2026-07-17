@@ -3,11 +3,11 @@
  * helper and its use in `updateAllWeatherWidgets` (finding 5).
  *
  * Worker L — cycle-break coverage: `setWeatherData` now passes the fresh weather
- * payload into `updateAllWeatherWidgets(weather)` so this module never statically
- * imports the forecast store. These tests prove (a) a passed payload is used
+ * payload into `updateAllWeatherWidgets(weather)` so this module never imports
+ * the forecast store at all. These tests prove (a) a passed payload is used
  * directly with no store read, and (b) a stray non-Weather value (the temp-scale
- * string a naive `onAfterChange` would forward) is rejected by the guard and the
- * cached-store fallback runs instead.
+ * string a naive `onAfterChange` would forward) is rejected by the isWeather()
+ * guard: the function warns and returns without rendering.
  */
 import { ensureStoresHydrated, updateAllWeatherWidgets } from '../widgetUpdater';
 import { useLocationStore } from '../../store/useLocationStore';
@@ -35,8 +35,9 @@ jest.mock('../../utils/logger', () => ({
   },
 }));
 
-// The forecast store is only reached via a LAZY dynamic import in the no-payload
-// fallback path; jest still intercepts it because the resolved module is mocked.
+// widgetUpdater has NO reference to the forecast store (the cycle break removed
+// even the dynamic import). This mock is defensive scaffolding: the test imports
+// the store only to assert getWeatherData is never called through any path.
 jest.mock('../../store/useForecastStore', () => ({
   useForecastStore: { getState: jest.fn() },
 }));
