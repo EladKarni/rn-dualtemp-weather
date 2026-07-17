@@ -82,6 +82,42 @@ describe("computeScreenState — precedence & exclusivity", () => {
       },
       expected: "content",
     },
+
+    // --- Precedence edges: pin the WINNER of every ordered dominance pair so a
+    // reorder of the branches in computeScreenState is caught. Contract order is
+    // error > content > loading > skeleton, but the `error` branch is gated on
+    // `!forecast`, so content in fact wins over error whenever a forecast exists.
+    {
+      // content > loading (the flagged blind spot): a forecast already on screen
+      // must stay while a pull-to-refresh is in flight — never a loading screen.
+      name: "content beats loading: forecast present while refreshing -> content (pull-to-refresh keeps content)",
+      input: { ...base, forecast: { current: {} }, refreshing: true },
+      expected: "content",
+    },
+    {
+      // content dominates BOTH a concurrent error signal and an in-flight refresh
+      // at once — the strongest form of content precedence.
+      name: "content beats both: forecast present with a concurrent error AND an in-flight refresh -> content",
+      input: {
+        ...base,
+        forecast: { current: {} },
+        hasForecastError: true,
+        refreshing: true,
+      },
+      expected: "content",
+    },
+    {
+      // error > loading: a live error is not downgraded to a loading screen just
+      // because a refresh is in flight (no forecast to fall back to).
+      name: "error beats loading: post-timeout error while refreshing, no forecast -> error",
+      input: {
+        ...base,
+        hasForecastError: true,
+        refreshing: true,
+        forecast: undefined,
+      },
+      expected: "error",
+    },
   ];
 
   it.each(cases)("$name -> $expected", ({ input, expected }) => {
