@@ -44,6 +44,14 @@ describe('buildCoordKey (decision D9 — rounded coords in the key)', () => {
     expect(buildCoordKey(undefined, undefined)).toBe('0.00,0.00');
   });
 
+  it('treats NaN coordinates as missing (a bad reading must not poison the key)', () => {
+    // `?? 0` does not catch NaN, so guard explicitly: NaN collapses to the same
+    // "0.00,0.00" fallback as undefined instead of baking a "NaN,NaN" key.
+    expect(buildCoordKey(NaN, NaN)).toBe('0.00,0.00');
+    expect(buildCoordKey(NaN, 34.781)).toBe('0.00,34.78');
+    expect(buildCoordKey(32.081, NaN)).toBe('32.08,0.00');
+  });
+
   it('keeps the SAME key for sub-rounding-threshold GPS jitter', () => {
     // ~30 m of jitter that does not cross the 2-decimal rounding boundary.
     expect(buildCoordKey(40.001, -74.001)).toBe(buildCoordKey(40.004, -74.004));

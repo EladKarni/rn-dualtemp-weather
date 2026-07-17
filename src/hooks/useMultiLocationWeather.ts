@@ -35,7 +35,12 @@ export const COORD_KEY_DECIMALS = 2;
 
 /** Rounded `lat,lon` fragment used inside the forecast query key. Pure — unit tested. */
 export function buildCoordKey(latitude?: number, longitude?: number): string {
-  return `${(latitude ?? 0).toFixed(COORD_KEY_DECIMALS)},${(longitude ?? 0).toFixed(
+  // `?? 0` alone lets NaN through (NaN is not nullish), which would bake a
+  // "NaN,NaN" key. Treat NaN like a missing coord so a bad reading collapses to
+  // the same "0.00,0.00" fallback as undefined instead of a poisoned key.
+  const coord = (value?: number): number =>
+    value == null || Number.isNaN(value) ? 0 : value;
+  return `${coord(latitude).toFixed(COORD_KEY_DECIMALS)},${coord(longitude).toFixed(
     COORD_KEY_DECIMALS
   )}`;
 }
@@ -136,16 +141,18 @@ export function useMultiLocationWeather(
   // Active location: fetch with high priority. refetchOnWindowFocus stays at its
   // default (true) so a stale-on-resume active query refetches when the app
   // returns to the foreground (finding 4b — focusManager is wired in
-  // useAppLifecycle.ts). buildCoordKey is called inline so the raw lat/lon appear
-  // in the key (satisfies @tanstack/query/exhaustive-deps) while the key value
-  // stays rounded (decision D9).
+  // useAppLifecycle.ts). buildForecastQueryKey receives the raw lat/lon so those
+  // deps appear directly in the queryKey expression (satisfies
+  // @tanstack/query/exhaustive-deps — verified: dropping them errors) while the
+  // built key value stays rounded (decision D9). Using the builder here means its
+  // unit test guards the real production key structure.
   const activeQuery = useQuery({
-    queryKey: [
-      'forecast',
+    queryKey: buildForecastQueryKey(
       i18n.locale,
       activeLocation?.id,
-      buildCoordKey(activeLocation?.latitude, activeLocation?.longitude),
-    ],
+      activeLocation?.latitude,
+      activeLocation?.longitude
+    ),
     queryFn: async () => {
       logger.debug('Fetching forecast for active location:', {
         locale: i18n.locale,
@@ -207,12 +214,12 @@ export function useMultiLocationWeather(
     allLoaded: prefetchAllLoaded,
   } = useQueries({
     queries: otherLocations.map(location => ({
-      queryKey: [
-        'forecast',
+      queryKey: buildForecastQueryKey(
         i18n.locale,
         location.id,
-        buildCoordKey(location.latitude, location.longitude),
-      ],
+        location.latitude,
+        location.longitude
+      ),
       queryFn: async () => {
         logger.debug('Pre-fetching forecast for:', {
           locale: i18n.locale,

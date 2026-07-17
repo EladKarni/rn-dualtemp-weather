@@ -125,4 +125,45 @@ describe('useMultiLocationWeather — location-switch race (finding 9)', () => {
     unmount();
     client.clear();
   });
+
+  // Opposite ordering to the case above — this is the one the cancelled flag is
+  // LOAD-BEARING for. B resolves FIRST (its cache paints), then A's stale read
+  // lands LATE. Without the cancelled flag, A's late `.then` would call
+  // setCachedActive({ locationId: 'A', ... }); since the active location is now B,
+  // selectCachedWeather nulls it (A !== B) and B's already-correct weather blanks
+  // out. The flag discards A's late write, so B's weather must SURVIVE.
+  it("keeps the new location's weather when the previous location's read lands late", async () => {
+    const saved = [makeLocation('A'), makeLocation('B')];
+
+    const { result, rerender, unmount } = renderHook(
+      ({ activeId }: { activeId: string }) =>
+        useMultiLocationWeather(saved, activeId, true),
+      { initialProps: { activeId: 'A' }, wrapper }
+    );
+
+    // A's cache read is in flight; switch to B before it resolves.
+    expect(deferredResolvers.A).toBeDefined();
+    act(() => {
+      rerender({ activeId: 'B' });
+    });
+    expect(deferredResolvers.B).toBeDefined();
+
+    // B's own read lands FIRST -> B's cache paints (22).
+    await act(async () => {
+      deferredResolvers.B(makeWeather(22));
+    });
+    expect(result.current.activeWeather).toEqual(makeWeather(22));
+
+    // A's stale read lands LATE, after B already painted. The cancelled flag must
+    // discard it: without the flag it would clobber cachedActive to {A, 11}, the
+    // active-location (B) selector would null it, and the display would blank.
+    await act(async () => {
+      deferredResolvers.A(makeWeather(11));
+    });
+    // Must remain B's weather — not blanked, not A's (11).
+    expect(result.current.activeWeather).toEqual(makeWeather(22));
+
+    unmount();
+    client.clear();
+  });
 });
