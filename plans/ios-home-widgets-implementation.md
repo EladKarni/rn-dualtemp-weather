@@ -6,6 +6,20 @@ This plan outlines implementation of iOS home widgets to mirror to existing Andr
 
 **Update**: Based on [Exo's blog post on iOS widgets](https://expo.dev/blog/how-to-implement-ios-widgets-in-expo-apps), this plan has been validated and refined with real-world implementation insights from the Glow app case study.
 
+### Implementation Status (per the 2026-07 feature audit)
+
+| Phase | Status |
+| --- | --- |
+| Phase 1 — Project Setup & Dependencies | ✅ Done |
+| Phase 2 — Widget Architecture & Configuration | ✅ Done |
+| Phase 3 — Data Management & Integration | ✅ Done |
+| Phase 4 — Widget UI Implementation | 🔶 Partial |
+| Phase 5 — Native Integration & Build Configuration | ✅ Done |
+| Phase 6 — Testing & Quality Assurance | ⚠️ Untracked (no widget-specific test coverage recorded) |
+| Phase 7 — Advanced Features (Phase 2) | ⬜ Not started |
+
+Legend: ✅ done · 🔶 partial · ⚠️ untracked · ⬜ not started. Per-phase status is repeated under each phase heading below.
+
 ## Technology Stack
 
 ### Primary iOS Widget Solution
@@ -21,6 +35,8 @@ This plan outlines implementation of iOS home widgets to mirror to existing Andr
 - **iOS 15.0+** - Minimum deployment target
 
 ## Phase 1: Project Setup & Dependencies
+
+> **Status: ✅ Done.**
 
 ### 1.1 Install Required Packages
 ```bash
@@ -57,6 +73,8 @@ This will create iOS widget structure in `/targets/widget/` (✅ **Confirmed str
 
 ## Phase 2: Widget Architecture & Configuration
 
+> **Status: ✅ Done.**
+
 ### 2.1 Widget Target Configuration
 Create `/targets/widget/expo-target.config.js`:
 ```javascript
@@ -89,6 +107,8 @@ Implement three widget sizes mirroring Android:
 - **WeatherExtended** (systemLarge - 4x4)
 
 ## Phase 3: Data Management & Integration
+
+> **Status: ✅ Done.**
 
 ### 3.1 Shared Data Architecture
 **Leverage existing SQLite database** from Android widgets:
@@ -131,6 +151,8 @@ struct Provider: TimelineProvider {
 
 ## Phase 4: Widget UI Implementation
 
+> **Status: 🔶 Partial.**
+
 ### 4.1 SwiftUI Widget Views
 Create widget views that mirror Android components:
 
@@ -168,6 +190,8 @@ Implement adaptive design:
 
 ## Phase 5: Native Integration & Build Configuration
 
+> **Status: ✅ Done.**
+
 ### 5.1 Prebuild Setup (Enhanced workflow from blog insights)
 ```bash
 npx expo prebuild -p ios --clean
@@ -201,6 +225,8 @@ Handle deep links in React Native using Expo Router for seamless widget-to-app i
 
 ## Phase 6: Testing & Quality Assurance
 
+> **Status: ⚠️ Untracked.**
+
 ### 6.1 Widget Testing
 - Test all three widget sizes
 - Verify data synchronization with main app
@@ -221,6 +247,8 @@ Handle deep links in React Native using Expo Router for seamless widget-to-app i
 - Validate battery usage optimization
 
 ## Phase 7: Advanced Features (Phase 2)
+
+> **Status: ⬜ Not started.**
 
 ### 7.1 Interactive Widgets (iOS 16+)
 - Tap-to-refresh functionality
