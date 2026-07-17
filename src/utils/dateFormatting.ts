@@ -1,7 +1,14 @@
 import moment from 'moment';
 import { logger } from './logger';
-import { uses24HourClock } from 'react-native-localize';
+import { getCalendars } from 'expo-localization';
 import { useSettingsStore } from '../store/useSettingsStore';
+
+/**
+ * Whether the device is configured for a 24-hour clock. expo-localization's
+ * uses24hourClock is nullable; default to 12-hour (false) when the platform
+ * does not report it.
+ */
+const uses24HourClock = (): boolean => getCalendars()[0]?.uses24hourClock ?? false;
 
 /**
  * Safe date formatting utility that ensures locale synchronization

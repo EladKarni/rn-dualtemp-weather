@@ -1,7 +1,13 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { uses24HourClock } from "react-native-localize";
+import { getCalendars } from "expo-localization";
+
+/**
+ * Whether the device is configured for a 24-hour clock. expo-localization's
+ * uses24hourClock is nullable; default to 12-hour (false) when absent.
+ */
+const uses24HourClock = (): boolean => getCalendars()[0]?.uses24hourClock ?? false;
 
 interface SettingsState {
   tempScale: "C" | "F";
@@ -28,7 +34,7 @@ export const useSettingsStore = create<SettingsState>()(
       clockFormat: "auto",
       showSunriseSunset: true,
       isHydrated: false,
-      lastUpdated: null,
+      lastUpdated: null as string | null,
       setLastUpdated: (time: string) => set({ lastUpdated: time }),
       setTempScale: (scale: "C" | "F") => set({ tempScale: scale }),
       setClockFormat: (format: "12hour" | "24hour" | "auto") =>

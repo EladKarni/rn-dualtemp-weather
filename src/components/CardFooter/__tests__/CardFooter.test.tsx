@@ -17,10 +17,11 @@ jest.mock("@react-native-async-storage/async-storage", () =>
   require("@react-native-async-storage/async-storage/jest/async-storage-mock")
 );
 
-// react-native-localize's native module ('RNLocalize') isn't in the jest binary;
-// useSettingsStore imports uses24HourClock from it at module load.
-jest.mock("react-native-localize", () => ({
-  uses24HourClock: () => false,
+// expo-localization's native module isn't in the jest binary; useSettingsStore
+// reads getCalendars()[0].uses24hourClock at module load.
+jest.mock("expo-localization", () => ({
+  getCalendars: () => [{ uses24hourClock: false }],
+  getLocales: () => [{ languageCode: "en", languageTag: "en-US" }],
 }));
 
 // Stores transitively import logger -> @sentry/react-native, whose session
