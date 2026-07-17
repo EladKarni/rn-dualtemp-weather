@@ -108,4 +108,6 @@ const styles = StyleSheet.create({
   },
 });
 
+LocationPill.displayName = "LocationPill";
+
 export default LocationPill;

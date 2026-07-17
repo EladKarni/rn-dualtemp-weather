@@ -13,18 +13,6 @@ const CardFooter = () => {
   const isHydrated = useSettingsStore((state) => state.isHydrated);
   const lastTimeUpdated = useSettingsStore((state) => state.lastUpdated);
 
-  // Don't render until store is hydrated
-  if (!isHydrated) {
-    return (
-      <View
-        style={[
-          CardFooterStyles.cardFooter,
-          isRTL && CardFooterStyles.cardFooterRTL,
-        ]}
-      />
-    );
-  }
-
   const [updatedString, setUpdatedString] = useState<string>(
     lastTimeUpdated && typeof lastTimeUpdated.fromNow === "function"
       ? lastTimeUpdated.fromNow()
@@ -42,6 +30,18 @@ const CardFooter = () => {
 
     return () => clearInterval(updateStringFunc);
   }, [lastTimeUpdated]);
+
+  // Don't render until store is hydrated
+  if (!isHydrated) {
+    return (
+      <View
+        style={[
+          CardFooterStyles.cardFooter,
+          isRTL && CardFooterStyles.cardFooterRTL,
+        ]}
+      />
+    );
+  }
 
   return (
     <View

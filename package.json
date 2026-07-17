@@ -13,7 +13,13 @@
     "prebuild:prod": "cross-env EAS_BUILD_PROFILE=production expo prebuild --clean",
     "build:dev": "eas build --profile development",
     "build:preview": "eas build --profile preview",
-    "build:prod": "eas build --profile production"
+    "build:prod": "eas build --profile production",
+    "test": "jest --ci",
+    "lint": "eslint .",
+    "gate": "tsc --noEmit && eslint . && jest --ci"
+  },
+  "jest": {
+    "preset": "jest-expo"
   },
   "dependencies": {
     "@bacons/apple-targets": "^3.0.7",
@@ -53,8 +59,14 @@
   "devDependencies": {
     "@babel/core": "^7.26.0",
     "@tanstack/eslint-plugin-query": "^5.81.2",
+    "@testing-library/react-native": "^13",
+    "@types/jest": "29.5.14",
     "@types/react": "~19.1.10",
     "cross-env": "^10.1.0",
+    "eslint": "^9",
+    "eslint-config-expo": "~10.0.0",
+    "jest": "~29.7.0",
+    "jest-expo": "~54.0.17",
     "sharp": "^0.34.5",
     "typescript": "~5.9.2"
   },
