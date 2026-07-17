@@ -4,11 +4,17 @@ import moment from "moment";
 import { AppError } from "../../utils/errors";
 import { i18n } from "../../localization/i18n";
 import { palette } from "../../styles/Palette";
+import { useSettingsStore } from "../../store/useSettingsStore";
 
 interface WeatherErrorBannerProps {
   error: AppError;
   onRetry?: () => void;
   onDismiss?: () => void;
+  /**
+   * @deprecated The "last updated" time is now sourced from the settings store
+   * (an ISO string) and formatted at render. This prop is retained only so the
+   * WeatherScreen pass-through keeps compiling; it is no longer read here.
+   */
   lastUpdated?: Date;
 }
 
@@ -16,17 +22,18 @@ export const WeatherErrorBanner: React.FC<WeatherErrorBannerProps> = ({
   error,
   onRetry,
   onDismiss,
-  lastUpdated,
 }) => {
-  const getTimeAgoText = (date: Date): string => {
-    return moment(date).fromNow();
-  };
+  // Sourced from the persisted settings store as an ISO-8601 string. Tolerate
+  // missing/legacy (non-string) values by showing no relative time — never throw.
+  const lastUpdated = useSettingsStore((state) => state.lastUpdated);
 
   const getErrorMessage = (): string => {
-    let message = error.userMessage;
+    const message = error.userMessageKey
+      ? i18n.t(error.userMessageKey)
+      : error.userMessage;
 
-    if (lastUpdated) {
-      message += `. ${getTimeAgoText(lastUpdated)}`;
+    if (typeof lastUpdated === "string" && moment(lastUpdated).isValid()) {
+      return `${message}. ${moment(lastUpdated).fromNow()}`;
     }
 
     return message;

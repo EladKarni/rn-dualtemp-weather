@@ -37,6 +37,7 @@ export const fr = {
     LocationAdded: "Emplacement ajouté",
     LocationRemoved: "Emplacement supprimé",
     MaxLocationsReached: "Maximum 5 emplacements enregistrés",
+    DuplicateLocation: "Cet emplacement a déjà été ajouté",
     StartTyping: "Commencez à taper pour rechercher...",
     Searching: "Recherche...",
     SearchError: "Échec de la recherche. Réessayez.",

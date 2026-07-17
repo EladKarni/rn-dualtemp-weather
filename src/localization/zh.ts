@@ -37,6 +37,7 @@ export const zh = {
   LocationAdded: "地点已添加",
   LocationRemoved: "地点已删除",
   MaxLocationsReached: "最多保存5个地点",
+  DuplicateLocation: "该地点已添加",
   StartTyping: "开始输入以搜索...",
   Searching: "搜索中...",
   SearchError: "搜索失败。请重试。",

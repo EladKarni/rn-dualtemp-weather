@@ -37,6 +37,7 @@ export const he = {
     LocationAdded: "המיקום נוסף",
     LocationRemoved: "המיקום הוסר",
     MaxLocationsReached: "מקסימום 5 מיקומים שמורים",
+    DuplicateLocation: "מיקום זה כבר נוסף",
     StartTyping: "התחל להקליד כדי לחפש...",
     Searching: "מחפש...",
     SearchError: "החיפוש נכשל. נסה שוב.",

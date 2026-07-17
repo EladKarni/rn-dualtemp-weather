@@ -6,7 +6,12 @@ export class AppError extends Error {
     message: string,
     public userMessage: string,
     public code: string,
-    public recoverable: boolean = true
+    public recoverable: boolean = true,
+    // Optional i18n key resolved at render time (never at construction — errors
+    // are built outside React). When set, the UI shows i18n.t(userMessageKey)
+    // and falls back to userMessage when absent. Additive in Phase 2 (Worker F);
+    // a Phase-3 worker extends population of this field to more classes.
+    public userMessageKey?: string
   ) {
     super(message);
     this.name = this.constructor.name;
@@ -196,6 +201,20 @@ export class DuplicateLocationError extends UserError {
       'This location has already been added.',
       'DUPLICATE_LOCATION'
     );
+    // Localized at render via i18n.t('DuplicateLocation'); userMessage is the fallback.
+    this.userMessageKey = 'DuplicateLocation';
+  }
+}
+
+export class MaxLocationsError extends UserError {
+  constructor() {
+    super(
+      'Maximum locations reached',
+      'You have reached the maximum number of saved locations.',
+      'MAX_LOCATIONS'
+    );
+    // Localized at render via i18n.t('MaxLocationsReached'); userMessage is the fallback.
+    this.userMessageKey = 'MaxLocationsReached';
   }
 }
 

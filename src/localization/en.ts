@@ -37,6 +37,7 @@ export const en = {
     LocationAdded: "Location added",
     LocationRemoved: "Location removed",
     MaxLocationsReached: "Maximum 5 locations saved",
+    DuplicateLocation: "This location has already been added",
     StartTyping: "Start typing to search...",
     Searching: "Searching...",
     SearchError: "Failed to search. Try again.",

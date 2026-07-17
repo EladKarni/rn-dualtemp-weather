@@ -37,6 +37,7 @@ export const ar = {
     LocationAdded: "تمت إضافة الموقع",
     LocationRemoved: "تمت إزالة الموقع",
     MaxLocationsReached: "الحد الأقصى 5 مواقع محفوظة",
+    DuplicateLocation: "تمت إضافة هذا الموقع بالفعل",
     StartTyping: "ابدأ الكتابة للبحث...",
     Searching: "جاري البحث...",
     SearchError: "فشل البحث. حاول مرة أخرى.",

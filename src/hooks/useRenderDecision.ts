@@ -16,9 +16,53 @@ interface RenderDecisionParams {
   fontsLoaded: boolean;
 }
 
+/**
+ * The single, mutually-exclusive screen the app renders after the splash gate.
+ * Exactly one of these is active at any time — this replaces the old set of
+ * independent boolean JSX guards that could mount two screens at once (e.g. a
+ * double SkeletonScreen, or a SkeletonScreen alongside a LoadingScreen).
+ */
+export type ScreenState = 'loading' | 'skeleton' | 'error' | 'content';
+
+interface ScreenStateInputs {
+  splashTimeoutExpired: boolean;
+  forecast: unknown;
+  refreshing: boolean;
+  hasForecastError: boolean;
+}
+
+/**
+ * Pure resolver for the active screen state, with an explicit precedence:
+ * error > content > loading > skeleton. Because the branches are ordered and
+ * `return` early, exactly one state is ever produced for any input.
+ *
+ * - error:   post-splash-timeout, query errored, and no forecast to show.
+ * - content: forecast data is present (an error banner may still overlay it).
+ * - loading: an initial fetch is in flight with no forecast and no error yet.
+ * - skeleton: the catch-all fallback (post-timeout resources still resolving).
+ */
+export function computeScreenState({
+  splashTimeoutExpired,
+  forecast,
+  refreshing,
+  hasForecastError,
+}: ScreenStateInputs): ScreenState {
+  if (splashTimeoutExpired && hasForecastError && !forecast) {
+    return 'error';
+  }
+  if (forecast) {
+    return 'content';
+  }
+  if (refreshing && !hasForecastError) {
+    return 'loading';
+  }
+  return 'skeleton';
+}
+
 interface RenderDecisionResult {
   essentialResourcesLoading: boolean;
   shouldBlockOnSplash: boolean;
+  screenState: ScreenState;
 }
 
 /**
@@ -44,6 +88,14 @@ export const useRenderDecision = ({
 
   // Block on splash screen if timeout hasn't expired AND resources not ready
   const shouldBlockOnSplash = !splashTimeoutExpired && essentialResourcesLoading;
+
+  // The single screen to render post-splash (mutually exclusive by construction).
+  const screenState = computeScreenState({
+    splashTimeoutExpired,
+    forecast,
+    refreshing,
+    hasForecastError,
+  });
 
   // Log resources during splash blocking
   React.useEffect(() => {
@@ -92,5 +144,6 @@ export const useRenderDecision = ({
   return {
     essentialResourcesLoading,
     shouldBlockOnSplash,
+    screenState,
   };
 };

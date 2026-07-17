@@ -134,17 +134,9 @@ function App() {
 
   const { splashTimeoutExpired, onLayoutRootView } = useSplashScreen(isFetched);
 
-  const {
-    showSkeleton,
-    showErrorScreen,
-    dismissedError,
-    setDismissedError,
-    lastUpdated,
-  } = useWeatherLoadingState(
-    splashTimeoutExpired,
-    refreshing,
-    forecast,
+  const { isErrorDismissed, dismissError } = useWeatherLoadingState(
     hasForecastError,
+    forecastError,
   );
 
   // Font loading
@@ -203,8 +195,9 @@ function App() {
     locationLoadingStates,
   });
 
-  // Render decision logic - determines when to block on splash and logs state
-  const { essentialResourcesLoading, shouldBlockOnSplash } = useRenderDecision({
+  // Render decision logic - determines when to block on splash and which single
+  // screen to render (mutually-exclusive screenState replaces the old guards).
+  const { shouldBlockOnSplash, screenState } = useRenderDecision({
     splashTimeoutExpired,
     activeLocation,
     date,
@@ -224,13 +217,11 @@ function App() {
 
   // ============================================================================
   // RENDER DECISION TREE - WRAPPED WITH ERROR BOUNDARY
-  // After 3-second splash timeout, we always render one of the screens below
-  // All screens are wrapped with ErrorBoundary to catch render errors
-  // ============================================================================
-
-  // ============================================================================
-  // RENDER DECISION TREE
-  // All components are wrapped with ErrorBoundary to catch render errors
+  // After the 3-second splash timeout, we render exactly ONE screen, chosen by
+  // the mutually-exclusive `screenState` (see useRenderDecision.computeScreenState).
+  // This replaces the previous set of independent boolean guards, which could
+  // mount two screens simultaneously (double SkeletonScreen / Skeleton+Loading).
+  // All screens are wrapped with ErrorBoundary to catch render errors.
   // ============================================================================
 
   return (
@@ -249,64 +240,56 @@ function App() {
             />
           )}
         >
-          {/* CRITICAL SAFETY CHECK: Timeout expired but essential resources still loading */}
-          {splashTimeoutExpired && essentialResourcesLoading && (
-            <SkeletonScreen {...screenProps} />
-          )}
-
-          {/* LOADING STATE: Initial fetch in progress */}
-          {refreshing && !forecast && !hasForecastError && (
-            <LoadingScreen {...screenProps} />
-          )}
-
-          {/* LOADING STATE: Post-timeout loading */}
-          {showSkeleton && !showErrorScreen && (
-            <SkeletonScreen {...screenProps} />
-          )}
-
-          {/* ERROR STATE: Network/API error with no cached data */}
-          {showErrorScreen &&
-            hasForecastError &&
-            !forecast &&
-            (() => {
-              const appError = forecastError ? toAppError(forecastError) : null;
-              return (
-                <ErrorScreen
-                  {...screenProps}
-                  errorMessage={appError?.userMessage}
-                  onRetry={() => refetch()}
-                />
-              );
-            })()}
-
-          {/* FALLBACK STATE: Safety net for missing data */}
-          {!forecast && !showErrorScreen && !refreshing && (
-            <SkeletonScreen {...screenProps} />
-          )}
-
-          {/* SUCCESS STATE: All data loaded successfully (with optional error banner for cached data) */}
-          {forecast && (
-            <MainWeatherWithModals
-              forecast={forecast}
-              date={date}
-              tempScale={tempScale}
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              onLayoutRootView={onLayoutRootView}
-              activeModal={activeModal}
-              closeModal={() => useModalStore.getState().closeModal()}
-              openAddLocation={openAddLocation}
-              appError={
-                hasForecastError && !dismissedError
+          {(() => {
+            switch (screenState) {
+              // ERROR STATE: Network/API error with no cached data
+              case "error": {
+                const appError = forecastError
                   ? toAppError(forecastError)
-                  : null
+                  : null;
+                return (
+                  <ErrorScreen
+                    {...screenProps}
+                    errorMessage={appError?.userMessage}
+                    onRetry={() => refetch()}
+                  />
+                );
               }
-              onRetry={() => refetch()}
-              onDismissError={() => setDismissedError("dismissed")}
-              lastUpdated={lastUpdated}
-              {...screenProps}
-            />
-          )}
+
+              // SUCCESS STATE: Data loaded (with optional error banner for cached data)
+              case "content":
+                return (
+                  <MainWeatherWithModals
+                    forecast={forecast}
+                    date={date}
+                    tempScale={tempScale}
+                    refreshing={refreshing}
+                    onRefresh={onRefresh}
+                    onLayoutRootView={onLayoutRootView}
+                    activeModal={activeModal}
+                    closeModal={() => useModalStore.getState().closeModal()}
+                    openAddLocation={openAddLocation}
+                    appError={
+                      hasForecastError && !isErrorDismissed
+                        ? toAppError(forecastError)
+                        : null
+                    }
+                    onRetry={() => refetch()}
+                    onDismissError={dismissError}
+                    {...screenProps}
+                  />
+                );
+
+              // LOADING STATE: Initial fetch in progress
+              case "loading":
+                return <LoadingScreen {...screenProps} />;
+
+              // SKELETON STATE: Post-timeout fallback while resources resolve
+              case "skeleton":
+              default:
+                return <SkeletonScreen {...screenProps} />;
+            }
+          })()}
         </ErrorBoundary>
       )}
     </QueryErrorResetBoundary>

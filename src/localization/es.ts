@@ -37,6 +37,7 @@ export const es = {
     LocationAdded: "Ubicación agregada",
     LocationRemoved: "Ubicación eliminada",
     MaxLocationsReached: "Máximo 5 ubicaciones guardadas",
+    DuplicateLocation: "Esta ubicación ya ha sido agregada",
     StartTyping: "Comienza a escribir para buscar...",
     Searching: "Buscando...",
     SearchError: "Error al buscar. Inténtalo de nuevo.",

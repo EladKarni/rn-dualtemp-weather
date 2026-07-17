@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, Text } from "react-native";
+import moment from "moment";
 import { useLanguageStore } from "../../store/useLanguageStore";
 import { CardFooterStyles } from "./CardFooter.Styles";
 import { typography } from "../../styles/Typography";
@@ -8,23 +9,34 @@ import "intl";
 import "intl/locale-data/jsonp/he";
 import { useSettingsStore } from "../../store/useSettingsStore";
 
+// `lastUpdated` is persisted as an ISO-8601 string (see useSettingsStore). Any
+// missing or legacy (non-string) value yields an empty relative string rather
+// than throwing.
+const formatUpdated = (value: unknown): string =>
+  typeof value === "string" && moment(value).isValid()
+    ? moment(value).fromNow()
+    : "";
+
 const CardFooter = () => {
   const isRTL = useLanguageStore((state) => state.isRTL);
   const isHydrated = useSettingsStore((state) => state.isHydrated);
   const lastTimeUpdated = useSettingsStore((state) => state.lastUpdated);
 
-  const [updatedString, setUpdatedString] = useState<string>(
-    lastTimeUpdated && typeof lastTimeUpdated.fromNow === "function"
-      ? lastTimeUpdated.fromNow()
-      : ""
+  const [updatedString, setUpdatedString] = useState<string>(() =>
+    formatUpdated(lastTimeUpdated)
   );
 
   useEffect(() => {
-    if (!lastTimeUpdated || typeof lastTimeUpdated.fromNow !== "function")
+    // Recompute immediately when the timestamp changes (don't wait for the first
+    // interval tick — this also corrects the brief post-hydration "" transient),
+    // then keep the relative string fresh every second.
+    setUpdatedString(formatUpdated(lastTimeUpdated));
+
+    if (typeof lastTimeUpdated !== "string" || !moment(lastTimeUpdated).isValid())
       return;
 
     const updateStringFunc = setInterval(
-      () => setUpdatedString(lastTimeUpdated.fromNow()),
+      () => setUpdatedString(formatUpdated(lastTimeUpdated)),
       1000
     );
 

@@ -40,9 +40,6 @@ const AddLocationScreen = ({ visible, onClose }: AddLocationScreenProps) => {
   const selectedLanguage = useLanguageStore((state) => state.selectedLanguage);
 
   const addLocation = useLocationStore((state) => state.addLocation);
-  const canAddMoreLocations = useLocationStore((state) =>
-    state.canAddMoreLocations()
-  );
 
   const { fadeAnim, slideAnim } = useModalAnimation(visible);
 
@@ -92,24 +89,27 @@ const AddLocationScreen = ({ visible, onClose }: AddLocationScreenProps) => {
   }, [searchQuery, selectedLanguage]);
 
   const handleSelectCity = (city: CityResult) => {
-    if (!canAddMoreLocations) {
-      setError(toAppError(new Error(i18n.t("MaxLocationsReached"))));
-      return;
-    }
-
     const locationName = formatLocationName(
       city.name,
       city.state,
       city.country
     );
 
-    addLocation({
-      name: locationName,
-      latitude: city.lat,
-      longitude: city.lon,
-    });
-
-    onClose();
+    try {
+      addLocation({
+        name: locationName,
+        latitude: city.lat,
+        longitude: city.lon,
+      });
+      onClose();
+    } catch (err) {
+      // addLocation throws typed UserErrors (DuplicateLocationError /
+      // MaxLocationsError) carrying a userMessageKey. Surface localized feedback
+      // and keep the modal open so the user can pick a different city.
+      const appError = err instanceof AppError ? err : toAppError(err);
+      logger.warn("Add location failed:", appError);
+      setError(appError);
+    }
   };
 
   const handleRetry = () => {
@@ -183,7 +183,11 @@ const AddLocationScreen = ({ visible, onClose }: AddLocationScreenProps) => {
           <View style={styles.errorBanner}>
             <View style={styles.errorContent}>
               <Text style={styles.errorIcon}>⚠️</Text>
-              <Text style={styles.errorMessage}>{error.userMessage}</Text>
+              <Text style={styles.errorMessage}>
+                {error.userMessageKey
+                  ? i18n.t(error.userMessageKey)
+                  : error.userMessage}
+              </Text>
             </View>
             <View style={styles.errorActions}>
               {error.recoverable && (
