@@ -14,7 +14,8 @@ import * as Sentry from "@sentry/react-native";
 import Constants from "expo-constants";
 
 import { logger } from "./src/utils/logger";
-import { toAppError } from "./src/utils/errors";
+import { toAppError, NoConnectionError } from "./src/utils/errors";
+import { scrubBreadcrumb, scrubEventValues } from "./src/utils/sentryScrubbing";
 
 // Initialize Sentry - only if DSN is provided
 const sentryDsn = Constants.expoConfig?.extra?.sentryDsn;
@@ -24,23 +25,20 @@ if (sentryDsn) {
     debug: __DEV__, // Enable debug mode in development
     enabled: !__DEV__, // Only send events in production builds
     sendDefaultPii: false, // don't let Sentry attach IP / default identifiers
-    // Defense-in-depth scrubber: strip any precise-coordinate fields or URL
-    // query strings a call site may have attached, before the event leaves the
-    // device — so location can't reach Sentry even if a call site forgets. (S2)
+    // Defense-in-depth scrubbing (S2): strip GPS query strings from the default
+    // fetch/XHR breadcrumbs Sentry attaches automatically, and — before any
+    // event leaves the device — delete precise-coordinate extras then value-scrub
+    // every URL/coordinate at any depth. So location can't reach Sentry even if
+    // a call site forgets to sanitize.
+    beforeBreadcrumb: scrubBreadcrumb,
     beforeSend(event) {
       const extra = event.extra;
       if (extra) {
         for (const key of ["latitude", "longitude", "lat", "long", "lon", "lng"]) {
           delete extra[key];
         }
-        for (const key of Object.keys(extra)) {
-          const val = extra[key];
-          if (typeof val === "string" && /url/i.test(key)) {
-            extra[key] = val.split("?")[0];
-          }
-        }
       }
-      return event;
+      return scrubEventValues(event);
     },
   });
   if (__DEV__) {
@@ -182,9 +180,14 @@ function App() {
     localeData,
   ]);
 
-  if (hasForecastError) {
-    logger.error("Forecast query error:", forecastError);
-  }
+  // Report forecast errors from an effect (never the render body — that would
+  // fire on every re-render). Offline (NoConnectionError) is an expected,
+  // user-visible state, not an anomaly worth a Sentry event.
+  React.useEffect(() => {
+    if (forecastError && !(forecastError instanceof NoConnectionError)) {
+      logger.error("Forecast query error:", forecastError);
+    }
+  }, [forecastError]);
 
   const onRefresh = React.useCallback(() => {
     refetch();
