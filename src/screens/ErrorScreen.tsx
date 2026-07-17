@@ -5,6 +5,7 @@ import AppHeader from "../components/AppHeader/AppHeader";
 import type { SavedLocation } from "../store/useLocationStore";
 import type { LocationWeatherState } from "../hooks/useMultiLocationWeather";
 import { errorScreenStyles } from "../styles/screens/ErrorScreen.styles";
+import { i18n } from "../localization/i18n";
 
 interface ErrorScreenProps {
   onSettingsPress: () => void;
@@ -18,7 +19,8 @@ interface ErrorScreenProps {
 
 export default function ErrorScreen({
   onSettingsPress,
-  errorMessage = "Unable to fetch weather data. Please check your connection and try again.",
+  // Default is localized at render (call time); a caller-supplied message wins.
+  errorMessage = i18n.t("ErrorDefaultMessage"),
   onRetry,
   savedLocations,
   activeLocationId,
@@ -37,17 +39,17 @@ export default function ErrorScreen({
         />
         <View style={errorScreenStyles.errorContent}>
           <Text style={errorScreenStyles.errorTitle}>
-            Unable to Load Weather
+            {i18n.t("ErrorTitle")}
           </Text>
           <Text style={errorScreenStyles.errorMessage}>{errorMessage}</Text>
           <TouchableOpacity
             style={errorScreenStyles.retryButton}
             onPress={onRetry}
           >
-            <Text style={errorScreenStyles.retryButtonText}>Retry</Text>
+            <Text style={errorScreenStyles.retryButtonText}>{i18n.t("Retry")}</Text>
           </TouchableOpacity>
           <Text style={errorScreenStyles.supportText}>
-            If this happens often, please contact support at{"\n"}
+            {i18n.t("ErrorSupport")}{"\n"}
             <Text style={errorScreenStyles.supportEmail}>
               {process.env.EXPO_PUBLIC_SUPPORT_EMAIL ||
                 "support@eladkarni.solutions"}

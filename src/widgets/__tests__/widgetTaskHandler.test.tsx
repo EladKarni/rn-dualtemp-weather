@@ -39,7 +39,27 @@ jest.mock('../WeatherCompact', () => ({ WeatherCompact: 'WeatherCompact' }));
 jest.mock('../WeatherStandard', () => ({ WeatherStandard: 'WeatherStandard' }));
 jest.mock('../WeatherExtended', () => ({ WeatherExtended: 'WeatherExtended' }));
 
-jest.mock('../../localization/i18n', () => ({ i18n: { locale: 'en' } }));
+// Worker K localized the widget fallback strings, so the handler now calls
+// i18n.t(...). Back the mock with the real English table + %{...} interpolation
+// so the fallback-text assertions below keep asserting the actual rendered copy.
+jest.mock('../../localization/i18n', () => {
+  const { en } = jest.requireActual('../../localization/en') as {
+    en: Record<string, string>;
+  };
+  return {
+    i18n: {
+      locale: 'en',
+      t: (key: string, opts?: Record<string, unknown>): string => {
+        const template = en[key] ?? key;
+        return opts
+          ? template.replace(/%\{(\w+)\}/g, (_m, k: string) =>
+              String(opts[k] ?? '')
+            )
+          : template;
+      },
+    },
+  };
+});
 
 jest.mock('../../utils/logger', () => ({
   logger: {

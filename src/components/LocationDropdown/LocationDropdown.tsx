@@ -11,7 +11,11 @@ import {
 } from "react-native";
 import { i18n } from "../../localization/i18n";
 import { styles } from "./LocationDropdown.Styles";
-import { useLocationStore, SavedLocation } from "../../store/useLocationStore";
+import {
+  useLocationStore,
+  SavedLocation,
+  MAX_SAVED_LOCATIONS,
+} from "../../store/useLocationStore";
 
 type LocationDropdownProps = {
   visible: boolean;
@@ -176,7 +180,8 @@ const LocationDropdown = ({
                   ]}
                 >
                   + {i18n.t("AddLocation")}
-                  {!canAddMoreLocations && ` (${nonGPSLocations.length}/5)`}
+                  {!canAddMoreLocations &&
+                    ` (${nonGPSLocations.length}/${MAX_SAVED_LOCATIONS})`}
                 </Text>
               </TouchableOpacity>
             </Animated.View>

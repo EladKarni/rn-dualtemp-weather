@@ -5,6 +5,7 @@ import { AppError } from "../../utils/errors";
 import { i18n } from "../../localization/i18n";
 import { palette } from "../../styles/Palette";
 import { useSettingsStore } from "../../store/useSettingsStore";
+import { useLanguageStore } from "../../store/useLanguageStore";
 
 interface WeatherErrorBannerProps {
   error: AppError;
@@ -26,6 +27,10 @@ export const WeatherErrorBanner: React.FC<WeatherErrorBannerProps> = ({
   // Sourced from the persisted settings store as an ISO-8601 string. Tolerate
   // missing/legacy (non-string) values by showing no relative time — never throw.
   const lastUpdated = useSettingsStore((state) => state.lastUpdated);
+  // Manual RTL mirroring (same pattern as the other RTL-aware components).
+  const isRTL = useLanguageStore((state) => state.isRTL);
+  const supportEmail =
+    process.env.EXPO_PUBLIC_SUPPORT_EMAIL || "support@eladkarni.solutions";
 
   const getErrorMessage = (): string => {
     const message = error.userMessageKey
@@ -41,21 +46,23 @@ export const WeatherErrorBanner: React.FC<WeatherErrorBannerProps> = ({
 
   return (
     <View style={styles.container}>
-      <View style={styles.content}>
-        <Text style={styles.icon}>⚠️</Text>
+      <View style={[styles.content, isRTL && styles.contentRTL]}>
+        <Text style={[styles.icon, isRTL && styles.iconRTL]}>⚠️</Text>
         <View style={styles.messageContainer}>
-          <Text style={styles.message}>{getErrorMessage()}</Text>
-          <Text style={styles.supportText}>
-            If this happens often, contact{" "}
-            {process.env.EXPO_PUBLIC_SUPPORT_EMAIL ||
-              "support@eladkarni.solutions"}{" "}
-            for help.
+          <Text style={[styles.message, isRTL && styles.textRTL]}>
+            {getErrorMessage()}
+          </Text>
+          <Text style={[styles.supportText, isRTL && styles.textRTL]}>
+            {i18n.t("BannerSupport", { email: supportEmail })}
           </Text>
         </View>
       </View>
-      <View style={styles.actions}>
+      <View style={[styles.actions, isRTL && styles.actionsRTL]}>
         {error.recoverable && onRetry && (
-          <TouchableOpacity onPress={onRetry} style={styles.retryButton}>
+          <TouchableOpacity
+            onPress={onRetry}
+            style={[styles.retryButton, isRTL && styles.retryButtonRTL]}
+          >
             <Text style={styles.retryText}>{i18n.t("Retry")}</Text>
           </TouchableOpacity>
         )}
@@ -83,10 +90,21 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "flex-start",
   },
+  contentRTL: {
+    flexDirection: "row-reverse",
+  },
   icon: {
     fontSize: 20,
     marginRight: 10,
     marginTop: 2,
+  },
+  iconRTL: {
+    marginRight: 0,
+    marginLeft: 10,
+  },
+  textRTL: {
+    textAlign: "right",
+    writingDirection: "rtl",
   },
   messageContainer: {
     flex: 1,
@@ -107,12 +125,19 @@ const styles = StyleSheet.create({
     marginTop: 8,
     justifyContent: "flex-end",
   },
+  actionsRTL: {
+    flexDirection: "row-reverse",
+  },
   retryButton: {
     paddingHorizontal: 16,
     paddingVertical: 6,
     backgroundColor: palette.highlightColor,
     borderRadius: 6,
     marginRight: 8,
+  },
+  retryButtonRTL: {
+    marginRight: 0,
+    marginLeft: 8,
   },
   retryText: {
     color: "#fff",

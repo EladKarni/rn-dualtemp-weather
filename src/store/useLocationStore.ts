@@ -33,7 +33,9 @@ interface LocationState {
 }
 
 export const GPS_LOCATION_ID = "gps-location";
-const MAX_SAVED_LOCATIONS = 25;
+// Exported so UI copy (LocationDropdown cap, AddLocationScreen/MaxLocations
+// message) derives the cap from one source instead of hardcoding it.
+export const MAX_SAVED_LOCATIONS = 25;
 
 export const useLocationStore = create<LocationState>()(
   persist(

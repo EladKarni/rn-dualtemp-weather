@@ -8,6 +8,14 @@
  */
 import { getWeatherIcon, WEATHER_ICON_MAP } from "../widgetDataUtils";
 
+// widgetDataUtils now imports i18n (for formatDataAge). i18n-js ships ESM that
+// jest-expo does not transform, so mock the localization module (this test does
+// not exercise any localized string). babel-plugin-jest-hoist lifts this above
+// the import so widgetDataUtils resolves i18n to the mock.
+jest.mock("../../../localization/i18n", () => ({
+  i18n: { locale: "en", t: (key: string) => key },
+}));
+
 describe("getWeatherIcon — lookup fallback chain", () => {
   it("returns the exact icon for a known condition code", () => {
     expect(getWeatherIcon(800)).toBe("☀️");

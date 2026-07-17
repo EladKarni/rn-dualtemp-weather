@@ -9,6 +9,7 @@ import { calculateDailyItemCount } from "./utils/widgetLayoutUtils";
 import { palette } from "../styles/Palette";
 import moment from "moment";
 import { formatDataAge } from "./utils/widgetDataUtils";
+import { i18n } from "../localization/i18n";
 
 interface WeatherExtendedProps {
   weather: Weather;
@@ -35,7 +36,11 @@ const DailyForecastRow = ({
   isToday: boolean;
   variant: DailyRowVariant;
 }) => {
-  const dayText = isToday ? "Today" : moment(forecast.dt * 1000).format("ddd");
+  // "Today" is localized via i18n; other day labels come from moment, whose
+  // locale is hydrated in the widget context (Worker C's store-hydration gate).
+  const dayText = isToday
+    ? i18n.t("Today")
+    : moment(forecast.dt * 1000).format("ddd");
   const isCompact = variant === "compact";
 
   // Only the outer container and the day-label style differ between variants;
@@ -81,7 +86,7 @@ const DailyForecastRow = ({
 
       {/* High Temp */}
       <FlexWidget style={{ flexDirection: "row", alignItems: "center" }}>
-        <TextWidget text="Hi " style={{ color: palette.highlightColor, fontSize: 16 }} />
+        <TextWidget text={`${i18n.t("WidgetHi")} `} style={{ color: palette.highlightColor, fontSize: 16 }} />
         <DualTemperatureDisplay
           temp={forecast.temp.max}
           size="small"
@@ -92,7 +97,7 @@ const DailyForecastRow = ({
 
       {/* Low Temp */}
       <FlexWidget style={{ flexDirection: "row", alignItems: "center" }}>
-        <TextWidget text="Lo " style={{ color: palette.highlightColor, fontSize: 16 }} />
+        <TextWidget text={`${i18n.t("WidgetLo")} `} style={{ color: palette.highlightColor, fontSize: 16 }} />
         <DualTemperatureDisplay
           temp={forecast.temp.min}
           size="small"

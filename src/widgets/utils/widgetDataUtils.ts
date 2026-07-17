@@ -4,6 +4,7 @@
  */
 import { Weather, HourlyEntity, DailyEntity } from '../../types/WeatherTypes';
 import { formatTemperature, convertWindSpeed } from '../../utils/temperature';
+import { i18n } from '../../localization/i18n';
 
 export interface ProcessedWeatherData {
   // Current weather
@@ -172,20 +173,29 @@ export const formatUVI = (uvi: number): string => {
 };
 
 /**
- * Format data age for widget display
- * Returns a human-readable string like "2h ago" or "Just now"
- * Returns null if data is fresh (< 30 minutes)
+ * Format data age for widget display, localized via i18n.
+ * Contract (finalized in Phase 3):
+ *   - ageMinutes < 30        -> null   (fresh; no age chip)
+ *   - 30 <= ageMinutes < 60  -> "Xm ago"
+ *   - 60 <= ageMinutes < 1440-> "Xh ago"
+ *   - ageMinutes >= 1440     -> "Xd ago"
+ * Resolved at render (the widget calls this while rendering, with i18n.locale
+ * already set by the store-hydration gate). The previously unreachable
+ * "Just now" branch (it sat after the `< 30 -> null` guard) has been removed.
  */
 export const formatDataAge = (ageMinutes: number): string | null => {
   // Don't show age indicator if data is fresh (< 30 minutes)
   if (ageMinutes < 30) return null;
 
-  if (ageMinutes < 1) return 'Just now';
-  if (ageMinutes < 60) return `${Math.round(ageMinutes)}m ago`;
+  if (ageMinutes < 60) {
+    return i18n.t('WidgetAgeMinutes', { count: Math.round(ageMinutes) });
+  }
 
   const hours = Math.floor(ageMinutes / 60);
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 24) {
+    return i18n.t('WidgetAgeHours', { count: hours });
+  }
 
   const days = Math.floor(hours / 24);
-  return `${days}d ago`;
+  return i18n.t('WidgetAgeDays', { count: days });
 };

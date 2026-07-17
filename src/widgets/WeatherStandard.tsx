@@ -9,6 +9,8 @@ import { convertWindSpeed } from "../utils/temperature";
 import { calculateHourlyItemCount, getItemSpacing } from "./utils/widgetLayoutUtils";
 import { palette } from "../styles/Palette";
 import { formatDataAge } from "./utils/widgetDataUtils";
+import { formatTime } from "../utils/dateFormatting";
+import { useSettingsStore } from "../store/useSettingsStore";
 
 interface WeatherStandardProps {
   weather: Weather;
@@ -29,11 +31,12 @@ const HourlyItem = ({
   tempScale: "C" | "F";
   showBackground?: boolean;
 }) => {
-  // Format time using device locale
-  const timeText = new Date(forecast.dt * 1000).toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  // Honor the user's clock-format preference (settings store is hydrated in the
+  // widget context by the store-hydration gate).
+  const timeText = formatTime(
+    forecast.dt,
+    useSettingsStore.getState().clockFormat
+  );
 
   // Calculate wind speed
   const { value: windSpeed, unit: windUnit } = convertWindSpeed(

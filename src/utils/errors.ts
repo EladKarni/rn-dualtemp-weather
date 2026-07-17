@@ -30,6 +30,12 @@ export class NetworkError extends AppError {
       'NETWORK_ERROR',
       true
     );
+    // Only the generic (default-message) network error maps to a key here;
+    // subclasses supply their own userMessage AND set their own key below, so
+    // this guard avoids overriding their key. Resolved at render, never here.
+    if (!userMessage) {
+      this.userMessageKey = 'ErrNetwork';
+    }
   }
 }
 
@@ -40,6 +46,7 @@ export class NoConnectionError extends NetworkError {
       'No internet connection. Please check your network settings.'
     );
     this.code = 'NO_CONNECTION';
+    this.userMessageKey = 'ErrNoConnection';
   }
 }
 
@@ -50,6 +57,7 @@ export class TimeoutError extends NetworkError {
       'The request took too long. Please try again.'
     );
     this.code = 'TIMEOUT';
+    this.userMessageKey = 'ErrTimeout';
   }
 }
 
@@ -70,6 +78,7 @@ export class PermissionDeniedError extends LocationError {
       'PERMISSION_DENIED'
     );
     this.recoverable = false; // Requires user action in settings
+    this.userMessageKey = 'ErrPermissionDenied';
   }
 }
 
@@ -80,6 +89,7 @@ export class LocationUnavailableError extends LocationError {
       'Unable to determine your location. Make sure GPS is enabled.',
       'LOCATION_UNAVAILABLE'
     );
+    this.userMessageKey = 'ErrLocationUnavailable';
   }
 }
 
@@ -90,6 +100,7 @@ export class PositionTimeoutError extends LocationError {
       'Finding your location is taking too long. Please try again.',
       'POSITION_TIMEOUT'
     );
+    this.userMessageKey = 'ErrPositionTimeout';
   }
 }
 
@@ -108,6 +119,13 @@ export class ApiError extends AppError {
       `API_ERROR_${statusCode}`,
       statusCode >= 500 // Server errors are recoverable (retry)
     );
+    // Map only the generic (default-message) API error to a key; subclasses pass
+    // their own userMessage AND set their own key below, and direct callers that
+    // supply custom text (e.g. fetchWeather's invalid-response ApiError) keep
+    // rendering that text via the userMessage fallback.
+    if (!userMessage) {
+      this.userMessageKey = 'ErrApiGeneric';
+    }
   }
 }
 
@@ -119,6 +137,9 @@ export class RateLimitError extends ApiError {
 
     super('Rate limit exceeded', 429, message);
     this.code = 'RATE_LIMIT';
+    // The retryAfter detail stays in the internal `message`; the user-facing
+    // text uses the static localized form.
+    this.userMessageKey = 'ErrRateLimit';
   }
 }
 
@@ -130,6 +151,7 @@ export class ServerError extends ApiError {
       'Our servers are experiencing issues. Please try again in a moment.'
     );
     this.code = 'SERVER_ERROR';
+    this.userMessageKey = 'ErrServer';
   }
 }
 
@@ -144,6 +166,9 @@ export class NotFoundError extends ApiError {
     );
     this.code = 'NOT_FOUND';
     this.recoverable = recoverable;
+    // The specific `resource` stays in the internal message; the user-facing
+    // text uses the static localized form.
+    this.userMessageKey = 'ErrNotFound';
   }
 }
 
@@ -160,6 +185,7 @@ export class BadRequestError extends ApiError {
     );
     this.code = 'BAD_REQUEST';
     this.recoverable = recoverable;
+    this.userMessageKey = 'ErrBadRequest';
   }
 }
 
@@ -172,6 +198,7 @@ export class AuthenticationError extends ApiError {
     );
     this.code = 'AUTHENTICATION_ERROR';
     this.recoverable = false; // No retry for 401 errors
+    this.userMessageKey = 'ErrAuth';
   }
 }
 
@@ -254,7 +281,8 @@ export function toAppError(error: unknown): AppError {
       error.message,
       'An unexpected error occurred. Please try again.',
       'UNKNOWN_ERROR',
-      true
+      true,
+      'ErrUnexpected'
     );
   }
 
@@ -262,6 +290,7 @@ export function toAppError(error: unknown): AppError {
     'Unknown error',
     'Something went wrong. Please try again.',
     'UNKNOWN_ERROR',
-    true
+    true,
+    'ErrGeneric'
   );
 }

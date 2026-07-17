@@ -125,7 +125,7 @@ function getGpsLocationOrWarn(
       extra: { widgetName: props.widgetInfo.widgetName, locationId: GPS_LOCATION_ID },
       level: 'warning',
     });
-    renderFallbackWidget(props.renderWidget, 'Weather data unavailable', 'Tap to retry');
+    renderFallbackWidget(props.renderWidget, i18n.t('WidgetUnavailable'), i18n.t('WidgetTapToRetry'));
     return null;
   }
 
@@ -209,7 +209,7 @@ async function handleWidgetRender(
 
     if (error || !weather) {
       logger.warn('No weather data available for widget:', error?.message);
-      renderFallbackWidget(props.renderWidget, 'Weather data unavailable', 'Tap to retry');
+      renderFallbackWidget(props.renderWidget, i18n.t('WidgetUnavailable'), i18n.t('WidgetTapToRetry'));
       return;
     }
 
@@ -221,7 +221,7 @@ async function handleWidgetRender(
     );
   } catch (error) {
     logger.error('Widget render failed:', error);
-    renderFallbackWidget(props.renderWidget, 'Unable to load weather', 'Tap to retry');
+    renderFallbackWidget(props.renderWidget, i18n.t('WidgetLoadError'), i18n.t('WidgetTapToRetry'));
   }
 }
 
@@ -257,7 +257,7 @@ async function handleWidgetRefresh(props: WidgetTaskHandlerProps): Promise<void>
     }
 
     // Show refreshing state
-    renderLoadingWidget(props.renderWidget, 'Refreshing...');
+    renderLoadingWidget(props.renderWidget, i18n.t('WidgetRefreshing'));
 
     // Try to perform refresh
     let refreshSucceeded = false;
@@ -302,7 +302,7 @@ async function handleWidgetRefresh(props: WidgetTaskHandlerProps): Promise<void>
         },
         level: 'warning',
       });
-      renderFallbackWidget(props.renderWidget, 'Weather data unavailable', 'Tap to retry');
+      renderFallbackWidget(props.renderWidget, i18n.t('WidgetUnavailable'), i18n.t('WidgetTapToRetry'));
       return;
     }
 
@@ -349,7 +349,7 @@ async function handleWidgetRefresh(props: WidgetTaskHandlerProps): Promise<void>
     }
 
     // Final fallback: show error
-    renderFallbackWidget(props.renderWidget, 'Unable to refresh', 'Tap to retry');
+    renderFallbackWidget(props.renderWidget, i18n.t('WidgetRefreshError'), i18n.t('WidgetTapToRetry'));
   }
 }
 

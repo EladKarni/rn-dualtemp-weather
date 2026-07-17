@@ -17,7 +17,7 @@ import {
   searchCities,
   formatLocationName,
 } from "../utils/geocoding";
-import { useLocationStore } from "../store/useLocationStore";
+import { useLocationStore, MAX_SAVED_LOCATIONS } from "../store/useLocationStore";
 import { useLanguageStore } from "../store/useLanguageStore";
 import { logger } from "../utils/logger";
 import { AppError, toAppError } from "../utils/errors";
@@ -67,7 +67,10 @@ const AddLocationScreen = ({ visible, onClose }: AddLocationScreenProps) => {
 
     searchTimeoutRef.current = setTimeout(async () => {
       try {
-        const locale = selectedLanguage || "en";
+        // Auto-detect mode ("selectedLanguage" is null) uses the resolved active
+        // locale so city names come back in the language the user actually sees,
+        // instead of the previous hardcoded "en".
+        const locale = selectedLanguage || i18n.locale;
         const results = await searchCities(searchQuery, locale);
         setSearchResults(results);
         setError(null);
@@ -185,7 +188,7 @@ const AddLocationScreen = ({ visible, onClose }: AddLocationScreenProps) => {
               <Text style={styles.errorIcon}>⚠️</Text>
               <Text style={styles.errorMessage}>
                 {error.userMessageKey
-                  ? i18n.t(error.userMessageKey)
+                  ? i18n.t(error.userMessageKey, { count: MAX_SAVED_LOCATIONS })
                   : error.userMessage}
               </Text>
             </View>

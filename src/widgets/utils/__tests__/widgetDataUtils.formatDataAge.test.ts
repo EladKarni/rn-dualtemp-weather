@@ -1,34 +1,67 @@
 /**
- * Review-mandated test #5 — `formatDataAge` boundary table.
+ * `formatDataAge` boundary table — FINALIZED contract (Phase 3, Worker K).
  *
- * This test DOCUMENTS the *current* intended behavior of `formatDataAge`
- * (src/widgets/utils/widgetDataUtils.ts). It is deliberately written against
- * the shipping contract, latent bugs and all, so any change to the function is
- * a conscious one.
+ * Originally review-mandated test #5 (Worker H) documented the shipping
+ * behavior, latent bugs and all, with a TODO handing the contract to Worker K.
+ * Worker K has now:
+ *   - localized the m/h/d strings via i18n (en resolves to the same literals),
+ *   - deleted the unreachable `< 1 -> "Just now"` branch,
+ *   - KEPT the `>= 1440 -> "Xd ago"` days branch.
  *
- * Current contract (as implemented today):
- *   - ageMinutes < 30        -> null   (data considered "fresh", no age chip)
- *   - 30 <= ageMinutes < 60  -> "Xm ago"
+ * Finalized contract:
+ *   - ageMinutes < 30        -> null   (fresh; no age chip)
+ *   - 30 <= ageMinutes < 60  -> "Xm ago"   (Math.round(minutes))
  *   - 60 <= ageMinutes < 1440-> "Xh ago"   (Math.floor(minutes / 60))
- *   - ageMinutes >= 1440     -> "Xd ago"    (Math.floor(hours / 24))
+ *   - ageMinutes >= 1440     -> "Xd ago"   (Math.floor(hours / 24))
  *
- * LATENT BUG documented here: the `if (ageMinutes < 1) return 'Just now';`
- * branch (widgetDataUtils.ts) is DEAD CODE. It sits *after* the `< 30 -> null`
- * guard, so any age small enough to be "Just now" already returned null. The
- * "Just now" string can never be produced. The test below pins that fact.
- *
- * TODO(Worker K, Phase 3): Worker K finalizes the localized `formatDataAge`
- * contract. Per the plan it KEEPS the `>= 1440 -> "Xd ago"` days branch and
- * only deletes the unreachable "Just now" branch, replacing the English
- * literals with i18n keys. When that lands, update the string expectations
- * below (m/h/d suffixes become localized) but the numeric BOUNDARIES
- * (0/29/30/59/60/1439/1440) and the `< 30 -> null` / days-branch semantics must
- * still hold — Worker K's spec re-affirms 1439 -> hours, 1440 -> days.
+ * The numeric BOUNDARIES (0/29/30/59/60/1439/1440) and `< 30 -> null` semantics
+ * are unchanged from Worker H's table. The expected strings are the localized
+ * output for the default (en) locale, which is byte-identical to the old
+ * literals — proving the localization is behavior-preserving for en.
  */
 import { formatDataAge } from '../widgetDataUtils';
+import { i18n } from '../../../localization/i18n';
 
-describe('formatDataAge — boundary table (current shipping contract)', () => {
-  // The exact boundary set the review mandated.
+// i18n-js ships ESM that jest-expo does not transform, so mock the localization
+// module — but back it with the REAL locale tables + %{...} interpolation and a
+// mutable locale, so this test verifies the actual localized output (not keys).
+// babel-plugin-jest-hoist lifts this above the imports.
+jest.mock('../../../localization/i18n', () => {
+  const { en } = jest.requireActual('../../../localization/en') as {
+    en: Record<string, string>;
+  };
+  const { zh } = jest.requireActual('../../../localization/zh') as {
+    zh: Record<string, string>;
+  };
+  const tables: Record<string, Record<string, string>> = { en, zh };
+  const state = { locale: 'en' };
+  return {
+    i18n: {
+      get locale() {
+        return state.locale;
+      },
+      set locale(value: string) {
+        state.locale = value;
+      },
+      t: (key: string, opts?: Record<string, unknown>): string => {
+        const template = (tables[state.locale] ?? en)[key] ?? key;
+        return opts
+          ? template.replace(/%\{(\w+)\}/g, (_m, k: string) =>
+              String(opts[k] ?? '')
+            )
+          : template;
+      },
+    },
+  };
+});
+
+// Pin the locale so the assertions are deterministic regardless of test order.
+beforeAll(() => {
+  i18n.locale = 'en';
+});
+
+describe('formatDataAge — boundary table (finalized, localized)', () => {
+  // The exact boundary set the review mandated, incl. 1439 -> hours, 1440 -> days.
   it.each<[number, string | null]>([
     [0, null],        // fresh
     [29, null],       // still fresh (just under the 30-min threshold)
@@ -42,10 +75,11 @@ describe('formatDataAge — boundary table (current shipping contract)', () => {
   });
 });
 
-describe('formatDataAge — the "Just now" branch is dead code', () => {
-  // Anything small enough to reach the (unreachable) `< 1 -> "Just now"` branch
-  // is caught first by the `< 30 -> null` guard. Prove the string never appears.
-  it.each([0, 0.0001, 0.5, 0.9, 0.999])(
+describe('formatDataAge — ages below the 30-minute threshold return null', () => {
+  // The old unreachable `< 1 -> "Just now"` branch has been removed; anything
+  // below the 30-min freshness threshold still returns null (no age chip), and
+  // the "Just now" string can never be produced.
+  it.each([0, 0.0001, 0.5, 0.9, 0.999, 15, 29.9])(
     'formatDataAge(%p) returns null, never "Just now"',
     (ageMinutes) => {
       const result = formatDataAge(ageMinutes);
@@ -75,5 +109,14 @@ describe('formatDataAge — rounding and unit-transition sanity', () => {
     expect(formatDataAge(2880)).toBe('2d ago');
     // 2879 minutes -> 47h -> still 1 day
     expect(formatDataAge(2879)).toBe('1d ago');
+  });
+});
+
+describe('formatDataAge — localization', () => {
+  it('renders the localized age string when the locale changes', () => {
+    i18n.locale = 'zh';
+    // zh: WidgetAgeMinutes === "%{count} 分钟前"
+    expect(formatDataAge(30)).toBe('30 分钟前');
+    i18n.locale = 'en'; // restore for any later assertions
   });
 });

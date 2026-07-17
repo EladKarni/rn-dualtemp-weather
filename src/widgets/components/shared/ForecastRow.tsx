@@ -5,6 +5,8 @@ import { HourlyEntity } from '../../../types/WeatherTypes';
 import { formatTemperature } from '../../../utils/temperature';
 import { WeatherIcon } from './WeatherIcon';
 import { palette } from '../../../styles/Palette';
+import { formatTime } from '../../../utils/dateFormatting';
+import { useSettingsStore } from '../../../store/useSettingsStore';
 
 interface ForecastRowProps {
   forecast: HourlyEntity;
@@ -32,20 +34,16 @@ const getIconSize = (size: ForecastRowProps['size']): 'small' | 'medium' | 'larg
   }
 };
 
-// Format time from Unix timestamp
-const formatHour = (timestamp: number): string => {
-  const date = new Date(timestamp * 1000);
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
-};
-
-export const ForecastRow: React.FC<ForecastRowProps> = ({ 
-  forecast, 
+export const ForecastRow: React.FC<ForecastRowProps> = ({
+  forecast,
   tempScale,
-  size 
+  size
 }) => {
   const fontSize = getForecastFontSize(size);
   const iconSize = getIconSize(size);
-  const time = formatHour(forecast.dt);
+  // Honor the user's clock-format preference (settings store hydrated in the
+  // widget context by the store-hydration gate).
+  const time = formatTime(forecast.dt, useSettingsStore.getState().clockFormat);
 
   return (
     <FlexWidget
