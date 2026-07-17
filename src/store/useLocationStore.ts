@@ -40,7 +40,7 @@ export const MAX_SAVED_LOCATIONS = 25;
 export const useLocationStore = create<LocationState>()(
   persist(
     (set, get) => ({
-      savedLocations: [],
+      savedLocations: [] as SavedLocation[],
       activeLocationId: GPS_LOCATION_ID,
 
       addLocation: (location) => {

@@ -59,18 +59,21 @@ class ErrorBoundary extends Component<Props, State> {
       }
       
       if (this.props.errorScreenProps) {
+        // Capture into a narrowed local so the onRetry closure below keeps the
+        // non-undefined narrowing (property accesses inside a closure would not).
+        const errorScreenProps = this.props.errorScreenProps;
         return (
           <ErrorScreen
-            onSettingsPress={this.props.errorScreenProps.onSettingsPress}
-            errorMessage={this.props.errorScreenProps.error?.message || this.state.error?.message}
+            onSettingsPress={errorScreenProps.onSettingsPress}
+            errorMessage={errorScreenProps.error?.message || this.state.error?.message}
             onRetry={() => {
-              this.props.errorScreenProps.onRetry();
+              errorScreenProps.onRetry();
               this.resetError();
             }}
-            savedLocations={this.props.errorScreenProps.savedLocations}
-            activeLocationId={this.props.errorScreenProps.activeLocationId}
-            onLocationSelect={this.props.errorScreenProps.onLocationSelect}
-            locationLoadingStates={this.props.errorScreenProps.locationLoadingStates}
+            savedLocations={errorScreenProps.savedLocations}
+            activeLocationId={errorScreenProps.activeLocationId}
+            onLocationSelect={errorScreenProps.onLocationSelect}
+            locationLoadingStates={errorScreenProps.locationLoadingStates}
           />
         );
       }

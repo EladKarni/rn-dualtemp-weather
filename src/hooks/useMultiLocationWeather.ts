@@ -179,7 +179,7 @@ export function useMultiLocationWeather(
       return result;
     },
     enabled: !!activeLocation && fetchedLocaleSuccessfully,
-    placeholderData: cachedActiveWeather, // Use cached data as placeholder
+    placeholderData: cachedActiveWeather ?? undefined, // Use cached data as placeholder (TanStack wants Weather | undefined, not null)
     staleTime: 1000 * 60 * 30, // 30 minutes - data is considered fresh for this long
     gcTime: 1000 * 60 * 60, // 1 hour - keep unused data in cache for this long
     retry: 1, // Only retry once instead of 3 times (faster error display)

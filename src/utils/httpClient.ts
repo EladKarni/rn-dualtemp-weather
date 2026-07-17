@@ -151,7 +151,9 @@ export const fetchWithErrorHandling = async (
 
     return response;
   } catch (error) {
-    handleFetchError(error);
+    // handleFetchError always throws (returns `never`); returning it satisfies
+    // the Promise<Response> contract without an unreachable fall-through.
+    return handleFetchError(error);
   }
 };
 

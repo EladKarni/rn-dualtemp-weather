@@ -29,7 +29,8 @@ describe("useWeatherLoadingState — dismissedError identity lifecycle", () => {
   it("stays dismissed while the same error identity persists across re-renders", () => {
     const err = new ServerError(500);
     const { result, rerender } = renderHook(
-      ({ hasErr, e }) => useWeatherLoadingState(hasErr, e),
+      ({ hasErr, e }: { hasErr: boolean; e: unknown }) =>
+        useWeatherLoadingState(hasErr, e),
       { initialProps: { hasErr: true, e: err as unknown } }
     );
 
@@ -44,7 +45,8 @@ describe("useWeatherLoadingState — dismissedError identity lifecycle", () => {
   it("re-shows the banner when a NEW error identity arrives", () => {
     const first = new ServerError(500);
     const { result, rerender } = renderHook(
-      ({ hasErr, e }) => useWeatherLoadingState(hasErr, e),
+      ({ hasErr, e }: { hasErr: boolean; e: unknown }) =>
+        useWeatherLoadingState(hasErr, e),
       { initialProps: { hasErr: true, e: first as unknown } }
     );
 
@@ -60,7 +62,8 @@ describe("useWeatherLoadingState — dismissedError identity lifecycle", () => {
   it("resets the dismissal when the error clears", () => {
     const err = new ServerError(500);
     const { result, rerender } = renderHook(
-      ({ hasErr, e }) => useWeatherLoadingState(hasErr, e),
+      ({ hasErr, e }: { hasErr: boolean; e: unknown }) =>
+        useWeatherLoadingState(hasErr, e),
       { initialProps: { hasErr: true, e: err as unknown } }
     );
 

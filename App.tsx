@@ -260,7 +260,9 @@ function App() {
               case "content":
                 return (
                   <MainWeatherWithModals
-                    forecast={forecast}
+                    // `content` is only selected when forecast is present
+                    // (useRenderDecision precedence), so it is non-null here.
+                    forecast={forecast!}
                     date={date}
                     tempScale={tempScale}
                     refreshing={refreshing}
