@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Platform } from "react-native";
 import { getLanguage } from "react-native-localization-settings";
 import moment from "moment";
 import "moment/locale/he";
@@ -15,6 +16,32 @@ import { logger } from "../utils/logger";
 // CRITICAL: Reset moment to English after importing locales
 // Some locale files (especially zh-cn) set themselves as the default global locale on import
 moment.locale('en');
+
+/**
+ * Resolve the device's primary language code (e.g. "en" from "en-US").
+ *
+ * The native getLanguage() from react-native-localization-settings has no web
+ * implementation and throws on web. Guard it: use navigator.language on web and
+ * wrap everything in try/catch so a missing native module can never crash the
+ * store. Falls back to "en".
+ *
+ * Kept intentionally minimal — Phase 3 swaps this for expo-localization.
+ */
+const getDeviceLanguage = (): string => {
+  try {
+    if (Platform.OS === "web") {
+      const nav =
+        typeof navigator !== "undefined"
+          ? (navigator as { language?: string })
+          : undefined;
+      return nav?.language?.split("-")[0] || "en";
+    }
+    return getLanguage().split("-")[0] || "en";
+  } catch (error) {
+    logger.warn("Failed to resolve device language, falling back to 'en':", error);
+    return "en";
+  }
+};
 
 interface LanguageState {
   selectedLanguage: string | null; // null = auto-detect
@@ -49,7 +76,7 @@ export const useLanguageStore = create<LanguageState>()(
       initializeLocale: () => {
         try {
           const state = get();
-          const deviceLanguage = getLanguage().split("-")[0];
+          const deviceLanguage = getDeviceLanguage();
           const userLocale = state.selectedLanguage || deviceLanguage;
           const locale = translations[userLocale] ? userLocale : "en";
 
@@ -145,7 +172,7 @@ export const useLanguageStore = create<LanguageState>()(
         set({ selectedLanguage: language });
 
         // Determine and apply the new locale
-        const deviceLanguage = getLanguage().split("-")[0];
+        const deviceLanguage = getDeviceLanguage();
         const userLocale = language || deviceLanguage;
         const locale = translations[userLocale] ? userLocale : "en";
 

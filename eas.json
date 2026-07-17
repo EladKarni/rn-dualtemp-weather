@@ -14,7 +14,8 @@
       "channel": "preview",
       "environment": "preview",
       "env": {
-        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true",
+        "EXPO_PUBLIC_WEATHER_API_URL": "https://open-weather-proxy-pi.vercel.app/api/v1/"
       }
     },
     "preview-apk": {

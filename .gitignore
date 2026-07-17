@@ -11,9 +11,10 @@ npm-debug.*
 web-build/
 api-gcs.*
 
-# Environment variables
-.env.local
-.env*.local
+# Environment variables — ignore all env files, keep the committed example
+.env
+.env.*
+!.env.example
 
 # Native Code
 android/
@@ -29,6 +30,3 @@ ios/
 # Play Store — never commit the real service-account key (eas submit writes it here)
 serviceKey*.json
 !serviceKey.example.json
-
-.env.local
-.env

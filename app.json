@@ -18,8 +18,8 @@
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Allow DualTemp Weather to use your location.",
-          "isAndroidBackgroundLocationEnabled": true
+          "locationWhenInUsePermission": "Allow DualTemp Weather to use your location.",
+          "isAndroidBackgroundLocationEnabled": false
         }
       ],
       [
@@ -114,7 +114,7 @@
         "backgroundColor": "#1C1B4D"
       },
       "package": "com.ekarni.rndualtempweatherapp",
-      "permissions": ["ACCESS_BACKGROUND_LOCATION"]
+      "permissions": []
     },
     "updates": {
       "url": "https://u.expo.dev/444bda66-1ab4-4665-ba53-c2b76743a33b"

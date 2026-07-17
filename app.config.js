@@ -71,9 +71,8 @@ export default ({ config }) => {
   return {
     ...appConfig,
     extra,
-    plugins: [
-      ...(appConfig.plugins || []),
-      "@sentry/react-native/expo",
-    ],
+    // NOTE: @sentry/react-native/expo is already registered (parameterized) in
+    // app.json's plugins array. Do NOT re-add it here — appending it again
+    // double-registers the config plugin. Plugins flow through via ...appConfig.
   };
 };
