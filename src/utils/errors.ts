@@ -129,26 +129,32 @@ export class ServerError extends ApiError {
 }
 
 export class NotFoundError extends ApiError {
-  constructor(resource: string) {
+  // `recoverable` defaults to the historical value (false); callers that know a
+  // 404 is transient (e.g. a proxy hiccup) pass `true` to keep the Retry button.
+  constructor(resource: string, recoverable: boolean = false) {
     super(
       `${resource} not found`,
       404,
       `${resource} was not found. Please check and try again.`
     );
     this.code = 'NOT_FOUND';
-    this.recoverable = false;
+    this.recoverable = recoverable;
   }
 }
 
 export class BadRequestError extends ApiError {
-  constructor(details?: string) {
+  // Server-supplied `details` go into the internal `message` only (for logs /
+  // Sentry), never into the user-facing `userMessage` — a proxy can put
+  // arbitrary/sensitive text there (finding 8). `recoverable` defaults to the
+  // historical value (false); callers may override.
+  constructor(details?: string, recoverable: boolean = false) {
     super(
-      'Bad request',
+      details ? `Bad request: ${details}` : 'Bad request',
       400,
-      details || 'Invalid request. Please check your input and try again.'
+      'Invalid request. Please check your input and try again.'
     );
     this.code = 'BAD_REQUEST';
-    this.recoverable = false;
+    this.recoverable = recoverable;
   }
 }
 
@@ -199,6 +205,17 @@ export class DuplicateLocationError extends UserError {
 export function toAppError(error: unknown): AppError {
   if (error instanceof AppError) {
     return error;
+  }
+
+  // React Native's offline fetch rejects with a TypeError whose message is
+  // "Network request failed" (Android/iOS) or "Failed to fetch" (web/Hermes).
+  // Neither matches the case-sensitive 'fetch'/'network' substring checks
+  // below (finding 6c), so match them explicitly and case-insensitively.
+  if (
+    error instanceof Error &&
+    /network request failed|failed to fetch/i.test(error.message)
+  ) {
+    return new NoConnectionError();
   }
 
   if (error instanceof TypeError && error.message.includes('fetch')) {

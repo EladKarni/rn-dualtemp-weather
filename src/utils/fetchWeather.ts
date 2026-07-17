@@ -1,6 +1,7 @@
 import * as Network from "expo-network";
 import { Weather } from "../types/WeatherTypes";
 import { logger } from "./logger";
+import { fetchWithTimeout } from "./httpClient";
 import {
   ApiError,
   AuthenticationError,
@@ -9,11 +10,34 @@ import {
   NotFoundError,
   RateLimitError,
   ServerError,
+  TimeoutError,
 } from "./errors";
 
-export const base_url =
-  process.env.EXPO_PUBLIC_WEATHER_API_URL ??
+/**
+ * Default weather proxy used when EXPO_PUBLIC_WEATHER_API_URL is unset or blank.
+ * (Infra endpoint, not ours to rename — see plan decision D1.)
+ */
+const DEFAULT_WEATHER_API_URL =
   "https://open-weather-proxy-pi.vercel.app/api/v1/";
+
+/**
+ * Normalize the configured weather-API base URL (finding 7). Pure & exported so
+ * it is unit-testable:
+ * - trim surrounding whitespace,
+ * - treat empty / whitespace-only as unset (fall back to the default proxy),
+ * - guarantee exactly one trailing slash so `${base_url}get-weather` is valid.
+ */
+export const normalizeBaseUrl = (raw: string | undefined | null): string => {
+  const trimmed = (raw ?? "").trim();
+  if (trimmed === "") {
+    return DEFAULT_WEATHER_API_URL;
+  }
+  return trimmed.endsWith("/") ? trimmed : `${trimmed}/`;
+};
+
+export const base_url = normalizeBaseUrl(
+  process.env.EXPO_PUBLIC_WEATHER_API_URL
+);
 
 /**
  * Parse a response body as JSON, returning null instead of throwing when the
@@ -33,6 +57,69 @@ const parseJsonSafely = (body: string): any | null => {
  * precise GPS position to a third party (Sentry). See audit issue S2.
  */
 const coarsenCoord = (n: number): number => Math.round(n * 10) / 10;
+
+/**
+ * Sanitize a response-body preview before it leaves the device for Sentry
+ * (part of finding 1). Two passes:
+ *  1. strip query strings from any URL-looking token (the request URL carries
+ *     lat/long), and
+ *  2. redact coordinate-like decimals (>=3 dp) adjacent to lat/lon-ish markers.
+ * Worker B's event scrubber is the backstop; this is the primary source-side
+ * pass. Exported for unit tests.
+ */
+export const sanitizeBodyPreview = (raw: string): string => {
+  return raw
+    // Plain query-string strip: "?lat=..&long=.." → "" wherever it appears,
+    // stopping at whitespace or a quote/angle-bracket delimiter.
+    .replace(/\?[^\s"'<>]*/g, "")
+    // Coordinate redaction: a lat/lon marker followed by a high-precision
+    // decimal (JSON style: `"lat": 32.0853421`, or `lat=..`, `lat:..`).
+    .replace(
+      /\b(lat|latitude|lon|long|lng|longitude)\b["'\s]*[=:]["'\s]*-?\d+\.\d{3,}/gi,
+      "$1=[redacted]"
+    );
+};
+
+/**
+ * Build and report (exactly once) the invalid-response ApiError shared by the
+ * non-JSON and wrong-shape 2xx paths. A 200 that isn't a valid Weather object
+ * must never be persisted into SQLite as fresh truth (finding 7b). Always
+ * throws (return type `never`).
+ */
+const throwInvalidResponse = (opts: {
+  message: string;
+  status: number;
+  contentType: string;
+  rawBody: string;
+  latitude: number;
+  longitude: number;
+  locale: string;
+}): never => {
+  const error = new ApiError(
+    opts.message,
+    opts.status,
+    "Weather service returned an unexpected response. Please try again later."
+  );
+  // Its own userMessage says "try again", so keep the Retry button (finding 8).
+  error.recoverable = true;
+
+  logger.exception(error, {
+    tags: {
+      error_type: "weather_api_invalid_response",
+    },
+    extra: {
+      api_path: "get-weather",
+      api_status: opts.status,
+      content_type: opts.contentType,
+      body_preview: sanitizeBodyPreview(opts.rawBody).slice(0, 200),
+      lat_approx: coarsenCoord(opts.latitude),
+      lon_approx: coarsenCoord(opts.longitude),
+      locale: opts.locale,
+    },
+  });
+
+  throw error;
+};
 
 export const fetchForecast = async (
   locale: string,
@@ -57,7 +144,10 @@ export const fetchForecast = async (
       throw new NoConnectionError();
     }
 
-    const response = await fetch(url);
+    // 10s timeout leaves room for the cached-fallback path to run before the
+    // widget headless task is killed at 30s (finding 6b). A timed-out fetch
+    // rejects with an AbortError, mapped to TimeoutError in the catch below.
+    const response = await fetchWithTimeout(url, 10_000);
 
     // Read the body as text first so a non-JSON response (e.g. an HTML error
     // page from a misconfigured URL) doesn't blow up with an opaque
@@ -67,17 +157,14 @@ export const fetchForecast = async (
     const data = parseJsonSafely(rawBody);
 
     if (!response.ok) {
-      logger.error("Weather API error:", {
-        status: response.status,
-      });
-
-      // Convert HTTP status codes to appropriate error types
-      // Check for 401 in message (proxy might return 500 but message contains 401 info)
+      // Convert HTTP status codes to appropriate error types.
+      // Check for 401 in message (proxy might return 500 but message contains
+      // 401 info).
       const message = data?.message as string | undefined;
       const isAuthError =
         response.status === 401 ||
-        (message && message.includes("401")) ||
-        (message && message.includes("Unauthorized"));
+        message?.includes("401") === true ||
+        message?.includes("Unauthorized") === true;
 
       let error: Error;
       if (isAuthError) {
@@ -87,9 +174,12 @@ export const fetchForecast = async (
       } else if (response.status >= 500) {
         error = new ServerError(response.status);
       } else if (response.status === 404) {
-        error = new NotFoundError("Weather data");
+        // Keep the Retry button — a proxy 404 is usually transient (finding 8).
+        error = new NotFoundError("Weather data", true);
       } else if (response.status === 400) {
-        error = new BadRequestError(message);
+        // Server text stays internal (message + api_message extra), not in the
+        // user-facing message; keep Retry (finding 8).
+        error = new BadRequestError(message, true);
       } else {
         // Generic error for other status codes
         error = new ApiError(
@@ -98,10 +188,11 @@ export const fetchForecast = async (
         );
       }
 
-      // Send to Sentry via centralized logger
+      // Exactly one Sentry event per failure (finding 3a): report here, and the
+      // catch block excludes every ApiError subtype so it is never re-reported.
       logger.exception(error, {
         tags: {
-          error_type: 'weather_api_error',
+          error_type: "weather_api_error",
         },
         extra: {
           api_path: "get-weather",
@@ -119,45 +210,52 @@ export const fetchForecast = async (
     // Response was 2xx but the body wasn't valid JSON — typically means the URL
     // is pointing at the wrong host (returning HTML) rather than the API.
     if (data === null) {
-      const error = new ApiError(
-        `Weather API returned a non-JSON response (content-type: ${contentType || "unknown"})`,
-        response.status,
-        "Weather service returned an unexpected response. Please try again later."
-      );
-      logger.exception(error, {
-        tags: {
-          error_type: 'weather_api_invalid_response',
-        },
-        extra: {
-          api_path: "get-weather",
-          api_status: response.status,
-          content_type: contentType,
-          body_preview: rawBody.slice(0, 200),
-          lat_approx: coarsenCoord(latitude),
-          lon_approx: coarsenCoord(longitude),
-          locale,
-        },
+      throwInvalidResponse({
+        message: `Weather API returned a non-JSON response (content-type: ${
+          contentType || "unknown"
+        })`,
+        status: response.status,
+        contentType,
+        rawBody,
+        latitude,
+        longitude,
+        locale,
       });
-      throw error;
+    }
+
+    // Response was 2xx and valid JSON, but the wrong shape — reject it so a
+    // malformed body can never be persisted into SQLite as fresh truth (7b).
+    const hasValidShape =
+      typeof data?.current?.temp === "number" &&
+      Array.isArray(data?.daily) &&
+      Array.isArray(data?.hourly);
+    if (!hasValidShape) {
+      throwInvalidResponse({
+        message: "Weather API returned JSON with an unexpected shape",
+        status: response.status,
+        contentType,
+        rawBody,
+        latitude,
+        longitude,
+        locale,
+      });
     }
 
     logger.debug("Weather data received successfully");
     return data as Weather;
   } catch (e: any) {
-    // Send network/unexpected errors to Sentry. API errors are already reported
-    // above, and an offline NoConnectionError is expected (we fall back to
-    // cached data), so neither is re-reported here.
-    if (
-      !(
-        e instanceof AuthenticationError ||
-        e instanceof RateLimitError ||
-        e instanceof ServerError ||
-        e instanceof NoConnectionError
-      )
-    ) {
-      logger.exception(e, {
+    // A timed-out fetch rejects with an AbortError from fetchWithTimeout's
+    // AbortController; surface it as the taxonomy's TimeoutError (finding 6b).
+    const error = e?.name === "AbortError" ? new TimeoutError() : e;
+
+    // Single-report policy (finding 3a): every API subtype extends ApiError and
+    // was already reported above; an offline NoConnectionError is expected (we
+    // fall back to cached data). Everything else — including TimeoutError, an
+    // unexpected anomaly — is reported here exactly once.
+    if (!(error instanceof ApiError || error instanceof NoConnectionError)) {
+      logger.exception(error, {
         tags: {
-          error_type: 'weather_fetch_network_error',
+          error_type: "weather_fetch_network_error",
         },
         extra: {
           lat_approx: coarsenCoord(latitude),
@@ -167,7 +265,7 @@ export const fetchForecast = async (
       });
     }
 
-    // Re-throw so React Query marks this as an error state
-    throw e;
+    // Re-throw so React Query marks this as an error state.
+    throw error;
   }
 };
