@@ -32,7 +32,6 @@ interface WeatherScreenProps {
   appError?: AppError | null;
   onRetry?: () => void;
   onDismissError?: () => void;
-  lastUpdated?: Date;
 }
 
 export default function WeatherScreen({
@@ -50,7 +49,6 @@ export default function WeatherScreen({
   appError,
   onRetry,
   onDismissError,
-  lastUpdated,
 }: WeatherScreenProps) {
   // Determine if we should show skeleton for hourly/daily forecasts
   // Show skeleton if forecast is still loading (initial load)
@@ -70,7 +68,6 @@ export default function WeatherScreen({
               error={appError}
               onRetry={onRetry}
               onDismiss={onDismissError}
-              lastUpdated={lastUpdated}
             />
           )}
 

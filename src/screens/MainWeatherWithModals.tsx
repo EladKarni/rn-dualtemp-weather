@@ -27,7 +27,6 @@ interface MainWeatherWithModalsProps {
   appError?: AppError | null;
   onRetry?: () => void;
   onDismissError?: () => void;
-  lastUpdated?: Date;
 }
 
 /**
@@ -52,7 +51,6 @@ export default function MainWeatherWithModals({
   appError,
   onRetry,
   onDismissError,
-  lastUpdated,
 }: MainWeatherWithModalsProps) {
   return (
     <>
@@ -71,7 +69,6 @@ export default function MainWeatherWithModals({
         appError={appError}
         onRetry={onRetry}
         onDismissError={onDismissError}
-        lastUpdated={lastUpdated}
       />
 
       <LocationDropdown

@@ -11,12 +11,6 @@ interface WeatherErrorBannerProps {
   error: AppError;
   onRetry?: () => void;
   onDismiss?: () => void;
-  /**
-   * @deprecated The "last updated" time is now sourced from the settings store
-   * (an ISO string) and formatted at render. This prop is retained only so the
-   * WeatherScreen pass-through keeps compiling; it is no longer read here.
-   */
-  lastUpdated?: Date;
 }
 
 export const WeatherErrorBanner: React.FC<WeatherErrorBannerProps> = ({

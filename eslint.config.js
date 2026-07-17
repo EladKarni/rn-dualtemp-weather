@@ -26,20 +26,4 @@ module.exports = [
       "react-hooks/exhaustive-deps": "warn",
     },
   },
-  {
-    // Pre-existing @tanstack/query correctness violations, downgraded to warn
-    // (not off) here ONLY so the gate stays green without pre-empting the
-    // owning phase's substantive fix. The rules stay at error everywhere else.
-    //   - useForecastQuery.ts -> Worker I (Phase 3, dead-code deletion);
-    //     remove this whole block when the file is deleted.
-    // (useMultiLocationWeather.ts was covered here until Worker E's Phase-2
-    // finding-4 rework cleared its violations; entry removed.)
-    files: [
-      "src/hooks/useForecastQuery.ts",
-    ],
-    rules: {
-      "@tanstack/query/exhaustive-deps": "warn",
-      "@tanstack/query/no-unstable-deps": "warn",
-    },
-  },
 ];

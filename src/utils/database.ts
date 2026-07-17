@@ -72,12 +72,6 @@ export class WeatherDatabase {
           created_at INTEGER NOT NULL DEFAULT (strftime('%s', 'unixepoch'))
         );
 
-        CREATE TABLE IF NOT EXISTS weather_errors (
-          location_id TEXT PRIMARY KEY,
-          error_data TEXT NOT NULL,
-          occurred_at INTEGER NOT NULL
-        );
-
         CREATE INDEX IF NOT EXISTS idx_weather_last_updated
         ON weather_cache(last_updated);
 
@@ -283,11 +277,6 @@ export class WeatherDatabase {
       const db = this.getDb();
       await db.runAsync(
         'DELETE FROM weather_cache WHERE location_id = ?',
-        [locationId]
-      );
-
-      await db.runAsync(
-        'DELETE FROM weather_errors WHERE location_id = ?',
         [locationId]
       );
 
