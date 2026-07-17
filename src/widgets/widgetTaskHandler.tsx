@@ -9,6 +9,8 @@ import { useForecastStore } from '../store/useForecastStore';
 import { i18n } from '../localization/i18n';
 import { logger } from '../utils/logger';
 import { fetchForecast } from '../utils/fetchWeather';
+import { ensureStoresHydrated } from '../utils/widgetUpdater';
+import { NoConnectionError } from '../utils/errors';
 import { palette } from '../styles/Palette';
 import type { Weather } from '../types/WeatherTypes';
 
@@ -116,6 +118,10 @@ interface FetchWeatherResult {
  * Falls back to stale cached data if fetch fails
  */
 async function fetchWeatherForWidget(): Promise<FetchWeatherResult> {
+  // Hydrate persisted stores before reading savedLocations / i18n.locale — the
+  // headless task starts before Zustand's async rehydration completes.
+  await ensureStoresHydrated();
+
   // Initialize database (widgets run outside React context)
   await useForecastStore.getState().initializeDatabase();
 
@@ -178,7 +184,7 @@ async function handleWidgetRender(
 
     if (error || !weather) {
       logger.warn('No weather data available for widget:', error?.message);
-      renderFallbackWidget(props.renderWidget, 'Weather data unavailable', 'Tap to open app');
+      renderFallbackWidget(props.renderWidget, 'Weather data unavailable', 'Tap to retry');
       return;
     }
 
@@ -192,7 +198,7 @@ async function handleWidgetRender(
     });
   } catch (error) {
     logger.error('Widget render failed:', error);
-    renderFallbackWidget(props.renderWidget, 'Unable to load weather', 'Tap to open app');
+    renderFallbackWidget(props.renderWidget, 'Unable to load weather', 'Tap to retry');
   }
 }
 
@@ -210,10 +216,13 @@ async function handleWidgetRefresh(props: WidgetTaskHandlerProps): Promise<void>
     widgetName: props.widgetInfo.widgetName,
     widgetId: props.widgetInfo.widgetId,
   });
-  // Tag the scope so any Sentry event raised below is attributable to this flow.
-  logger.setTag('widget_flow', 'refresh');
 
   try {
+    // Hydrate persisted stores before reading savedLocations / i18n.locale — the
+    // headless task starts before Zustand's async rehydration completes, so
+    // reading them first produces a false "no location" alarm (finding 5).
+    await ensureStoresHydrated();
+
     // Initialize database
     await useForecastStore.getState().initializeDatabase();
 
@@ -226,7 +235,7 @@ async function handleWidgetRefresh(props: WidgetTaskHandlerProps): Promise<void>
 
     if (!gpsLocation) {
       logger.exception('Widget refresh: no GPS location found', {
-        tags: { error_type: 'widget_refresh_no_location' },
+        tags: { error_type: 'widget_refresh_no_location', flow: 'widget_refresh' },
         extra: { widgetName: props.widgetInfo.widgetName, locationId: GPS_LOCATION_ID },
         level: 'warning',
       });
@@ -248,17 +257,23 @@ async function handleWidgetRefresh(props: WidgetTaskHandlerProps): Promise<void>
       );
       refreshSucceeded = true;
     } catch (refreshError) {
-      // Most common silent failure behind "tap does nothing visible": the fetch
-      // failed and we quietly fall back to cached (unchanged) data. Report it to
-      // Sentry instead of swallowing it as a breadcrumb-only warning.
-      logger.exception(
-        refreshError instanceof Error ? refreshError : new Error(String(refreshError)),
-        {
-          tags: { error_type: 'widget_refresh_failed' },
-          extra: { widgetName: props.widgetInfo.widgetName, locationId: GPS_LOCATION_ID },
-          level: 'warning',
-        }
-      );
+      // Always leave a breadcrumb — this is the silent failure behind "tap does
+      // nothing visible" (fetch failed, we fall back to cached/unchanged data).
+      logger.warn('Widget refresh fetch failed; falling back to cached data:', refreshError);
+
+      // Offline is an expected, recoverable state (we render cached data), so it
+      // must not become a Sentry event. Only report genuinely unexpected
+      // refresh failures (finding 3b).
+      if (!(refreshError instanceof NoConnectionError)) {
+        logger.exception(
+          refreshError instanceof Error ? refreshError : new Error(String(refreshError)),
+          {
+            tags: { error_type: 'widget_refresh_failed', flow: 'widget_refresh' },
+            extra: { widgetName: props.widgetInfo.widgetName, locationId: GPS_LOCATION_ID },
+            level: 'warning',
+          }
+        );
+      }
     }
 
     // Get weather data with age (fresh if refresh succeeded, or cached)
@@ -266,7 +281,7 @@ async function handleWidgetRefresh(props: WidgetTaskHandlerProps): Promise<void>
 
     if (!weather) {
       logger.exception('Widget refresh: no weather data available after refresh', {
-        tags: { error_type: 'widget_refresh_no_data' },
+        tags: { error_type: 'widget_refresh_no_data', flow: 'widget_refresh' },
         extra: {
           widgetName: props.widgetInfo.widgetName,
           locationId: GPS_LOCATION_ID,
@@ -299,7 +314,7 @@ async function handleWidgetRefresh(props: WidgetTaskHandlerProps): Promise<void>
     logger.exception(
       error instanceof Error ? error : new Error(String(error)),
       {
-        tags: { error_type: 'widget_refresh_unexpected' },
+        tags: { error_type: 'widget_refresh_unexpected', flow: 'widget_refresh' },
         extra: { widgetName: props.widgetInfo.widgetName, locationId: GPS_LOCATION_ID },
       }
     );

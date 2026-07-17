@@ -149,7 +149,11 @@ export const useForecastStore = create<ForecastStore>((set, get) => ({
         throw new Error('No weather data returned from fetch');
       }
     } catch (error) {
-      logger.error(`Failed to refresh weather data for ${locationId}:`, error);
+      // Offline refreshes are an expected, recoverable state (the widget/app
+      // falls back to cached data), so this must not raise a Sentry error event.
+      // Downgraded from logger.error to logger.warn (breadcrumb only); the error
+      // is re-thrown so callers still see it and report it once at their level.
+      logger.warn(`Failed to refresh weather data for ${locationId}:`, error);
       throw error;
     }
   },

@@ -5,9 +5,35 @@ import { WeatherStandard } from '../widgets/WeatherStandard';
 import { WeatherExtended } from '../widgets/WeatherExtended';
 import { useForecastStore } from '../store/useForecastStore';
 import { useLocationStore, GPS_LOCATION_ID } from '../store/useLocationStore';
+import { useLanguageStore } from '../store/useLanguageStore';
+import { useSettingsStore } from '../store/useSettingsStore';
 import { logger } from './logger';
 import { updateIOSWidgetData } from './iosWidgetStorage';
 import React from 'react';
+
+/**
+ * Ensure the three persisted stores are hydrated from AsyncStorage before the
+ * headless widget context reads them.
+ *
+ * Widgets run in a fresh headless JS task where Zustand's `persist` rehydration
+ * is still in flight. Reading `savedLocations` / `i18n.locale` / settings before
+ * that async read resolves produces false "no location" renders and wrong-unit
+ * output (review finding 5). Awaiting `rehydrate()` on each persisted store
+ * closes that race. Only these three stores are persisted; `useForecastStore`
+ * (SQLite-backed) and `useModalStore` have no `.persist` API and must not be
+ * passed through here.
+ *
+ * `useSettingsStore` is included because widgets read settings headlessly —
+ * `BaseWeatherWidget` reads `tempScale`, and the widget clock-format path reads
+ * `clockFormat` — so its hydration must be guaranteed too.
+ */
+export const ensureStoresHydrated = async (): Promise<void> => {
+  await Promise.all([
+    useLocationStore.persist.rehydrate(),
+    useLanguageStore.persist.rehydrate(),
+    useSettingsStore.persist.rehydrate(),
+  ]);
+};
 
 /**
  * Request immediate update of all weather widgets
@@ -15,6 +41,10 @@ import React from 'react';
  */
 export const updateAllWeatherWidgets = async () => {
   try {
+    // Hydrate persisted stores before reading savedLocations / locale / settings
+    // in this (potentially headless) context.
+    await ensureStoresHydrated();
+
     // Get weather data from store
     const weatherStore = useForecastStore.getState();
     const locationStore = useLocationStore.getState();
