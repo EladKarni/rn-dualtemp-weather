@@ -65,7 +65,7 @@ Finding numbers: 1–15 = tier-1 (review-confirmed), 16–42 = tier-2 (verified 
 | V4 | Offline refresh with NO cache emits one `widget_refresh_no_data` event (level: warning) | Within spec — genuinely dataless display state |
 | V5 | jest `transformIgnorePatterns` doesn't transform i18n-js (ESM) — tests must mock `localization/i18n` | Known; documented pattern used by all suites |
 | V6 | `getCityCoordinates` (geocoding.ts) dead-but-kept | Conservative; candidate deletion |
-| V7 | Geoapify attribution not rendered anywhere while Geoapify still serves city search | **Human follow-up** (ToS/attribution decision) — see §5 |
+| V7 | ~~Geoapify attribution not rendered anywhere while Geoapify still serves city search~~ | **Superseded 2026-07-17** — Geoapify is no longer in the stack; the proxy migrated to WeatherAPI.com (`search-cities`/`get-location` both call `api.weatherapi.com/v1/search.json`). Attribution question re-targets to WeatherAPI — see §5 item 10 (low priority) |
 | V8 | `WeatherStandard` "Tap to refresh" live-widget footer still English | Ruled outside spec item 2's literal list; residue of finding 12 |
 | V9 | ErrorBoundary passes raw `error?.message` into ErrorScreen | Same as finding 31 — follow-up |
 | V10 | Removing react-native-localization-settings dropped the OS-level per-app-language declaration (Android 13+/iOS picker) | **Human follow-up** — re-declare via app.json `locales`/CFBundleLocalizations if wanted |
@@ -184,6 +184,6 @@ Gate was green at every phase exit and re-run after every verifier-driven fix ro
 7. [ ] **Update store-listing copy/screenshots** if they mention OpenWeather (outside the repo).
 8. [ ] Website: no redeploy needed — content unchanged (zero OpenWeather references; marketing site doesn't call the proxy).
 9. [ ] **Strict mode:** nothing deferred — `strict: true` is fully enabled and green; no decision needed.
-10. [ ] **Geoapify attribution decision (V7):** no attribution renders anywhere while Geoapify still serves city search (the dead credit keys were removed). Check Geoapify ToS; if attribution is required, add a credit line (e.g., in Settings/About).
+10. [ ] **WeatherAPI attribution — low priority, verify when convenient (supersedes V7/Geoapify):** the proxy now serves WeatherAPI.com data (Geoapify is out of the stack entirely), and the app credits no provider. WeatherAPI's *free* tier requires a "Powered by WeatherAPI.com" link; **the account is on a paid business plan, which is generally exempt** — so this is a confirm-the-terms item, not a blocker. Confirm the key in the proxy's production `WEATHERAPI_KEY` belongs to the paid plan; if attribution turns out to be required, add a credit line in Settings/About. Owner decision D1 (strip OpenWeather, credit nobody) remains correct either way.
 11. [ ] **Per-app language picker (V10):** removing `react-native-localization-settings` dropped its `languages: [ar,en,es,fr,he,zh]` OS-level declaration. In-app switching is unaffected. Re-declare via app.json `locales` / iOS `CFBundleLocalizations` + new build if you want the Android 13+/iOS system picker.
 12. [ ] Optional follow-ups filed but not blocking: findings 14 (scroll reset), 27 (context value memo), 30 (search request cancellation), 31/V9 (raw error.message pass-through), V1 (committed website/.next), V6 (getCityCoordinates), V8 (WeatherStandard footer string).
