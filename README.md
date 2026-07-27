@@ -179,11 +179,12 @@ yarn lint      # eslint only
 
 ## Build Variants
 
-This app supports two build variants that can be installed simultaneously on the same device:
+This app supports three build variants. On Android all three can be installed
+simultaneously on the same device:
 
 #### Production Variant
 
-Used for the `preview`, `preview-apk`, and `production` build profiles.
+Used for the `production` build profile.
 
 * **Bundle ID (iOS):** `com.ekarni.rndualtempweatherapp`
 * **Package Name (Android):** `com.ekarni.rndualtempweatherapp`
@@ -199,14 +200,32 @@ Used for the `development` build profile.
 * **App Name:** "Dualtemp Weather Dev"
 * **Icon:** App icon with a "DEV" badge overlay
 
+#### Preview Variant (Android only)
+
+Used for the `preview` build profile. Produces a sideloadable APK that installs
+alongside production for on-device comparison. iOS config is deliberately left
+untouched — an iOS preview build would come out identical to production.
+
+* **Package Name (Android):** `com.ekarni.rndualtempweatherapp.preview`
+* **App Name:** "Dualtemp Weather Preview"
+* **Icon:** App icon with a "PREVIEW" badge overlay (regenerate via
+  `node scripts/generate-preview-icon.js`)
+* **Widgets:** labels prefixed with `[Preview]` so the launcher's widget picker
+  stays unambiguous with both variants installed
+* **Backend:** `EXPO_PUBLIC_WEATHER_API_URL` is pinned in the `preview` profile
+  of `eas.json` — edit that single line to re-point the build at a different
+  proxy deployment (note: a value there overrides any variable of the same name
+  in the EAS dashboard's "preview" environment). Widget/app data is isolated
+  from production automatically because Android scopes AsyncStorage per package.
+
 #### Building Variants
 
 ```sh
 # Development variant (installable alongside production)
 eas build --profile development --platform all
 
-# Preview variant (production signature)
-eas build --profile preview --platform all
+# Preview variant (Android-only side-by-side APK)
+eas build --profile preview --platform android
 
 # Production variant (for the app stores)
 eas build --profile production --platform all

@@ -13,16 +13,13 @@
       "distribution": "internal",
       "channel": "preview",
       "environment": "preview",
-      "env": {
-        "SENTRY_DISABLE_AUTO_UPLOAD": "true",
-        "EXPO_PUBLIC_WEATHER_API_URL": "https://open-weather-proxy-pi.vercel.app/api/v1/"
-      }
-    },
-    "preview-apk": {
       "android": {
         "buildType": "apk"
       },
-      "channel": "preview-apk"
+      "env": {
+        "SENTRY_DISABLE_AUTO_UPLOAD": "true",
+        "EXPO_PUBLIC_WEATHER_API_URL": "https://open-weather-proxy-q9xk-git-feat-pro-4cc9b7-eladkarnis-projects.vercel.app/api/v1/"
+      }
     },
     "production": {
       "channel": "production",
