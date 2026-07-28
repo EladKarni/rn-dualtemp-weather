@@ -94,18 +94,48 @@ export const logger = {
   /**
    * Error-level logging (always shown)
    * Use for exceptions and failures
-   * Sends message to Sentry as error-level event
+   * Sends to Sentry as an error-level event
+   *
+   * Reporting shape matters here, because most call sites look like
+   * `logger.error("Widget render failed:", error)`:
+   *  - When any argument is an Error, that Error is captured with
+   *    `captureException`, so the report keeps the real exception type and the
+   *    original throw-site stack. Reporting it as a message instead threw both
+   *    away — the attached stack pointed back into this file, and every event
+   *    grouped by a message string containing the error text, so one bug
+   *    fragmented across many Sentry issues.
+   *  - When there is no Error to capture, the message is sent but fingerprinted
+   *    on the first (static) argument rather than the fully-formatted text, so
+   *    interpolated values don't split one log site into many issues.
    */
   error: (...args: any[]) => {
     console.error(PREFIX, '[ERROR]', ...args);
 
-    // Send as error message to Sentry
     const message = formatMessage(args);
+    const cause = args.find((arg): arg is Error => arg instanceof Error);
+
+    if (cause) {
+      Sentry.captureException(cause, {
+        level: 'error',
+        tags: {
+          error_source: 'logger.error',
+        },
+        // The surrounding call-site text is context, not identity — it stays out
+        // of grouping but remains visible on the event.
+        extra: { log_message: message },
+      });
+      return;
+    }
+
     Sentry.captureMessage(message, {
       level: 'error',
       tags: {
         error_source: 'logger.error',
       },
+      fingerprint: [
+        'logger.error',
+        typeof args[0] === 'string' ? args[0] : 'unlabeled',
+      ],
     });
   },
 
