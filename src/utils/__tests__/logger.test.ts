@@ -25,6 +25,7 @@ jest.mock("@sentry/react-native", () => ({
   setUser: jest.fn(),
   setContext: jest.fn(),
   setTag: jest.fn(),
+  flush: jest.fn().mockResolvedValue(true),
 }));
 
 const mockedSentry = Sentry as unknown as Record<string, jest.Mock>;
@@ -94,5 +95,29 @@ describe("logger.error — message fallback groups stably", () => {
       "Failed to load location",
     ]);
     expect(second[1].fingerprint).toEqual(first[1].fingerprint);
+  });
+});
+
+describe("logger.flush — bounded wait", () => {
+  it("resolves true when the queue drains", async () => {
+    await expect(logger.flush()).resolves.toBe(true);
+    expect(mockedSentry.flush).toHaveBeenCalledTimes(1);
+  });
+
+  it("gives up rather than hanging the caller when the transport stalls", async () => {
+    jest.useFakeTimers();
+    mockedSentry.flush.mockReturnValue(new Promise(() => {})); // never settles
+
+    const pending = logger.flush(2000);
+    jest.advanceTimersByTime(2000);
+
+    await expect(pending).resolves.toBe(false);
+    jest.useRealTimers();
+  });
+
+  it("never rejects, so a failed flush cannot become a second failure", async () => {
+    mockedSentry.flush.mockRejectedValue(new Error("transport gone"));
+
+    await expect(logger.flush()).resolves.toBe(false);
   });
 });

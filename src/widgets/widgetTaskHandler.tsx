@@ -361,42 +361,52 @@ export async function widgetTaskHandler(props: WidgetTaskHandlerProps) {
 
   const Widget = nameToWidget[widgetName];
 
-  if (!Widget) {
-    logger.error(`No widget found with name: ${widgetName}`);
-    return;
-  }
+  try {
+    // Inside the try so the report this emits is flushed too — it is the one
+    // path that reports without doing any work afterwards to keep the task alive.
+    if (!Widget) {
+      logger.error(`No widget found with name: ${widgetName}`);
+      return;
+    }
 
-  switch (props.widgetAction) {
-    case 'WIDGET_ADDED':
-      logger.debug(`Handling ${widgetName} widget addition`);
-      await handleWidgetRender(props);
-      break;
+    switch (props.widgetAction) {
+      case 'WIDGET_ADDED':
+        logger.debug(`Handling ${widgetName} widget addition`);
+        await handleWidgetRender(props);
+        break;
 
-    case 'WIDGET_UPDATE':
-    case 'WIDGET_RESIZED':
-      logger.debug(`Handling ${widgetName} widget update/resize`);
-      await handleWidgetRender(props);
-      break;
+      case 'WIDGET_UPDATE':
+      case 'WIDGET_RESIZED':
+        logger.debug(`Handling ${widgetName} widget update/resize`);
+        await handleWidgetRender(props);
+        break;
 
-    case 'WIDGET_CLICK':
-      // Breadcrumb at the dispatch point: records that a click was delivered to
-      // JS and what clickAction came with it. If clicks "do nothing", check
-      // whether this shows clickAction !== 'REFRESH' (wiring/library mismatch).
-      logger.info('Widget click received', {
-        widgetName,
-        clickAction: props.clickAction,
-      });
-      // OPEN_APP action is handled automatically by library
-      if (props.clickAction === 'REFRESH') {
-        await handleWidgetRefresh(props);
-      }
-      break;
+      case 'WIDGET_CLICK':
+        // Breadcrumb at the dispatch point: records that a click was delivered to
+        // JS and what clickAction came with it. If clicks "do nothing", check
+        // whether this shows clickAction !== 'REFRESH' (wiring/library mismatch).
+        logger.info('Widget click received', {
+          widgetName,
+          clickAction: props.clickAction,
+        });
+        // OPEN_APP action is handled automatically by library
+        if (props.clickAction === 'REFRESH') {
+          await handleWidgetRefresh(props);
+        }
+        break;
 
-    case 'WIDGET_DELETED':
-      // No cleanup needed - data stays in store
-      break;
+      case 'WIDGET_DELETED':
+        // No cleanup needed - data stays in store
+        break;
 
-    default:
-      break;
+      default:
+        break;
+    }
+  } finally {
+    // Android kills the headless JS task as soon as this handler resolves, so
+    // anything the handlers just captured has to be on the wire before we
+    // return — otherwise widget failures, the hardest ones to reproduce by
+    // hand, are also the ones least likely to reach Sentry. Never throws.
+    await logger.flush();
   }
 }

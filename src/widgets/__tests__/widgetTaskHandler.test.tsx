@@ -70,6 +70,9 @@ jest.mock('../../utils/logger', () => ({
     exception: jest.fn(),
     trace: jest.fn(),
     setTag: jest.fn(),
+    // The handler awaits this on every exit path so queued Sentry events are
+    // delivered before Android tears the headless task down.
+    flush: jest.fn().mockResolvedValue(true),
   },
 }));
 
@@ -181,6 +184,46 @@ beforeEach(() => {
     setWeatherData: jest.fn().mockResolvedValue(undefined),
   };
   mockedForecastGetState.mockImplementation(() => forecastState);
+});
+
+describe('Sentry delivery — headless task flush', () => {
+  // Android kills the headless JS task the moment the handler resolves. Anything
+  // captured on the way out is dropped unless the queue is flushed first, which
+  // made widget failures — the hardest to reproduce by hand — also the least
+  // likely to ever reach Sentry.
+  it('flushes after a normal render', async () => {
+    forecastState.getWeatherDataWithAge.mockResolvedValue({
+      weather: { lat: 1 },
+      ageMinutes: 0,
+    });
+
+    await widgetTaskHandler(makeProps({ widgetAction: 'WIDGET_UPDATE' }));
+
+    expect(mockedLogger.flush).toHaveBeenCalledTimes(1);
+  });
+
+  it('flushes on the unknown-widget path, which reports and then returns immediately', async () => {
+    const props = makeProps({ widgetAction: 'WIDGET_UPDATE' });
+    (props.widgetInfo as { widgetName: string }).widgetName = 'NoSuchWidget';
+
+    await widgetTaskHandler(props);
+
+    expect(mockedLogger.error).toHaveBeenCalled();
+    // The report is worthless if the process dies before it is on the wire.
+    expect(mockedLogger.flush).toHaveBeenCalledTimes(1);
+    expect(mockedLogger.flush.mock.invocationCallOrder[0]).toBeGreaterThan(
+      mockedLogger.error.mock.invocationCallOrder[0]
+    );
+  });
+
+  it('flushes even when the handler throws', async () => {
+    const props = makeProps({ widgetAction: 'WIDGET_CLICK', clickAction: 'REFRESH' });
+    mockedEnsureHydrated.mockRejectedValue(new Error('hydration exploded'));
+
+    await widgetTaskHandler(props);
+
+    expect(mockedLogger.flush).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe('widget refresh — hydration gate (finding 5)', () => {
