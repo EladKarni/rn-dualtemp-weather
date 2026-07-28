@@ -123,9 +123,15 @@ pre-existing bug found while speccing this (2026-07-28):
 
 ## Phase 3 — Regenerate the picker previews
 
-> **Blocked on hardware (verified 2026-07-28): no Android AVDs exist on the
-> owner's Mac** (`emulator -list-avds` is empty, no devices attached). Create
-> an AVD (or plug in a device) before this phase can run.
+> **Done 2026-07-28** on the owner's Pixel_9a AVD: release build placed all
+> three widgets with live New York data (added via the manual-city flow — an
+> incidental on-device verification of the GPS-optional port and the Phase 2
+> resolver, since the device has no GPS entry). Widgets were sized to their
+> representative forms (Standard 2-col, Extended 4-row), screencapped, cropped
+> with a 16dp rounded-corner alpha mask, and written over
+> `assets/widget-preview/{Compact,Standard,Extended}.png`. Rebuild + picker
+> check confirms the new previews render. Raw home-screen capture saved to
+> `store/screenshots/widgets/android/home-widgets.png` for the store plan.
 
 Run **after** Phases 1–2 so the captures show the final UI (localized footer).
 
