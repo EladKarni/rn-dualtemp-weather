@@ -19,11 +19,24 @@ import { scrubBreadcrumb, scrubEventValues } from "./src/utils/sentryScrubbing";
 
 // Initialize Sentry - only if DSN is provided
 const sentryDsn = Constants.expoConfig?.extra?.sentryDsn;
+// EXPO_PUBLIC_SENTRY_FORCE_ENABLE=true opts a dev build into actually sending
+// events, so the pipeline can be smoke-tested without cutting a release build.
+const sentryForceEnable = Constants.expoConfig?.extra?.sentryForceEnable === true;
+// Which build produced this event. Without it every build — including the
+// internal `preview` ones that generate most field traffic — lands in Sentry's
+// default "production" environment and is indistinguishable from a real release.
+// __DEV__ is checked first because `buildProfile` is derived from
+// EAS_BUILD_PROFILE, which is unset outside EAS and falls back to "production" —
+// so a force-enabled dev build would otherwise label itself as a real release.
+const sentryEnvironment: string = __DEV__
+  ? "development"
+  : (Constants.expoConfig?.extra?.buildProfile ?? "production");
 if (sentryDsn) {
   Sentry.init({
     dsn: sentryDsn,
     debug: __DEV__, // Enable debug mode in development
-    enabled: !__DEV__, // Only send events in production builds
+    enabled: !__DEV__ || sentryForceEnable, // Only send from release builds (or an explicit dev opt-in)
+    environment: sentryEnvironment,
     sendDefaultPii: false, // don't let Sentry attach IP / default identifiers
     // Defense-in-depth scrubbing (S2): strip GPS query strings from the default
     // fetch/XHR breadcrumbs Sentry attaches automatically, and — before any
@@ -42,7 +55,11 @@ if (sentryDsn) {
     },
   });
   if (__DEV__) {
-    logger.info("Sentry initialized (dev mode - events disabled)");
+    logger.info(
+      sentryForceEnable
+        ? `Sentry initialized (dev mode - events FORCE-ENABLED, environment: ${sentryEnvironment})`
+        : "Sentry initialized (dev mode - events disabled)",
+    );
   }
 } else if (__DEV__) {
   logger.info(

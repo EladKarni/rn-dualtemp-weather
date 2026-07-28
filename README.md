@@ -154,9 +154,20 @@ upstream credentials server-side. The variables are:
 | `EXPO_PUBLIC_SUPPORT_EMAIL` | No | Contact email surfaced on persistent errors. |
 | `EXPO_PUBLIC_SPLASH_TIMEOUT_MS` | No | Max time (ms) to hold the splash screen before showing the UI. |
 | `EXPO_PUBLIC_SENTRY_DSN` | No | Sentry DSN for crash reporting. Leave empty to disable. |
-| `SENTRY_AUTH_TOKEN` | No | Build-time only, for uploading source maps. **Never** commit it, and never give it the `EXPO_PUBLIC_` prefix. |
+| `SENTRY_AUTH_TOKEN` | No | Build-time only, for uploading source maps. **Never** commit it, and never give it the `EXPO_PUBLIC_` prefix — `sentry-cli` reads only this exact name, so a prefixed copy silently ships stack traces with no source maps. |
+| `EXPO_PUBLIC_SENTRY_FORCE_ENABLE` | No | Set to `true` to make a **dev** build actually send events (normally suppressed by `__DEV__`). For smoke-testing the Sentry pipeline only. |
 
 `.env.local` is git-ignored — only `.env.example` is tracked.
+
+#### Verifying crash reporting
+
+Events are tagged with the build profile as the Sentry `environment` (`development` / `preview` /
+`production`), so internal preview builds are distinguishable from real releases. To confirm the
+pipeline end-to-end from a dev build, set `EXPO_PUBLIC_SENTRY_FORCE_ENABLE=true`, restart the
+bundler, and trigger any `logger.error` / `logger.exception` path; the event should appear in the
+`development` environment within a few seconds. Source maps upload automatically on EAS builds —
+if stack traces arrive unsymbolicated, check that `SENTRY_AUTH_TOKEN` is set on the EAS
+environment for that profile and that the profile does not set `SENTRY_DISABLE_AUTO_UPLOAD`.
 
 ### Running the App
 

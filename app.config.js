@@ -111,6 +111,12 @@ export default ({ config }) => {
       projectId: "444bda66-1ab4-4665-ba53-c2b76743a33b"
     },
     sentryDsn: process.env.EXPO_PUBLIC_SENTRY_DSN || null,
+    // Escape hatch for verifying the Sentry pipeline from a dev build. Sentry is
+    // normally `enabled: !__DEV__` (App.tsx), so a dev build sends nothing and
+    // there is no way to smoke-test the wiring short of cutting a release.
+    // Setting EXPO_PUBLIC_SENTRY_FORCE_ENABLE=true opts a dev build into sending.
+    // Off unless explicitly "true", so it can never be enabled by accident.
+    sentryForceEnable: process.env.EXPO_PUBLIC_SENTRY_FORCE_ENABLE === 'true',
     buildProfile: buildProfile,
     isDevelopment: isDevelopment,
   };
