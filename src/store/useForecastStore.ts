@@ -92,8 +92,10 @@ export const useForecastStore = create<ForecastStore>((set, get) => ({
       logger.debug(`Weather data persisted for location: ${locationId}`);
 
       // Update widgets with the freshly-saved weather. Passing the payload here
-      // means widgetUpdater does not import this store, breaking the cycle.
-      updateAllWeatherWidgets(weather).catch((error) => {
+      // means widgetUpdater does not import this store, breaking the cycle. The
+      // locationId lets the updater skip payloads that are not for the widget's
+      // resolved location (cross-location mislabel fix).
+      updateAllWeatherWidgets(weather, locationId).catch((error) => {
         logger.error('Failed to update widgets after weather save:', error);
       });
     } catch (error) {

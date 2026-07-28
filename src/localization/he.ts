@@ -74,6 +74,7 @@ export const he = {
     // Widget chrome
     WidgetUnavailable: "נתוני מזג אוויר אינם זמינים",
     WidgetTapToRetry: "הקש כדי לנסות שוב",
+    WidgetTapToRefresh: "הקש כדי לרענן",
     WidgetRefreshing: "מרענן...",
     WidgetLoadError: "לא ניתן לטעון מזג אוויר",
     WidgetRefreshError: "לא ניתן לרענן",

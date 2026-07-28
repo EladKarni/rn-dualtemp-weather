@@ -3,12 +3,13 @@ import { requestWidgetUpdate } from 'react-native-android-widget';
 import { WeatherCompact } from './WeatherCompact';
 import { WeatherStandard } from './WeatherStandard';
 import { WeatherExtended } from './WeatherExtended';
-import { useLocationStore, GPS_LOCATION_ID } from '../store/useLocationStore';
+import { useLocationStore } from '../store/useLocationStore';
 import { useLanguageStore } from '../store/useLanguageStore';
 import { useSettingsStore } from '../store/useSettingsStore';
 import type { Weather } from '../types/WeatherTypes';
 import { logger } from '../utils/logger';
 import { updateIOSWidgetData } from './utils/iosWidgetStorage';
+import { resolveWidgetLocation } from './utils/widgetDataUtils';
 import React from 'react';
 
 /**
@@ -52,12 +53,21 @@ const isWeather = (value: unknown): value is Weather =>
  *
  * @param weather The weather payload to render. Callers own reading it:
  *   `useForecastStore.setWeatherData` passes the weather it just persisted, and
- *   the settings UI passes the cached GPS weather. Because the payload is passed
- *   in, this module never imports the forecast store — that breaks the
- *   `useForecastStore <-> widgetUpdater` require cycle. A missing or non-Weather
- *   value (e.g. a segment string forwarded by a naive callback) is ignored.
+ *   the settings UI passes the resolved widget location's cached weather.
+ *   Because the payload is passed in, this module never imports the forecast
+ *   store — that breaks the `useForecastStore <-> widgetUpdater` require cycle.
+ *   A missing or non-Weather value (e.g. a segment string forwarded by a naive
+ *   callback) is ignored.
+ * @param locationId The location the payload belongs to. Widgets always show
+ *   the resolved widget location (GPS ?? active ?? first saved), so a payload
+ *   for any other location — e.g. a background prefetch of a non-widget city —
+ *   skips the repaint instead of mislabeling the widget with that city's
+ *   temperatures under the widget location's name.
  */
-export const updateAllWeatherWidgets = async (weather?: Weather) => {
+export const updateAllWeatherWidgets = async (
+  weather: Weather | undefined,
+  locationId: string
+) => {
   try {
     // Hydrate persisted stores before reading savedLocations / locale / settings
     // in this (potentially headless) context.
@@ -65,12 +75,20 @@ export const updateAllWeatherWidgets = async (weather?: Weather) => {
 
     const locationStore = useLocationStore.getState();
 
-    const gpsLocation = locationStore.savedLocations.find(
-      (loc) => loc.id === GPS_LOCATION_ID
+    const widgetLocation = resolveWidgetLocation(
+      locationStore.savedLocations,
+      locationStore.activeLocationId
     );
 
-    if (!gpsLocation) {
-      logger.warn('No GPS location found for widget update');
+    if (!widgetLocation) {
+      logger.warn('No location found for widget update');
+      return;
+    }
+
+    if (locationId !== widgetLocation.id) {
+      logger.debug(
+        `Skipping widget update: payload is for ${locationId}, widgets show ${widgetLocation.id}`
+      );
       return;
     }
 
@@ -86,7 +104,7 @@ export const updateAllWeatherWidgets = async (weather?: Weather) => {
 
     if (Platform.OS === 'ios') {
       // Update iOS widgets via App Groups
-      await updateIOSWidgetData(weatherData, gpsLocation.name);
+      await updateIOSWidgetData(weatherData, widgetLocation.name);
       logger.debug('iOS widgets updated successfully');
     } else {
       // Update Android widgets via react-native-android-widget
@@ -97,7 +115,7 @@ export const updateAllWeatherWidgets = async (weather?: Weather) => {
             <WeatherCompact
               weather={weatherData}
               lastUpdated={lastUpdated}
-              locationName={gpsLocation.name}
+              locationName={widgetLocation.name}
             />
           ),
         }),
@@ -107,7 +125,7 @@ export const updateAllWeatherWidgets = async (weather?: Weather) => {
             <WeatherStandard
               weather={weatherData}
               lastUpdated={lastUpdated}
-              locationName={gpsLocation.name}
+              locationName={widgetLocation.name}
               width={widgetInfo.width}
               height={widgetInfo.height}
             />
@@ -119,7 +137,7 @@ export const updateAllWeatherWidgets = async (weather?: Weather) => {
             <WeatherExtended
               weather={weatherData}
               lastUpdated={lastUpdated}
-              locationName={gpsLocation.name}
+              locationName={widgetLocation.name}
               height={widgetInfo.height}
             />
           ),

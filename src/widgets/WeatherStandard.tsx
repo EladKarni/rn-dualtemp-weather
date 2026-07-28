@@ -11,6 +11,7 @@ import { palette } from "../styles/Palette";
 import { formatDataAge } from "./utils/widgetDataUtils";
 import { formatTime } from "../utils/dateFormatting";
 import { useSettingsStore } from "../store/useSettingsStore";
+import { i18n } from "../localization/i18n";
 
 interface WeatherStandardProps {
   weather: Weather;
@@ -194,7 +195,7 @@ export function WeatherStandard({
         }}
       >
         <TextWidget
-          text="Tap to refresh"
+          text={i18n.t("WidgetTapToRefresh")}
           style={{
             fontSize: 9,
             color: palette.textColorSecondary,

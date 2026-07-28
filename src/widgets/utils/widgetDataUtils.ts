@@ -3,6 +3,7 @@
  * Centralizes weather data processing for all widget types
  */
 import { Weather, HourlyEntity, DailyEntity } from '../../types/WeatherTypes';
+import type { SavedLocation } from '../../store/useLocationStore';
 import { formatTemperature, convertWindSpeed } from '../../utils/temperature';
 import { i18n } from '../../localization/i18n';
 
@@ -198,4 +199,32 @@ export const formatDataAge = (ageMinutes: number): string | null => {
 
   const days = Math.floor(hours / 24);
   return i18n.t('WidgetAgeDays', { count: days });
+};
+
+/**
+ * Resolve which saved location the home-screen widgets should show.
+ *
+ * Precedence: GPS entry ?? active location ?? first saved ?? null.
+ *
+ * The app is GPS-optional — a user can decline location access and use manual
+ * cities exclusively — but the widget contract is "widget = current location",
+ * so the GPS entry (keyed off its `isGPS` flag) still wins whenever it exists.
+ * Without one, the widget follows the active location, then the first saved
+ * location, so manual-cities-only users get a working widget instead of a
+ * permanent "Weather data unavailable" fallback. Only a truly empty store
+ * resolves to null.
+ *
+ * Pure function of its inputs: callers own hydrating the location store and
+ * passing its state in.
+ */
+export const resolveWidgetLocation = (
+  savedLocations: SavedLocation[],
+  activeLocationId: string | null
+): SavedLocation | null => {
+  const gpsLocation = savedLocations.find((loc) => loc.isGPS);
+  const activeLocation = savedLocations.find(
+    (loc) => loc.id === activeLocationId
+  );
+
+  return gpsLocation ?? activeLocation ?? savedLocations[0] ?? null;
 };

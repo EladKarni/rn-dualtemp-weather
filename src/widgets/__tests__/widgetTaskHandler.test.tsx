@@ -14,6 +14,9 @@
  *    clickAction is REFRESH.
  *  - review test 6: stale cache + fetch failure renders cached weather at its
  *    original age without crashing.
+ *  - Phase 2 (widget location fallback): the refresh path resolves its location
+ *    via resolveWidgetLocation (GPS ?? active ?? first saved), so a
+ *    manual-cities-only user (no GPS entry) still gets a working widget.
  */
 import type { WidgetTaskHandlerProps } from 'react-native-android-widget';
 import { NoConnectionError } from '../../utils/errors';
@@ -127,7 +130,10 @@ interface WidgetElement {
 // State the mocked stores expose. `hydratedLocations` is what rehydration
 // reveals; `locationState.savedLocations` starts empty and is populated only
 // when `ensureStoresHydrated` is awaited.
-let locationState: { savedLocations: typeof gpsLocation[] };
+let locationState: {
+  savedLocations: typeof gpsLocation[];
+  activeLocationId: string | null;
+};
 let hydratedLocations: typeof gpsLocation[];
 let forecastState: Record<string, jest.Mock>;
 
@@ -165,11 +171,12 @@ beforeEach(() => {
   jest.clearAllMocks();
 
   hydratedLocations = [gpsLocation];
-  locationState = { savedLocations: [] };
+  locationState = { savedLocations: [], activeLocationId: null };
 
   mockedEnsureHydrated.mockImplementation(async () => {
-    // Rehydration reveals the persisted GPS entry that wasn't there before.
+    // Rehydration reveals the persisted locations that weren't there before.
     locationState.savedLocations = hydratedLocations;
+    locationState.activeLocationId = hydratedLocations[0]?.id ?? null;
   });
 
   mockedLocationGetState.mockImplementation(() => locationState);
@@ -305,13 +312,13 @@ describe('widget refresh — Sentry noise (findings 3b, 3d)', () => {
   });
 
   it('tags a genuine no-location event with the per-event flow tag', async () => {
-    hydratedLocations = []; // no GPS entry even after hydration
+    hydratedLocations = []; // no saved location at all, even after hydration
     const props = makeProps({ widgetAction: 'WIDGET_CLICK', clickAction: 'REFRESH' });
 
     await widgetTaskHandler(props);
 
     expect(mockedLogger.exception).toHaveBeenCalledWith(
-      'Widget refresh: no GPS location found',
+      'Widget refresh: no widget location found',
       expect.objectContaining({
         tags: expect.objectContaining({
           error_type: 'widget_refresh_no_location',
@@ -319,6 +326,38 @@ describe('widget refresh — Sentry noise (findings 3b, 3d)', () => {
         }),
       })
     );
+  });
+});
+
+describe('widget refresh — GPS-optional location fallback (Phase 2)', () => {
+  it('refreshes the resolved fallback location for a manual-cities-only user (no GPS entry)', async () => {
+    const manualCity = {
+      id: 'location-1',
+      name: 'Paris',
+      latitude: 48.85,
+      longitude: 2.35,
+      addedAt: 0,
+      isGPS: false,
+    };
+    hydratedLocations = [manualCity];
+    const props = makeProps({ widgetAction: 'WIDGET_CLICK', clickAction: 'REFRESH' });
+    forecastState.getWeatherDataWithAge.mockResolvedValue({
+      weather: { lat: 1 },
+      ageMinutes: 0,
+    });
+
+    await widgetTaskHandler(props);
+
+    // The resolver fell back to the active manual city — no false no-location
+    // alarm, and every cache read/write keys off the city's own id.
+    expect(exceptionErrorTypes()).not.toContain('widget_refresh_no_location');
+    expect(forecastState.refreshWeather).toHaveBeenCalledWith(
+      manualCity.id,
+      'en',
+      manualCity.latitude,
+      manualCity.longitude
+    );
+    expect(forecastState.getWeatherDataWithAge).toHaveBeenCalledWith(manualCity.id);
   });
 });
 

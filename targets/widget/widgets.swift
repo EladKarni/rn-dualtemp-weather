@@ -192,8 +192,14 @@ struct WeatherProvider: TimelineProvider {
     }
 
     func getSnapshot(in context: Context, completion: @escaping (WeatherEntry) -> Void) {
-        let entry = WeatherEntry(date: Date(), weatherData: getWeatherData())
-        completion(entry)
+        // Gallery browsing calls getSnapshot with isPreview, and a fresh install
+        // has no payload yet — show fixtures there; real data still wins.
+        let data = getWeatherData()
+        if data == nil, context.isPreview {
+            completion(WeatherEntry(date: Date(), weatherData: previewWeatherData()))
+            return
+        }
+        completion(WeatherEntry(date: Date(), weatherData: data))
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<WeatherEntry>) -> Void) {
@@ -520,9 +526,30 @@ struct WeatherExtendedWidget: Widget {
 
 // MARK: - Preview Fixtures
 
+func previewHourlyForecast() -> [HourlyForecast] {
+    let now = Int(Date().timeIntervalSince1970)
+    return [
+        HourlyForecast(dt: now, temp: 22, weatherId: 800, pop: 0.1, windSpeed: 18),
+        HourlyForecast(dt: now + 3600, temp: 24, weatherId: 801, pop: 0.2, windSpeed: 22),
+        HourlyForecast(dt: now + 7200, temp: 25, weatherId: 802, pop: 0.3, windSpeed: 25),
+        HourlyForecast(dt: now + 10800, temp: 23, weatherId: 800, pop: 0.1, windSpeed: 18)
+    ]
+}
+
+func previewDailyForecast() -> [DailyForecast] {
+    let now = Int(Date().timeIntervalSince1970)
+    return [
+        DailyForecast(dt: now, tempMax: 28, tempMin: 18, weatherId: 800),
+        DailyForecast(dt: now + 86400, tempMax: 27, tempMin: 17, weatherId: 801),
+        DailyForecast(dt: now + 172800, tempMax: 25, tempMin: 16, weatherId: 802),
+        DailyForecast(dt: now + 259200, tempMax: 24, tempMin: 15, weatherId: 500),
+        DailyForecast(dt: now + 345600, tempMax: 26, tempMin: 17, weatherId: 800)
+    ]
+}
+
 func previewWeatherData(
-    hourlyForecast: [HourlyForecast] = [],
-    dailyForecast: [DailyForecast] = []
+    hourlyForecast: [HourlyForecast] = previewHourlyForecast(),
+    dailyForecast: [DailyForecast] = previewDailyForecast()
 ) -> WeatherData {
     WeatherData(
         temp: 22,
@@ -557,27 +584,12 @@ func previewWeatherData(
 #Preview("Standard", as: .systemMedium) {
     WeatherStandardWidget()
 } timeline: {
-    WeatherEntry(date: .now, weatherData: previewWeatherData(
-        hourlyForecast: [
-            HourlyForecast(dt: Int(Date().timeIntervalSince1970), temp: 22, weatherId: 800, pop: 0.1, windSpeed: 18),
-            HourlyForecast(dt: Int(Date().timeIntervalSince1970) + 3600, temp: 24, weatherId: 801, pop: 0.2, windSpeed: 22),
-            HourlyForecast(dt: Int(Date().timeIntervalSince1970) + 7200, temp: 25, weatherId: 802, pop: 0.3, windSpeed: 25),
-            HourlyForecast(dt: Int(Date().timeIntervalSince1970) + 10800, temp: 23, weatherId: 800, pop: 0.1, windSpeed: 18)
-        ]
-    ))
+    WeatherEntry(date: .now, weatherData: previewWeatherData())
 }
 
 @available(iOS 17.0, *)
 #Preview("Extended", as: .systemLarge) {
     WeatherExtendedWidget()
 } timeline: {
-    WeatherEntry(date: .now, weatherData: previewWeatherData(
-        dailyForecast: [
-            DailyForecast(dt: Int(Date().timeIntervalSince1970), tempMax: 28, tempMin: 18, weatherId: 800),
-            DailyForecast(dt: Int(Date().timeIntervalSince1970) + 86400, tempMax: 27, tempMin: 17, weatherId: 801),
-            DailyForecast(dt: Int(Date().timeIntervalSince1970) + 172800, tempMax: 25, tempMin: 16, weatherId: 802),
-            DailyForecast(dt: Int(Date().timeIntervalSince1970) + 259200, tempMax: 24, tempMin: 15, weatherId: 500),
-            DailyForecast(dt: Int(Date().timeIntervalSince1970) + 345600, tempMax: 26, tempMin: 17, weatherId: 800)
-        ]
-    ))
+    WeatherEntry(date: .now, weatherData: previewWeatherData())
 }

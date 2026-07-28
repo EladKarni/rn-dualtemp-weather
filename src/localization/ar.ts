@@ -74,6 +74,7 @@ export const ar = {
     // Widget chrome
     WidgetUnavailable: "بيانات الطقس غير متاحة",
     WidgetTapToRetry: "اضغط لإعادة المحاولة",
+    WidgetTapToRefresh: "اضغط للتحديث",
     WidgetRefreshing: "جارٍ التحديث...",
     WidgetLoadError: "تعذّر تحميل الطقس",
     WidgetRefreshError: "تعذّر التحديث",

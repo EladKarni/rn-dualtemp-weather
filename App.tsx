@@ -72,6 +72,9 @@ import { useSettingsStore } from "./src/store/useSettingsStore";
 import { useLocationStore } from "./src/store/useLocationStore";
 import { useModalStore } from "./src/store/useModalStore";
 
+// Widget sync
+import { startWidgetLocationSync } from "./src/widgets/widgetLocationSync";
+
 // Custom hooks
 import { useGPSLocation } from "./src/hooks/useGPSLocation";
 import { useMultiLocationWeather } from "./src/hooks/useMultiLocationWeather";
@@ -102,6 +105,10 @@ function App() {
       console.error("Failed to initialize forecast store:", error);
     });
   }, []);
+
+  // Repaint widgets when the location they resolve to changes (returns its
+  // unsubscribe for cleanup).
+  useEffect(() => startWidgetLocationSync(), []);
 
   // Store state
   const tempScale = useSettingsStore((state) => state.tempScale);

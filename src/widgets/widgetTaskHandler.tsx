@@ -4,12 +4,13 @@ import { WeatherCompact } from './WeatherCompact';
 import { WeatherStandard } from './WeatherStandard';
 import { WeatherExtended } from './WeatherExtended';
 import type { WidgetTaskHandlerProps } from 'react-native-android-widget';
-import { useLocationStore, GPS_LOCATION_ID, type SavedLocation } from '../store/useLocationStore';
+import { useLocationStore, type SavedLocation } from '../store/useLocationStore';
 import { useForecastStore } from '../store/useForecastStore';
 import { i18n } from '../localization/i18n';
 import { logger } from '../utils/logger';
 import { fetchForecast } from '../utils/fetchWeather';
 import { ensureStoresHydrated } from './widgetUpdater';
+import { resolveWidgetLocation } from './utils/widgetDataUtils';
 import { NoConnectionError } from '../utils/errors';
 import { palette } from '../styles/Palette';
 import type { Weather } from '../types/WeatherTypes';
@@ -108,28 +109,34 @@ function renderWidgetWithData(
 }
 
 /**
- * Looks up the persisted GPS location. If it's missing — a genuine no-location
- * state, since callers hydrate the stores first — reports it once (per-event
- * `flow` tag) and renders the retry fallback, returning null so the caller bails.
+ * Resolves the persisted location the widget should show (GPS entry ?? active
+ * ?? first saved). If none resolves — a genuine no-location state, since
+ * callers hydrate the stores first — reports it once (per-event `flow` tag) and
+ * renders the retry fallback, returning null so the caller bails.
  */
-function getGpsLocationOrWarn(
+function getWidgetLocationOrWarn(
   props: WidgetTaskHandlerProps
 ): SavedLocation | null {
-  const gpsLocation = useLocationStore
-    .getState()
-    .savedLocations.find((loc) => loc.id === GPS_LOCATION_ID);
+  const locationStore = useLocationStore.getState();
+  const widgetLocation = resolveWidgetLocation(
+    locationStore.savedLocations,
+    locationStore.activeLocationId
+  );
 
-  if (!gpsLocation) {
-    logger.exception('Widget refresh: no GPS location found', {
+  if (!widgetLocation) {
+    logger.exception('Widget refresh: no widget location found', {
       tags: { error_type: 'widget_refresh_no_location', flow: 'widget_refresh' },
-      extra: { widgetName: props.widgetInfo.widgetName, locationId: GPS_LOCATION_ID },
+      extra: {
+        widgetName: props.widgetInfo.widgetName,
+        activeLocationId: locationStore.activeLocationId,
+      },
       level: 'warning',
     });
     renderFallbackWidget(props.renderWidget, i18n.t('WidgetUnavailable'), i18n.t('WidgetTapToRetry'));
     return null;
   }
 
-  return gpsLocation;
+  return widgetLocation;
 }
 
 interface FetchWeatherResult {
@@ -140,7 +147,7 @@ interface FetchWeatherResult {
 }
 
 /**
- * Fetches weather data for the GPS location, using cache when fresh
+ * Fetches weather data for the resolved widget location, using cache when fresh
  * Falls back to stale cached data if fetch fails
  */
 async function fetchWeatherForWidget(): Promise<FetchWeatherResult> {
@@ -154,17 +161,18 @@ async function fetchWeatherForWidget(): Promise<FetchWeatherResult> {
   const weatherStore = useForecastStore.getState();
   const locationStore = useLocationStore.getState();
 
-  const gpsLocation = locationStore.savedLocations.find(
-    loc => loc.id === GPS_LOCATION_ID
+  const widgetLocation = resolveWidgetLocation(
+    locationStore.savedLocations,
+    locationStore.activeLocationId
   );
 
-  if (!gpsLocation) {
-    return { weather: null, locationName: '', dataAge: null, error: new Error('No GPS location found') };
+  if (!widgetLocation) {
+    return { weather: null, locationName: '', dataAge: null, error: new Error('No widget location found') };
   }
 
   // Get weather data with age for fallback logic
-  const { weather: cachedWeather, ageMinutes } = await weatherStore.getWeatherDataWithAge(GPS_LOCATION_ID);
-  const isFresh = await weatherStore.isLocationDataFresh(GPS_LOCATION_ID);
+  const { weather: cachedWeather, ageMinutes } = await weatherStore.getWeatherDataWithAge(widgetLocation.id);
+  const isFresh = await weatherStore.isLocationDataFresh(widgetLocation.id);
 
   let weather = cachedWeather;
   let dataAge = ageMinutes;
@@ -172,15 +180,15 @@ async function fetchWeatherForWidget(): Promise<FetchWeatherResult> {
   // If data is stale or missing, try to fetch fresh data
   if (!isFresh) {
     try {
-      logger.debug('Fetching fresh data for widget:', GPS_LOCATION_ID);
+      logger.debug('Fetching fresh data for widget:', widgetLocation.id);
       const freshWeather = await fetchForecast(
         i18n.locale,
-        gpsLocation.latitude,
-        gpsLocation.longitude
+        widgetLocation.latitude,
+        widgetLocation.longitude
       );
 
       // Store and use fresh data
-      await weatherStore.setWeatherData(GPS_LOCATION_ID, freshWeather);
+      await weatherStore.setWeatherData(widgetLocation.id, freshWeather);
       weather = freshWeather;
       dataAge = 0; // Fresh data
     } catch (fetchError) {
@@ -192,7 +200,7 @@ async function fetchWeatherForWidget(): Promise<FetchWeatherResult> {
 
   return {
     weather,
-    locationName: gpsLocation.name,
+    locationName: widgetLocation.name,
     dataAge,
     error: !weather ? new Error('No weather data available') : undefined
   };
@@ -240,6 +248,10 @@ async function handleWidgetRefresh(props: WidgetTaskHandlerProps): Promise<void>
     widgetId: props.widgetInfo.widgetId,
   });
 
+  // Which location the widget resolved to, for the outer catch's Sentry extra.
+  // Stays null when the failure happens before resolution.
+  let resolvedLocationId: string | null = null;
+
   try {
     // Hydrate persisted stores before reading savedLocations / i18n.locale — the
     // headless task starts before Zustand's async rehydration completes, so
@@ -251,10 +263,11 @@ async function handleWidgetRefresh(props: WidgetTaskHandlerProps): Promise<void>
 
     const weatherStore = useForecastStore.getState();
 
-    const gpsLocation = getGpsLocationOrWarn(props);
-    if (!gpsLocation) {
+    const widgetLocation = getWidgetLocationOrWarn(props);
+    if (!widgetLocation) {
       return;
     }
+    resolvedLocationId = widgetLocation.id;
 
     // Show refreshing state
     renderLoadingWidget(props.renderWidget, i18n.t('WidgetRefreshing'));
@@ -263,10 +276,10 @@ async function handleWidgetRefresh(props: WidgetTaskHandlerProps): Promise<void>
     let refreshSucceeded = false;
     try {
       await weatherStore.refreshWeather(
-        GPS_LOCATION_ID,
+        widgetLocation.id,
         i18n.locale,
-        gpsLocation.latitude,
-        gpsLocation.longitude
+        widgetLocation.latitude,
+        widgetLocation.longitude
       );
       refreshSucceeded = true;
     } catch (refreshError) {
@@ -282,7 +295,7 @@ async function handleWidgetRefresh(props: WidgetTaskHandlerProps): Promise<void>
           refreshError instanceof Error ? refreshError : new Error(String(refreshError)),
           {
             tags: { error_type: 'widget_refresh_failed', flow: 'widget_refresh' },
-            extra: { widgetName: props.widgetInfo.widgetName, locationId: GPS_LOCATION_ID },
+            extra: { widgetName: props.widgetInfo.widgetName, locationId: widgetLocation.id },
             level: 'warning',
           }
         );
@@ -290,14 +303,14 @@ async function handleWidgetRefresh(props: WidgetTaskHandlerProps): Promise<void>
     }
 
     // Get weather data with age (fresh if refresh succeeded, or cached)
-    const { weather, ageMinutes } = await weatherStore.getWeatherDataWithAge(GPS_LOCATION_ID);
+    const { weather, ageMinutes } = await weatherStore.getWeatherDataWithAge(widgetLocation.id);
 
     if (!weather) {
       logger.exception('Widget refresh: no weather data available after refresh', {
         tags: { error_type: 'widget_refresh_no_data', flow: 'widget_refresh' },
         extra: {
           widgetName: props.widgetInfo.widgetName,
-          locationId: GPS_LOCATION_ID,
+          locationId: widgetLocation.id,
           refreshSucceeded,
         },
         level: 'warning',
@@ -311,7 +324,7 @@ async function handleWidgetRefresh(props: WidgetTaskHandlerProps): Promise<void>
       : ageMinutes !== null
         ? ageMinutes
         : undefined;
-    if (renderWidgetWithData(props, weather, gpsLocation.name, dataAge)) {
+    if (renderWidgetWithData(props, weather, widgetLocation.name, dataAge)) {
       logger.debug(
         refreshSucceeded
           ? `${props.widgetInfo.widgetName} widget refreshed successfully`
@@ -323,22 +336,25 @@ async function handleWidgetRefresh(props: WidgetTaskHandlerProps): Promise<void>
       error instanceof Error ? error : new Error(String(error)),
       {
         tags: { error_type: 'widget_refresh_unexpected', flow: 'widget_refresh' },
-        extra: { widgetName: props.widgetInfo.widgetName, locationId: GPS_LOCATION_ID },
+        extra: { widgetName: props.widgetInfo.widgetName, locationId: resolvedLocationId },
       }
     );
 
     // Try to render with cached data before showing error
     try {
       const weatherStore = useForecastStore.getState();
-      const { weather, ageMinutes } = await weatherStore.getWeatherDataWithAge(GPS_LOCATION_ID);
+      const locationStore = useLocationStore.getState();
+      const widgetLocation = resolveWidgetLocation(
+        locationStore.savedLocations,
+        locationStore.activeLocationId
+      );
 
-      if (weather) {
-        const locationStore = useLocationStore.getState();
-        const gpsLocation = locationStore.savedLocations.find(loc => loc.id === GPS_LOCATION_ID);
+      if (widgetLocation) {
+        const { weather, ageMinutes } = await weatherStore.getWeatherDataWithAge(widgetLocation.id);
 
-        if (gpsLocation) {
+        if (weather) {
           const dataAge = ageMinutes !== null ? ageMinutes : undefined;
-          if (renderWidgetWithData(props, weather, gpsLocation.name, dataAge)) {
+          if (renderWidgetWithData(props, weather, widgetLocation.name, dataAge)) {
             logger.debug('Rendered widget with cached data after error');
             return;
           }

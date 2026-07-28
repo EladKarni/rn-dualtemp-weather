@@ -3,13 +3,23 @@
  * helper and its use in `updateAllWeatherWidgets` (finding 5).
  *
  * Worker L — cycle-break coverage: `setWeatherData` now passes the fresh weather
- * payload into `updateAllWeatherWidgets(weather)` so this module never imports
- * the forecast store at all. These tests prove (a) a passed payload is used
- * directly with no store read, and (b) a stray non-Weather value (the temp-scale
- * string a naive `onAfterChange` would forward) is rejected by the isWeather()
- * guard: the function warns and returns without rendering.
+ * payload into `updateAllWeatherWidgets(weather, locationId)` so this module
+ * never imports the forecast store at all. These tests prove (a) a passed
+ * payload is used directly with no store read, and (b) a stray non-Weather
+ * value (the temp-scale string a naive `onAfterChange` would forward) is
+ * rejected by the isWeather() guard: the function warns and returns without
+ * rendering.
+ *
+ * Phase 2 (widget location fallback) — the updater resolves the widget
+ * location via resolveWidgetLocation (GPS ?? active ?? first saved) and skips
+ * the repaint when the payload's locationId is not the resolved location's,
+ * closing the cross-location mislabel bug (a background prefetch of a
+ * non-widget city must not repaint the widget with that city's temperatures
+ * under the widget location's name).
  */
+import { requestWidgetUpdate } from 'react-native-android-widget';
 import { ensureStoresHydrated, updateAllWeatherWidgets } from '../widgetUpdater';
+import { updateIOSWidgetData } from '../utils/iosWidgetStorage';
 import { useLocationStore } from '../../store/useLocationStore';
 import { useLanguageStore } from '../../store/useLanguageStore';
 import { useSettingsStore } from '../../store/useSettingsStore';
@@ -24,6 +34,13 @@ jest.mock('../WeatherCompact', () => ({ WeatherCompact: 'WeatherCompact' }));
 jest.mock('../WeatherStandard', () => ({ WeatherStandard: 'WeatherStandard' }));
 jest.mock('../WeatherExtended', () => ({ WeatherExtended: 'WeatherExtended' }));
 jest.mock('../utils/iosWidgetStorage', () => ({ updateIOSWidgetData: jest.fn() }));
+
+// widgetUpdater imports widgetDataUtils (for resolveWidgetLocation), which
+// imports i18n at module scope; i18n-js ships ESM that jest-expo does not
+// transform, so mock the localization module (no localized string is asserted).
+jest.mock('../../localization/i18n', () => ({
+  i18n: { locale: 'en', t: (key: string) => key },
+}));
 
 jest.mock('../../utils/logger', () => ({
   logger: {
@@ -58,8 +75,12 @@ const settingsRehydrate = useSettingsStore.persist.rehydrate as unknown as jest.
 const locationGetState = useLocationStore.getState as unknown as jest.Mock;
 const forecastGetState = useForecastStore.getState as unknown as jest.Mock;
 const mockedLogger = logger as unknown as Record<string, jest.Mock>;
+const mockedRequestWidgetUpdate = requestWidgetUpdate as unknown as jest.Mock;
+const mockedUpdateIOSWidgetData = updateIOSWidgetData as unknown as jest.Mock;
 
-const gpsWeather = {
+const GPS = 'gps-location';
+
+const weatherPayload = {
   current: { temp: 20 },
   daily: [],
   hourly: [],
@@ -72,7 +93,7 @@ beforeEach(() => {
   locationRehydrate.mockResolvedValue(undefined);
   languageRehydrate.mockResolvedValue(undefined);
   settingsRehydrate.mockResolvedValue(undefined);
-  locationGetState.mockReturnValue({ savedLocations: [] });
+  locationGetState.mockReturnValue({ savedLocations: [], activeLocationId: null });
   forecastGetState.mockReturnValue({
     getWeatherData: jest.fn().mockResolvedValue(null),
   });
@@ -97,7 +118,7 @@ describe('ensureStoresHydrated', () => {
 
 describe('updateAllWeatherWidgets', () => {
   it('hydrates the persisted stores before reading savedLocations', async () => {
-    await updateAllWeatherWidgets();
+    await updateAllWeatherWidgets(undefined, GPS);
 
     expect(locationRehydrate).toHaveBeenCalled();
     expect(languageRehydrate).toHaveBeenCalled();
@@ -110,7 +131,7 @@ describe('updateAllWeatherWidgets', () => {
 
     // Empty freshly-hydrated store → warn + early return (no widget update).
     expect(mockedLogger.warn).toHaveBeenCalledWith(
-      'No GPS location found for widget update'
+      'No location found for widget update'
     );
   });
 
@@ -118,10 +139,11 @@ describe('updateAllWeatherWidgets', () => {
     const getWeatherData = jest.fn().mockResolvedValue(null);
     forecastGetState.mockReturnValue({ getWeatherData });
     locationGetState.mockReturnValue({
-      savedLocations: [{ id: 'gps-location', name: 'Here' }],
+      savedLocations: [{ id: GPS, name: 'Here', isGPS: true }],
+      activeLocationId: GPS,
     });
 
-    await updateAllWeatherWidgets(gpsWeather);
+    await updateAllWeatherWidgets(weatherPayload, GPS);
 
     // widgetUpdater must not consult the forecast store at all — the payload is
     // passed in by the caller. The weather-missing warning never fires.
@@ -135,11 +157,12 @@ describe('updateAllWeatherWidgets', () => {
     const getWeatherData = jest.fn().mockResolvedValue(null);
     forecastGetState.mockReturnValue({ getWeatherData });
     locationGetState.mockReturnValue({
-      savedLocations: [{ id: 'gps-location', name: 'Here' }],
+      savedLocations: [{ id: GPS, name: 'Here', isGPS: true }],
+      activeLocationId: GPS,
     });
 
     // Simulate the runtime bug: a temp-scale string forwarded as "weather".
-    await updateAllWeatherWidgets('F' as unknown as Weather);
+    await updateAllWeatherWidgets('F' as unknown as Weather, GPS);
 
     // The guard rejects the string, so no widget is rendered with a bogus payload
     // and the store is never touched (widgetUpdater has no store dependency).
@@ -147,5 +170,44 @@ describe('updateAllWeatherWidgets', () => {
     expect(mockedLogger.warn).toHaveBeenCalledWith(
       'No weather data found for widget update'
     );
+  });
+
+  it('skips the repaint when the payload is for a different location than the widgets show (mislabel fix)', async () => {
+    locationGetState.mockReturnValue({
+      savedLocations: [
+        { id: GPS, name: 'Here', isGPS: true },
+        { id: 'location-paris', name: 'Paris', isGPS: false },
+      ],
+      activeLocationId: GPS,
+    });
+
+    // A background prefetch of Paris while the widgets show the GPS location.
+    await updateAllWeatherWidgets(weatherPayload, 'location-paris');
+
+    // Neither platform path repaints — that would label Paris temperatures
+    // with the GPS location's name until the next 30-minute cycle.
+    expect(mockedRequestWidgetUpdate).not.toHaveBeenCalled();
+    expect(mockedUpdateIOSWidgetData).not.toHaveBeenCalled();
+    expect(mockedLogger.debug).toHaveBeenCalledWith(
+      expect.stringContaining('Skipping widget update')
+    );
+  });
+
+  it('repaints for a manual-cities-only user when the payload matches the resolved fallback location', async () => {
+    locationGetState.mockReturnValue({
+      savedLocations: [{ id: 'location-paris', name: 'Paris', isGPS: false }],
+      activeLocationId: 'location-paris',
+    });
+
+    await updateAllWeatherWidgets(weatherPayload, 'location-paris');
+
+    // No GPS entry, yet the update goes through — the resolver falls back to
+    // the active location, so exactly one platform path rendered and neither
+    // "location missing" nor "weather missing" warning fired.
+    expect(mockedLogger.warn).not.toHaveBeenCalled();
+    expect(
+      mockedRequestWidgetUpdate.mock.calls.length +
+        mockedUpdateIOSWidgetData.mock.calls.length
+    ).toBeGreaterThan(0);
   });
 });

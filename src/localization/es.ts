@@ -74,6 +74,7 @@ export const es = {
     // Widget chrome
     WidgetUnavailable: "Datos meteorológicos no disponibles",
     WidgetTapToRetry: "Toca para reintentar",
+    WidgetTapToRefresh: "Toca para actualizar",
     WidgetRefreshing: "Actualizando...",
     WidgetLoadError: "No se pudo cargar el clima",
     WidgetRefreshError: "No se pudo actualizar",
