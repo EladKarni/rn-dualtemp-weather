@@ -6,6 +6,7 @@ import { Platform } from 'react-native';
 import { Weather } from '../../types/WeatherTypes';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { convertWindSpeed } from '../../utils/temperature';
+import { i18n, translations } from '../../localization/i18n';
 
 // Only import ExtensionStorage on iOS
 let ExtensionStorage: any = null;
@@ -19,7 +20,28 @@ if (Platform.OS === 'ios') {
 
 const APP_GROUP_ID = 'group.com.ekarni.rndualtempweatherapp.widget';
 
+/**
+ * Localized widget-chrome strings, resolved by the app's i18n at write time so
+ * the Swift widget never needs its own translation tables. The age strings are
+ * raw i18n templates — the "%{count}" placeholder is substituted in Swift,
+ * because data age must be computed at widget render time, not write time.
+ */
+interface IOSWidgetChrome {
+  today: string;
+  hi: string;
+  lo: string;
+  ageMinutes: string;
+  ageHours: string;
+  ageDays: string;
+}
+
 interface IOSWeatherData {
+  /**
+   * Payload contract version. v2 adds locale/is24Hour/chrome and changes
+   * hourlyForecast.windSpeed from m/s to the display unit matching windUnit.
+   * The Swift side treats a missing value as v1 and falls back to English.
+   */
+  schemaVersion: number;
   temp: number;
   tempScale: string;
   weatherId: number;
@@ -30,12 +52,15 @@ interface IOSWeatherData {
   locationName: string;
   lastUpdated: string;  // Display string for backward compatibility
   lastUpdatedTimestamp: number;  // Unix timestamp in seconds for age calculation
+  locale: string;       // Resolved app language (en/es/fr/ar/he/zh) for date formatting
+  is24Hour: boolean;    // Resolved clock-format preference ("auto" already applied)
+  chrome: IOSWidgetChrome;
   hourlyForecast: Array<{
     dt: number;
     temp: number;
     weatherId: number;
     pop: number;
-    windSpeed: number;
+    windSpeed: number;  // v2: already converted to the display unit (km/h or mph)
   }>;
   dailyForecast: Array<{
     dt: number;
@@ -43,6 +68,17 @@ interface IOSWeatherData {
     tempMin: number;
     weatherId: number;
   }>;
+}
+
+/**
+ * The active app locale, guarded to the set of shipped translation tables so a
+ * surprising i18n.locale value (e.g. "en-US") can never produce an undefined
+ * chrome payload.
+ */
+function resolveWidgetLocale(): keyof typeof translations {
+  return i18n.locale in translations
+    ? (i18n.locale as keyof typeof translations)
+    : 'en';
 }
 
 /**
@@ -54,8 +90,11 @@ function transformWeatherForIOS(
   tempScale: 'C' | 'F'
 ): IOSWeatherData {
   const windData = convertWindSpeed(weather.current.wind_speed, tempScale);
+  const locale = resolveWidgetLocale();
+  const table = translations[locale];
 
   return {
+    schemaVersion: 2,
     temp: Math.round(weather.current.temp),
     tempScale,
     weatherId: weather.current.weather[0].id,
@@ -69,12 +108,22 @@ function transformWeatherForIOS(
       minute: '2-digit',
     }),
     lastUpdatedTimestamp: Math.floor(Date.now() / 1000),  // Unix timestamp in seconds
+    locale,
+    is24Hour: useSettingsStore.getState().getEffectiveClockFormat() === '24hour',
+    chrome: {
+      today: table.Today,
+      hi: table.WidgetHi,
+      lo: table.WidgetLo,
+      ageMinutes: table.WidgetAgeMinutes,
+      ageHours: table.WidgetAgeHours,
+      ageDays: table.WidgetAgeDays,
+    },
     hourlyForecast: weather.hourly.slice(0, 6).map((hour) => ({
       dt: hour.dt,
       temp: Math.round(hour.temp),
       weatherId: hour.weather[0].id,
       pop: hour.pop,
-      windSpeed: hour.wind_speed,
+      windSpeed: convertWindSpeed(hour.wind_speed, tempScale).value,
     })),
     dailyForecast: weather.daily.slice(0, 7).map((day) => ({
       dt: day.dt,

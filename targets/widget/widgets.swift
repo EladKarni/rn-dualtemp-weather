@@ -16,6 +16,27 @@ extension View {
 
 // MARK: - Shared Data Model
 
+/// Localized chrome strings written by the app (src/widgets/utils/iosWidgetStorage.ts).
+/// The age strings are i18n templates whose "%{count}" placeholder is filled here,
+/// because data age is computed at render time.
+struct WidgetChrome: Codable {
+    let today: String
+    let hi: String
+    let lo: String
+    let ageMinutes: String
+    let ageHours: String
+    let ageDays: String
+}
+
+let defaultChrome = WidgetChrome(
+    today: "Today",
+    hi: "Hi",
+    lo: "Lo",
+    ageMinutes: "%{count}m ago",
+    ageHours: "%{count}h ago",
+    ageDays: "%{count}d ago"
+)
+
 struct WeatherData: Codable {
     let temp: Double
     let tempScale: String // "C" or "F"
@@ -29,6 +50,22 @@ struct WeatherData: Codable {
     let lastUpdatedTimestamp: Int?  // Optional for backward compatibility
     let hourlyForecast: [HourlyForecast]
     let dailyForecast: [DailyForecast]
+    // v2 payload fields — all optional so a stale v1 payload (written by an
+    // older app build) still decodes and renders with English defaults.
+    let schemaVersion: Int?
+    let locale: String?     // App language (en/es/fr/ar/he/zh), not device language
+    let is24Hour: Bool?     // Clock-format setting with "auto" already resolved
+    let chrome: WidgetChrome?
+}
+
+extension WeatherData {
+    var resolvedChrome: WidgetChrome { chrome ?? defaultChrome }
+    var resolvedLocale: Locale { Locale(identifier: locale ?? "en") }
+    // v1 payloads always rendered 24-hour time; keep that until the app rewrites.
+    var resolvedIs24Hour: Bool { is24Hour ?? true }
+    // v1 hourly windSpeed is in m/s with no per-hour unit — only v2 can label it.
+    var hasConvertedHourlyWind: Bool { (schemaVersion ?? 1) >= 2 }
+    var isRTL: Bool { ["he", "ar"].contains(locale ?? "en") }
 }
 
 struct HourlyForecast: Codable {
@@ -97,24 +134,47 @@ func formatDualTemp(tempCelsius: Double, primaryScale: String) -> (primary: Stri
     }
 }
 
+// MARK: - Date Formatting
+
+/// Mirrors the Android widget's formatTime: "HH:mm" for 24-hour, "h:mm a" for 12-hour,
+/// in the app's language (not the device language, which may differ).
+func makeTimeFormatter(locale: Locale, is24Hour: Bool) -> DateFormatter {
+    let f = DateFormatter()
+    f.locale = locale
+    f.dateFormat = is24Hour ? "HH:mm" : "h:mm a"
+    return f
+}
+
+/// Mirrors the Android widget's moment("ddd") day label in the app's language.
+func makeDayFormatter(locale: Locale) -> DateFormatter {
+    let f = DateFormatter()
+    f.locale = locale
+    f.dateFormat = "EEE"
+    return f
+}
+
 // MARK: - Age Calculation
 
+func fillCount(_ template: String, _ n: Int) -> String {
+    return template.replacingOccurrences(of: "%{count}", with: String(n))
+}
+
 /**
- * Calculate data age and return formatted string
- * Returns nil if data is fresh (< 30 minutes)
+ * Calculate data age and return a localized string.
+ * Contract matches the Android widget's formatDataAge:
+ * < 30 min fresh (nil), then Xm / Xh / Xd ago.
  */
-func calculateDataAge(timestamp: Int) -> String? {
+func calculateDataAge(timestamp: Int, chrome: WidgetChrome) -> String? {
     let now = Date().timeIntervalSince1970
     let ageMinutes = Int((now - Double(timestamp)) / 60)
 
     // Don't show age if fresh (< 30 min)
     if ageMinutes < 30 { return nil }
 
-    if ageMinutes < 60 { return "\(ageMinutes)m ago" }
+    if ageMinutes < 60 { return fillCount(chrome.ageMinutes, ageMinutes) }
     let hours = ageMinutes / 60
-    if hours < 24 { return "\(hours)h ago" }
-    let days = hours / 24
-    return "\(days)d ago"
+    if hours < 24 { return fillCount(chrome.ageHours, hours) }
+    return fillCount(chrome.ageDays, hours / 24)
 }
 
 // MARK: - Timeline Entry
@@ -137,20 +197,13 @@ struct WeatherProvider: TimelineProvider {
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<WeatherEntry>) -> Void) {
+        // The data doesn't change until the app (or its background task) rewrites
+        // the App Group payload, so a single entry refreshed every 30 minutes
+        // (matching the Android cycle) is sufficient.
         let currentDate = Date()
-        let weatherData = getWeatherData()
-
-        // Create entries for the next 30 minutes (matching Android refresh cycle)
-        var entries: [WeatherEntry] = []
-        for minuteOffset in stride(from: 0, to: 30, by: 15) {
-            let entryDate = Calendar.current.date(byAdding: .minute, value: minuteOffset, to: currentDate)!
-            entries.append(WeatherEntry(date: entryDate, weatherData: weatherData))
-        }
-
-        // Refresh after 30 minutes
+        let entry = WeatherEntry(date: currentDate, weatherData: getWeatherData())
         let nextUpdate = Calendar.current.date(byAdding: .minute, value: 30, to: currentDate)!
-        let timeline = Timeline(entries: entries, policy: .after(nextUpdate))
-        completion(timeline)
+        completion(Timeline(entries: [entry], policy: .after(nextUpdate)))
     }
 }
 
@@ -162,22 +215,22 @@ struct WidgetColors {
     static let textSecondary = Color.white.opacity(0.7)
     static let highlight = Color(red: 0.29, green: 0.565, blue: 0.886) // #4A90E2
     static let cardBackground = Color.white.opacity(0.1)
+    static let ageText = Color(red: 0.61, green: 0.64, blue: 0.69) // #9CA3AF
 }
 
 // MARK: - Placeholder View
 
 struct PlaceholderView: View {
     var body: some View {
-        VStack {
+        // No text: the placeholder renders before any payload exists, so there is
+        // no locale to localize copy into.
+        VStack(spacing: 4) {
             Text("--°")
                 .font(.title2)
                 .fontWeight(.bold)
                 .foregroundColor(WidgetColors.textPrimary)
             Text("🌤️")
                 .font(.title3)
-            Text("Loading...")
-                .font(.caption2)
-                .foregroundColor(WidgetColors.textSecondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(WidgetColors.background)
@@ -192,7 +245,9 @@ struct WeatherCompactView: View {
     var body: some View {
         if let weather = entry.weatherData {
             let temps = formatDualTemp(tempCelsius: weather.temp, primaryScale: weather.tempScale)
-            let ageText = weather.lastUpdatedTimestamp.flatMap { calculateDataAge(timestamp: $0) }
+            let ageText = weather.lastUpdatedTimestamp.flatMap {
+                calculateDataAge(timestamp: $0, chrome: weather.resolvedChrome)
+            }
 
             VStack(spacing: 2) {
                 Text(temps.primary)
@@ -212,11 +267,12 @@ struct WeatherCompactView: View {
                 if let ageText = ageText {
                     Text(ageText)
                         .font(.system(size: 9))
-                        .foregroundColor(Color(red: 0.61, green: 0.64, blue: 0.69)) // #9CA3AF
+                        .foregroundColor(WidgetColors.ageText)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(WidgetColors.background)
+            .environment(\.layoutDirection, weather.isRTL ? .rightToLeft : .leftToRight)
         } else {
             PlaceholderView()
         }
@@ -242,15 +298,13 @@ struct WeatherCompactWidget: Widget {
 struct HourlyItemView: View {
     let forecast: HourlyForecast
     let tempScale: String
+    let windUnit: String
+    let showWind: Bool
+    let timeFormatter: DateFormatter
 
     var body: some View {
         let temps = formatDualTemp(tempCelsius: forecast.temp, primaryScale: tempScale)
         let time = Date(timeIntervalSince1970: TimeInterval(forecast.dt))
-        let timeFormatter: DateFormatter = {
-            let f = DateFormatter()
-            f.dateFormat = "HH:mm"
-            return f
-        }()
 
         VStack(spacing: 2) {
             Text(timeFormatter.string(from: time))
@@ -260,6 +314,14 @@ struct HourlyItemView: View {
             Text("💧\(Int(forecast.pop * 100))%")
                 .font(.system(size: 9))
                 .foregroundColor(WidgetColors.textSecondary)
+
+            // Wind is only labeled correctly by v2 payloads (converted units)
+            if showWind {
+                Text("\(Int(forecast.windSpeed.rounded()))\(windUnit)")
+                    .font(.system(size: 9))
+                    .foregroundColor(WidgetColors.textSecondary)
+                    .minimumScaleFactor(0.7)
+            }
 
             Text(getWeatherIcon(weatherId: forecast.weatherId))
                 .font(.system(size: 16))
@@ -286,13 +348,25 @@ struct WeatherStandardView: View {
 
     var body: some View {
         if let weather = entry.weatherData {
-            let ageText = weather.lastUpdatedTimestamp.flatMap { calculateDataAge(timestamp: $0) }
+            let ageText = weather.lastUpdatedTimestamp.flatMap {
+                calculateDataAge(timestamp: $0, chrome: weather.resolvedChrome)
+            }
+            let timeFormatter = makeTimeFormatter(
+                locale: weather.resolvedLocale,
+                is24Hour: weather.resolvedIs24Hour
+            )
 
             VStack(spacing: 4) {
                 // Hourly forecast row
                 HStack(spacing: 4) {
                     ForEach(weather.hourlyForecast.prefix(4), id: \.dt) { forecast in
-                        HourlyItemView(forecast: forecast, tempScale: weather.tempScale)
+                        HourlyItemView(
+                            forecast: forecast,
+                            tempScale: weather.tempScale,
+                            windUnit: weather.windUnit,
+                            showWind: weather.hasConvertedHourlyWind,
+                            timeFormatter: timeFormatter
+                        )
                     }
                 }
 
@@ -300,12 +374,13 @@ struct WeatherStandardView: View {
                 if let ageText = ageText {
                     Text(ageText)
                         .font(.system(size: 9))
-                        .foregroundColor(Color(red: 0.61, green: 0.64, blue: 0.69)) // #9CA3AF
+                        .foregroundColor(WidgetColors.ageText)
                 }
             }
             .padding(8)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(WidgetColors.background)
+            .environment(\.layoutDirection, weather.isRTL ? .rightToLeft : .leftToRight)
         } else {
             PlaceholderView()
         }
@@ -332,19 +407,16 @@ struct DailyItemView: View {
     let forecast: DailyForecast
     let tempScale: String
     let isToday: Bool
+    let chrome: WidgetChrome
+    let dayFormatter: DateFormatter
 
     var body: some View {
         let highTemps = formatDualTemp(tempCelsius: forecast.tempMax, primaryScale: tempScale)
         let lowTemps = formatDualTemp(tempCelsius: forecast.tempMin, primaryScale: tempScale)
         let date = Date(timeIntervalSince1970: TimeInterval(forecast.dt))
-        let dayFormatter: DateFormatter = {
-            let f = DateFormatter()
-            f.dateFormat = "EEE"
-            return f
-        }()
 
         HStack {
-            Text(isToday ? "Today" : dayFormatter.string(from: date))
+            Text(isToday ? chrome.today : dayFormatter.string(from: date))
                 .font(.system(size: 14, weight: .semibold))
                 .foregroundColor(WidgetColors.textPrimary)
                 .frame(width: 50, alignment: .leading)
@@ -355,7 +427,7 @@ struct DailyItemView: View {
             Spacer()
 
             HStack(spacing: 2) {
-                Text("Hi")
+                Text(chrome.hi)
                     .font(.system(size: 11))
                     .foregroundColor(WidgetColors.highlight)
                 Text("\(highTemps.primary) / \(highTemps.secondary)")
@@ -366,7 +438,7 @@ struct DailyItemView: View {
             Spacer()
 
             HStack(spacing: 2) {
-                Text("Lo")
+                Text(chrome.lo)
                     .font(.system(size: 11))
                     .foregroundColor(WidgetColors.highlight)
                 Text("\(lowTemps.primary) / \(lowTemps.secondary)")
@@ -381,33 +453,51 @@ struct DailyItemView: View {
     }
 }
 
+// Content is split from the widget-family switch so the screenshot harness
+// (scripts/widget-screenshots) can render it at an explicit day count —
+// \.widgetFamily is a read-only environment value and cannot be injected.
+struct WeatherExtendedContent: View {
+    let weather: WeatherData
+    let dayCount: Int
+
+    var body: some View {
+        let ageText = weather.lastUpdatedTimestamp.flatMap {
+            calculateDataAge(timestamp: $0, chrome: weather.resolvedChrome)
+        }
+        let dayFormatter = makeDayFormatter(locale: weather.resolvedLocale)
+
+        VStack(spacing: 4) {
+            ForEach(Array(weather.dailyForecast.prefix(dayCount).enumerated()), id: \.element.dt) { index, forecast in
+                DailyItemView(
+                    forecast: forecast,
+                    tempScale: weather.tempScale,
+                    isToday: index == 0,
+                    chrome: weather.resolvedChrome,
+                    dayFormatter: dayFormatter
+                )
+            }
+
+            // Age indicator (only if stale)
+            if let ageText = ageText {
+                Text(ageText)
+                    .font(.system(size: 9))
+                    .foregroundColor(WidgetColors.ageText)
+            }
+        }
+        .padding(8)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(WidgetColors.background)
+        .environment(\.layoutDirection, weather.isRTL ? .rightToLeft : .leftToRight)
+    }
+}
+
 struct WeatherExtendedView: View {
     let entry: WeatherEntry
     @Environment(\.widgetFamily) var family
 
     var body: some View {
         if let weather = entry.weatherData {
-            let ageText = weather.lastUpdatedTimestamp.flatMap { calculateDataAge(timestamp: $0) }
-
-            VStack(spacing: 4) {
-                ForEach(Array(weather.dailyForecast.prefix(family == .systemLarge ? 5 : 3).enumerated()), id: \.element.dt) { index, forecast in
-                    DailyItemView(
-                        forecast: forecast,
-                        tempScale: weather.tempScale,
-                        isToday: index == 0
-                    )
-                }
-
-                // Age indicator (only if stale)
-                if let ageText = ageText {
-                    Text(ageText)
-                        .font(.system(size: 9))
-                        .foregroundColor(Color(red: 0.61, green: 0.64, blue: 0.69)) // #9CA3AF
-                }
-            }
-            .padding(8)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(WidgetColors.background)
+            WeatherExtendedContent(weather: weather, dayCount: family == .systemLarge ? 5 : 3)
         } else {
             PlaceholderView()
         }
@@ -428,50 +518,52 @@ struct WeatherExtendedWidget: Widget {
     }
 }
 
+// MARK: - Preview Fixtures
+
+func previewWeatherData(
+    hourlyForecast: [HourlyForecast] = [],
+    dailyForecast: [DailyForecast] = []
+) -> WeatherData {
+    WeatherData(
+        temp: 22,
+        tempScale: "C",
+        weatherId: 800,
+        description: "Clear sky",
+        humidity: 65,
+        windSpeed: 19.8,
+        windUnit: "km/h",
+        locationName: "Tel Aviv",
+        lastUpdated: "12:00",
+        lastUpdatedTimestamp: Int(Date().timeIntervalSince1970),
+        hourlyForecast: hourlyForecast,
+        dailyForecast: dailyForecast,
+        schemaVersion: 2,
+        locale: "en",
+        is24Hour: false,
+        chrome: defaultChrome
+    )
+}
+
 // MARK: - Previews
 
 @available(iOS 17.0, *)
 #Preview("Compact", as: .systemSmall) {
     WeatherCompactWidget()
 } timeline: {
-    WeatherEntry(date: .now, weatherData: WeatherData(
-        temp: 22,
-        tempScale: "C",
-        weatherId: 800,
-        description: "Clear sky",
-        humidity: 65,
-        windSpeed: 5.5,
-        windUnit: "m/s",
-        locationName: "Tel Aviv",
-        lastUpdated: "12:00",
-        lastUpdatedTimestamp: Int(Date().timeIntervalSince1970),
-        hourlyForecast: [],
-        dailyForecast: []
-    ))
+    WeatherEntry(date: .now, weatherData: previewWeatherData())
 }
 
 @available(iOS 17.0, *)
 #Preview("Standard", as: .systemMedium) {
     WeatherStandardWidget()
 } timeline: {
-    WeatherEntry(date: .now, weatherData: WeatherData(
-        temp: 22,
-        tempScale: "C",
-        weatherId: 800,
-        description: "Clear sky",
-        humidity: 65,
-        windSpeed: 5.5,
-        windUnit: "m/s",
-        locationName: "Tel Aviv",
-        lastUpdated: "12:00",
-        lastUpdatedTimestamp: Int(Date().timeIntervalSince1970),
+    WeatherEntry(date: .now, weatherData: previewWeatherData(
         hourlyForecast: [
-            HourlyForecast(dt: Int(Date().timeIntervalSince1970), temp: 22, weatherId: 800, pop: 0.1, windSpeed: 5),
-            HourlyForecast(dt: Int(Date().timeIntervalSince1970) + 3600, temp: 24, weatherId: 801, pop: 0.2, windSpeed: 6),
-            HourlyForecast(dt: Int(Date().timeIntervalSince1970) + 7200, temp: 25, weatherId: 802, pop: 0.3, windSpeed: 7),
-            HourlyForecast(dt: Int(Date().timeIntervalSince1970) + 10800, temp: 23, weatherId: 800, pop: 0.1, windSpeed: 5)
-        ],
-        dailyForecast: []
+            HourlyForecast(dt: Int(Date().timeIntervalSince1970), temp: 22, weatherId: 800, pop: 0.1, windSpeed: 18),
+            HourlyForecast(dt: Int(Date().timeIntervalSince1970) + 3600, temp: 24, weatherId: 801, pop: 0.2, windSpeed: 22),
+            HourlyForecast(dt: Int(Date().timeIntervalSince1970) + 7200, temp: 25, weatherId: 802, pop: 0.3, windSpeed: 25),
+            HourlyForecast(dt: Int(Date().timeIntervalSince1970) + 10800, temp: 23, weatherId: 800, pop: 0.1, windSpeed: 18)
+        ]
     ))
 }
 
@@ -479,18 +571,7 @@ struct WeatherExtendedWidget: Widget {
 #Preview("Extended", as: .systemLarge) {
     WeatherExtendedWidget()
 } timeline: {
-    WeatherEntry(date: .now, weatherData: WeatherData(
-        temp: 22,
-        tempScale: "C",
-        weatherId: 800,
-        description: "Clear sky",
-        humidity: 65,
-        windSpeed: 5.5,
-        windUnit: "m/s",
-        locationName: "Tel Aviv",
-        lastUpdated: "12:00",
-        lastUpdatedTimestamp: Int(Date().timeIntervalSince1970),
-        hourlyForecast: [],
+    WeatherEntry(date: .now, weatherData: previewWeatherData(
         dailyForecast: [
             DailyForecast(dt: Int(Date().timeIntervalSince1970), tempMax: 28, tempMin: 18, weatherId: 800),
             DailyForecast(dt: Int(Date().timeIntervalSince1970) + 86400, tempMax: 27, tempMin: 17, weatherId: 801),
