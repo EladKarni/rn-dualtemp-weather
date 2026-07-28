@@ -12,6 +12,7 @@ import {
 } from '../utils/errors';
 import { useLanguageStore } from '../store/useLanguageStore';
 import { useModalStore } from '../store/useModalStore';
+import { i18n } from '../localization/i18n';
 import { showErrorAlert, openDeviceSettings } from '../components/ErrorAlert/ErrorAlert';
 import { getDistanceKm } from '../utils/geocoding';
 
@@ -232,11 +233,13 @@ export function useGPSLocation() {
         let name: string;
         try {
           const locationInfo = await Location.reverseGeocodeAsync(location.coords);
-          name = locationInfo[0]?.city || locationInfo[0]?.name || 'Current Location';
+          // Localized fallback: Effect 2 re-geocodes on language change, so a
+          // stored fallback name doesn't go stale in the old language.
+          name = locationInfo[0]?.city || locationInfo[0]?.name || i18n.t('CurrentLocation');
           logger.debug('Location name from Expo reverse geocoding:', name);
         } catch (geocodeError) {
           logger.warn('Reverse geocoding failed, using fallback:', geocodeError);
-          name = 'Current Location';
+          name = i18n.t('CurrentLocation');
         }
 
         updateGPSLocation(latitude, longitude, name);
@@ -300,7 +303,7 @@ export function useGPSLocation() {
           latitude: storedGPS.latitude,
           longitude: storedGPS.longitude,
         });
-        const name = locationInfo[0]?.city || locationInfo[0]?.name || 'Current Location';
+        const name = locationInfo[0]?.city || locationInfo[0]?.name || i18n.t('CurrentLocation');
         updateGPSLocationName(name);
         logger.debug('GPS location name re-localized for language change:', name);
       } catch (error) {
