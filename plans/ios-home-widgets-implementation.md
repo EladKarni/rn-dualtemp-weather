@@ -13,10 +13,39 @@ This plan outlines implementation of iOS home widgets to mirror to existing Andr
 | Phase 1 — Project Setup & Dependencies | ✅ Done |
 | Phase 2 — Widget Architecture & Configuration | ✅ Done |
 | Phase 3 — Data Management & Integration | ✅ Done |
-| Phase 4 — Widget UI Implementation | 🔶 Partial |
+| Phase 4 — Widget UI Implementation | ✅ Done (2026-07-28 quality pass; device verification pending) |
 | Phase 5 — Native Integration & Build Configuration | ✅ Done |
-| Phase 6 — Testing & Quality Assurance | ⚠️ Untracked (no widget-specific test coverage recorded) |
+| Phase 6 — Testing & Quality Assurance | 🔶 Partial (JS payload contract tested; Swift unverified on device) |
 | Phase 7 — Advanced Features (Phase 2) | ⬜ Not started |
+
+### 2026-07-28 quality pass (unblocks store screenshots)
+
+The Swift widget had shipped as a rough draft: review finding 12's iOS half was
+never actually fixed — commit `b5cd4fa` localized only the Android widget layer.
+Fixed in this pass:
+
+- **Payload v2** (`src/widgets/utils/iosWidgetStorage.ts`): the app now writes
+  `schemaVersion: 2` with `locale` (app language, not device language),
+  `is24Hour` (clock-format setting with "auto" resolved), and `chrome` —
+  pre-localized Today/Hi/Lo strings plus raw `%{count}` age templates from the
+  app's i18n tables. Hourly wind speeds are converted to the display unit
+  matching `windUnit` (km/h / mph). Contract pinned by
+  `src/widgets/utils/__tests__/iosWidgetStorage.test.ts`.
+- **Swift** (`targets/widget/widgets.swift`): hourly times honor the clock
+  format and locale (was hardcoded `HH:mm`), day labels use the app locale (was
+  English `EEE`), Today/Hi/Lo/age strings come from the payload chrome (were
+  hardcoded English), the Standard widget shows per-hour wind like Android
+  (v2 payloads only), he/ar payloads render right-to-left, the placeholder
+  dropped its untranslatable "Loading..." text, and the timeline collapsed to a
+  single entry per 30-minute refresh. v1 payloads (older app builds) still
+  decode via optional fields and fall back to the old English behavior.
+- **Screenshot harness**: `scripts/widget-screenshots/ios/render.sh` renders all
+  three widget views to PNGs at exact WidgetKit sizes via `ImageRenderer`
+  (macOS only) — both the store-capture route and the quickest visual check of
+  these fixes.
+
+Still open: compile + visual verification on a Mac or EAS build (this
+environment cannot build Swift), and Phase 7 remains unstarted.
 
 Legend: ✅ done · 🔶 partial · ⚠️ untracked · ⬜ not started. Per-phase status is repeated under each phase heading below.
 

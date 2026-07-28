@@ -160,8 +160,12 @@ home screen, not in the app.
 - **Android** — `react-native-android-widget` can render widgets headlessly; the existing
   `assets/widget-preview/*.png` were produced this way and prove the path works.
 
-**Blocker:** iOS widget quality issues must be fixed before they are photographed for the
-store. Tracked separately — see the iOS widget findings.
+**Blocker (resolved in code 2026-07-28):** the iOS widget quality issues (English-only
+chrome, hardcoded 24h clock, missing wind, no RTL) are fixed — see the "2026-07-28
+quality pass" section of [ios-home-widgets-implementation.md](./ios-home-widgets-implementation.md).
+The capture harness now exists at `scripts/widget-screenshots/` (iOS `ImageRenderer`
+route + Android emulator route). Remaining before capture: compile + visual check on
+the owner's Mac.
 
 ## Prerequisites
 
