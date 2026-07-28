@@ -20,6 +20,7 @@ api-gcs.*
 # android/ dirs such as scripts/widget-screenshots/ios/ are tracked)
 /android/
 /ios/
+*.apk
 
 # macOS
 .DS_Store
