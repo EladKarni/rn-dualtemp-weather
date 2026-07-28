@@ -54,7 +54,16 @@
       "Bash(curl -sL https://github.com/expo/eas-build/archive/refs/heads/main.tar.gz -o eas-build.tgz)",
       "Bash(mkdir -p eas-build)",
       "Bash(tar -xzf eas-build.tgz -C eas-build --strip-components=1)",
-      "Bash(git diff *)"
+      "Bash(git diff *)",
+      "Bash(/mnt/c/platform-tools/adb.exe -s emulator-5554 shell monkey -p com.ekarni.rndualtempweatherapp.preview -c android.intent.category.LAUNCHER 1)",
+      "Bash(/mnt/c/platform-tools/adb.exe -s emulator-5554 shell 'sleep 10; screencap -p /sdcard/preview-proof.png')",
+      "Bash(/mnt/c/platform-tools/adb.exe -s emulator-5554 pull /sdcard/preview-proof.png 'C:\\\\Users\\\\Light\\\\AppData\\\\Local\\\\Temp\\\\preview-proof.png')",
+      "Bash(git -C /home/light/projects/rn-dualtemp-weather diff --stat)",
+      "Bash(/mnt/c/platform-tools/adb.exe devices *)",
+      "Bash(chmod +x /home/light/projects/rn-dualtemp-weather/scripts/widget-screenshots/ios/render.sh)",
+      "Bash(git -C /home/light/projects/rn-dualtemp-weather status --short)",
+      "Bash(git -C /home/light/projects/rn-dualtemp-weather diff .claude/settings.json)",
+      "Bash(python3 -)"
     ],
     "additionalDirectories": [
       "/home/light/.claude/plans",
