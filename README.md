@@ -236,6 +236,12 @@ untouched — an iOS preview build would come out identical to production.
 > - Never `eas update` the preview channel without `--environment preview` —
 >   env vars are baked into the bundle at publish time, so a bare run would
 >   silently repoint the preview install at the default (production) proxy.
+>   Note `--environment preview` alone is **not** sufficient: the `eas.json`
+>   env pin applies to `eas build` only, so `eas update` reads the EAS
+>   dashboard's "preview" environment — that environment must itself define
+>   `EXPO_PUBLIC_WEATHER_API_URL` (same value as the `eas.json` pin), or the
+>   update bakes the default proxy despite the flag. Safest: don't OTA-update
+>   the preview channel at all; rebuild instead.
 > - If the pinned preview URL goes stale (Vercel PR-branch aliases 404 once the
 >   branch is deleted), the app does **not** fall back to the default proxy —
 >   the fallback only applies when the variable is unset. Re-point `eas.json`
