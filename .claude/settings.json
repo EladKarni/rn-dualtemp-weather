@@ -29,10 +29,36 @@
       "Bash(find /home/light/projects/rn-dualtemp-weather/website -type f \\\\\\(-name *Card* -o -name *shadow* \\\\\\))",
       "Bash(grep -E \"\\\\.\\(ts|tsx\\)$\")",
       "Bash(find /home/light/projects/rn-dualtemp-weather/assets -maxdepth 1 -type f \\\\\\(-name *.png -o -name *.jpg -o -name *.svg \\\\\\))",
-      "Bash(git ls-tree:*)"
+      "Bash(git ls-tree:*)",
+      "Bash(node -e \"let d='';process.stdin.on\\('data',c=>d+=c\\).on\\('end',\\(\\)=>{JSON.parse\\(d\\);console.log\\('committed eas.json: valid JSON'\\)}\\)\")",
+      "Bash(echo \"grep-commit-exit:$?\")",
+      "Bash(echo \"grep-head-exit:$?\")",
+      "Bash(echo \"grep-worktree-exit:$?\")",
+      "WebFetch(domain:docs.expo.dev)",
+      "Bash(git check-ignore *)",
+      "Bash(npx --yes eas-cli@latest whoami)",
+      "Bash(npx --yes eas-cli@latest env:list preview --non-interactive)",
+      "Bash(git -C /home/light/projects/rn-dualtemp-weather diff App.tsx)",
+      "Bash(git -C /home/light/projects/rn-dualtemp-weather diff eas.json)",
+      "Bash(git -C /home/light/projects/rn-dualtemp-weather diff app.config.js)",
+      "Bash(curl -sL \"https://raw.githubusercontent.com/expo/eas-cli/main/packages/eas-cli/src/build/evaluateConfigWithEnvVarsAsync.ts\")",
+      "Bash(curl -sL \"https://raw.githubusercontent.com/expo/eas-cli/main/packages/eas-cli/src/graphql/queries/AppVersionQuery.ts\")",
+      "Bash(curl -sL \"https://raw.githubusercontent.com/expo/eas-cli/main/packages/eas-cli/src/build/utils/version.ts\")",
+      "Bash(curl -sL \"https://raw.githubusercontent.com/expo/eas-cli/main/packages/eas-cli/src/build/android/version.ts\")",
+      "Bash(gh search *)",
+      "Bash(curl -sL \"https://raw.githubusercontent.com/expo/eas-cli/main/packages/eas-cli/src/build/updates.ts\")",
+      "Bash(curl -sL \"https://raw.githubusercontent.com/expo/eas-cli/main/packages/eas-cli/src/channel/queries.ts\")",
+      "Bash(curl -sL https://github.com/expo/eas-cli/archive/refs/heads/main.tar.gz -o eas-cli.tgz)",
+      "Bash(tar -tzf eas-cli.tgz)",
+      "Bash(tar -xzf eas-cli.tgz -C eas-cli --strip-components=1)",
+      "Bash(curl -sL https://github.com/expo/eas-build/archive/refs/heads/main.tar.gz -o eas-build.tgz)",
+      "Bash(mkdir -p eas-build)",
+      "Bash(tar -xzf eas-build.tgz -C eas-build --strip-components=1)",
+      "Bash(git diff *)"
     ],
     "additionalDirectories": [
-      "/home/light/.claude/plans"
+      "/home/light/.claude/plans",
+      "/home/light/projects/rn-dualtemp-weather/.git"
     ]
   }
 }
