@@ -52,9 +52,48 @@ export function useGPSLocation() {
           return;
         }
 
-        const location = await Location.getCurrentPositionAsync({
-          accuracy: Location.Accuracy.Balanced,
-        });
+        // Prefer a fresh fix, but fall back to the last known position when the
+        // provider can't produce one — a slightly stale location is more useful
+        // for a weather app than an error alert. Both failure codes are expected
+        // user-environment states (location services off, no fix indoors), so
+        // they become warn breadcrumbs rather than Sentry error events — the
+        // same treatment the permission-denied branch above gets.
+        let location: Location.LocationObject;
+        try {
+          location = await Location.getCurrentPositionAsync({
+            accuracy: Location.Accuracy.Balanced,
+          });
+        } catch (positionError: any) {
+          if (
+            positionError?.code !== 'E_LOCATION_UNAVAILABLE' &&
+            positionError?.code !== 'E_LOCATION_TIMEOUT'
+          ) {
+            throw positionError;
+          }
+
+          const lastKnown = await Location.getLastKnownPositionAsync();
+
+          if (!lastKnown) {
+            const appError =
+              positionError.code === 'E_LOCATION_UNAVAILABLE'
+                ? new LocationUnavailableError()
+                : new PositionTimeoutError();
+
+            setGpsError(appError);
+            logger.warn('GPS position unavailable, no last-known fallback:', positionError);
+
+            showErrorAlert({
+              error: appError,
+              onRetry: fetchGPS,
+              onDismiss: () => setGpsError(null),
+            });
+
+            return;
+          }
+
+          logger.warn('Current GPS fix unavailable, using last-known position:', positionError);
+          location = lastKnown;
+        }
 
         const { latitude, longitude } = location.coords;
 
@@ -99,15 +138,9 @@ export function useGPSLocation() {
         logger.debug('GPS location updated:', { lat: latitude, lon: longitude, name });
         setGpsError(null);
       } catch (error: any) {
-        let appError: AppError;
-
-        if (error.code === 'E_LOCATION_UNAVAILABLE') {
-          appError = new LocationUnavailableError();
-        } else if (error.code === 'E_LOCATION_TIMEOUT') {
-          appError = new PositionTimeoutError();
-        } else {
-          appError = toAppError(error);
-        }
+        // Only genuinely unexpected failures reach here — the expected
+        // location-provider codes are absorbed by the fallback above.
+        const appError = toAppError(error);
 
         setGpsError(appError);
         logger.error('Error fetching GPS location:', error);
