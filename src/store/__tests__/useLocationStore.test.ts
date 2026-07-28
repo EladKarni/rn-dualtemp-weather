@@ -166,3 +166,63 @@ describe("addLocation — self-heals a dangling activeLocationId", () => {
     expect(useLocationStore.getState().activeLocationId).toBe("a");
   });
 });
+
+describe("removeGPSLocation — app-side GPS cleanup (GPS-optional flow)", () => {
+  it("removes the GPS entry and falls back to the first manual location when GPS was active", () => {
+    reset([gps(), loc("a", 40, -74)], GPS_LOCATION_ID);
+    useLocationStore.getState().removeGPSLocation();
+    const state = useLocationStore.getState();
+    expect(state.savedLocations.some((l) => l.isGPS)).toBe(false);
+    expect(state.activeLocationId).toBe("a");
+  });
+
+  it("falls back to null when GPS was the only location", () => {
+    reset([gps()], GPS_LOCATION_ID);
+    useLocationStore.getState().removeGPSLocation();
+    const state = useLocationStore.getState();
+    expect(state.savedLocations).toHaveLength(0);
+    expect(state.activeLocationId).toBeNull();
+  });
+
+  it("leaves the active manual location untouched", () => {
+    reset([gps(), loc("a", 40, -74)], "a");
+    useLocationStore.getState().removeGPSLocation();
+    expect(useLocationStore.getState().activeLocationId).toBe("a");
+  });
+
+  it("is a no-op when no GPS entry exists", () => {
+    reset([loc("a", 40, -74)], "a");
+    useLocationStore.getState().removeGPSLocation();
+    const state = useLocationStore.getState();
+    expect(state.savedLocations.map((l) => l.id)).toEqual(["a"]);
+    expect(state.activeLocationId).toBe("a");
+  });
+});
+
+describe("updateGPSLocation — first fix must not steal activation (GPS-optional flow)", () => {
+  it("keeps a manually chosen city active when GPS resolves for the first time", () => {
+    // User denied GPS at first, added a city, then granted permission later.
+    reset([loc("a", 40, -74)], "a");
+    useLocationStore.getState().updateGPSLocation(32.08, 34.78, "Here");
+    const state = useLocationStore.getState();
+    expect(state.savedLocations.some((l) => l.isGPS)).toBe(true);
+    expect(state.activeLocationId).toBe("a");
+  });
+
+  it("activates GPS on first fix when the active id is the unresolved placeholder", () => {
+    // Fresh install: initial activeLocationId is GPS_LOCATION_ID before any
+    // GPS entry exists, so it resolves to nothing until the first fix lands.
+    reset([], GPS_LOCATION_ID);
+    useLocationStore.getState().updateGPSLocation(32.08, 34.78, "Here");
+    expect(useLocationStore.getState().activeLocationId).toBe(GPS_LOCATION_ID);
+  });
+
+  it("updates coordinates in place without touching activation when GPS already exists", () => {
+    reset([gps(), loc("a", 40, -74)], "a");
+    useLocationStore.getState().updateGPSLocation(48.85, 2.35, "Paris");
+    const state = useLocationStore.getState();
+    const gpsEntry = state.savedLocations.find((l) => l.isGPS)!;
+    expect(gpsEntry.latitude).toBe(48.85);
+    expect(state.activeLocationId).toBe("a");
+  });
+});

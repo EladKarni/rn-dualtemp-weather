@@ -1,6 +1,7 @@
 import React from "react";
-import { View, Text, TouchableOpacity, Alert } from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { showAlert } from "../../utils/alert";
 import type { SavedLocation } from "../../store/useLocationStore";
 import { i18n } from "../../localization/i18n";
 import { palette } from "../../styles/Palette";
@@ -21,7 +22,7 @@ export const LocationList: React.FC<LocationListProps> = ({
   onAddLocationPress,
 }) => {
   const handleDeleteLocation = (location: SavedLocation) => {
-    Alert.alert(
+    showAlert(
       i18n.t("DeleteLocation"),
       `${i18n.t("DeleteLocationConfirm")} ${location.name}?`,
       [

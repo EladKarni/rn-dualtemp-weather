@@ -14,6 +14,9 @@ interface RenderDecisionParams {
   fetchedLocaleSuccessfully: boolean;
   localeData: { locale: string } | undefined;
   fontsLoaded: boolean;
+  locationsHydrated: boolean;
+  gpsResolved: boolean;
+  hasSavedLocations: boolean;
 }
 
 /**
@@ -22,20 +25,28 @@ interface RenderDecisionParams {
  * independent boolean JSX guards that could mount two screens at once (e.g. a
  * double SkeletonScreen, or a SkeletonScreen alongside a LoadingScreen).
  */
-export type ScreenState = 'loading' | 'skeleton' | 'error' | 'content';
+export type ScreenState = 'loading' | 'skeleton' | 'error' | 'content' | 'empty';
 
 interface ScreenStateInputs {
   splashTimeoutExpired: boolean;
   forecast: unknown;
   refreshing: boolean;
   hasForecastError: boolean;
+  locationsHydrated: boolean;
+  gpsResolved: boolean;
+  hasSavedLocations: boolean;
 }
 
 /**
  * Pure resolver for the active screen state, with an explicit precedence:
- * error > content > loading > skeleton. Because the branches are ordered and
- * `return` early, exactly one state is ever produced for any input.
+ * empty > error > content > loading > skeleton. Because the branches are
+ * ordered and `return` early, exactly one state is ever produced for any input.
  *
+ * - empty:   no saved location at all (e.g. GPS denied on first run) — show a
+ *            reachable "add a city" screen instead of an endless skeleton.
+ *            Waits for store rehydration and the initial GPS attempt to settle
+ *            so it can't flash during normal startup, and wins over every other
+ *            state so a stale forecast can never mask it.
  * - error:   post-splash-timeout, query errored, and no forecast to show.
  * - content: forecast data is present (an error banner may still overlay it).
  * - loading: an initial fetch is in flight with no forecast and no error yet.
@@ -46,7 +57,19 @@ export function computeScreenState({
   forecast,
   refreshing,
   hasForecastError,
+  locationsHydrated,
+  gpsResolved,
+  hasSavedLocations,
 }: ScreenStateInputs): ScreenState {
+  if (
+    splashTimeoutExpired &&
+    locationsHydrated &&
+    gpsResolved &&
+    !refreshing &&
+    !hasSavedLocations
+  ) {
+    return 'empty';
+  }
   if (splashTimeoutExpired && hasForecastError && !forecast) {
     return 'error';
   }
@@ -83,6 +106,9 @@ export const useRenderDecision = ({
   fetchedLocaleSuccessfully,
   localeData,
   fontsLoaded,
+  locationsHydrated,
+  gpsResolved,
+  hasSavedLocations,
 }: RenderDecisionParams): RenderDecisionResult => {
   const essentialResourcesLoading = !activeLocation || isLocaleLoading || !fetchedLocaleSuccessfully;
 
@@ -95,6 +121,9 @@ export const useRenderDecision = ({
     forecast,
     refreshing,
     hasForecastError,
+    locationsHydrated,
+    gpsResolved,
+    hasSavedLocations,
   });
 
   // Log resources during splash blocking
@@ -126,6 +155,9 @@ export const useRenderDecision = ({
       isLocaleLoading,
       fetchedLocaleSuccessfully,
       locale: localeData?.locale,
+      locationsHydrated,
+      gpsResolved,
+      hasSavedLocations,
     });
   }, [
     splashTimeoutExpired,
@@ -139,6 +171,9 @@ export const useRenderDecision = ({
     isLocaleLoading,
     fetchedLocaleSuccessfully,
     localeData,
+    locationsHydrated,
+    gpsResolved,
+    hasSavedLocations,
   ]);
 
   return {

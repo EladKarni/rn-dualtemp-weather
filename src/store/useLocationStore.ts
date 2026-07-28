@@ -21,6 +21,7 @@ interface LocationState {
     location: Omit<SavedLocation, "id" | "addedAt" | "isGPS">,
   ) => void;
   removeLocation: (id: string) => void;
+  removeGPSLocation: () => void;
   setActiveLocation: (id: string) => void;
   updateGPSLocation: (
     latitude: number,
@@ -126,6 +127,28 @@ export const useLocationStore = create<LocationState>()(
         });
       },
 
+      removeGPSLocation: () => {
+        // Unlike removeLocation (which guards the GPS entry from manual
+        // deletion), this is the app's own cleanup for when the GPS position
+        // can never update again (e.g. web permission denied) — stale
+        // coordinates must not keep masquerading as "current location".
+        const state = get();
+        const gps = state.savedLocations.find((loc) => loc.isGPS);
+        if (!gps) return;
+
+        const filteredLocations = state.savedLocations.filter(
+          (loc) => !loc.isGPS,
+        );
+
+        set({
+          savedLocations: filteredLocations,
+          activeLocationId:
+            state.activeLocationId === gps.id
+              ? (filteredLocations[0]?.id ?? null)
+              : state.activeLocationId,
+        });
+      },
+
       setActiveLocation: (id) => {
         logger.trace("LocationStore.setActiveLocation", {
           newId: id,
@@ -157,10 +180,17 @@ export const useLocationStore = create<LocationState>()(
             ),
           });
         } else {
-          // Add GPS location for the first time
+          // Add GPS location for the first time. Only take over activation
+          // when the current active id doesn't resolve to a saved location
+          // (first run's placeholder id) — a manually chosen city stays active
+          const activeExists = state.savedLocations.some(
+            (loc) => loc.id === state.activeLocationId,
+          );
           set({
             savedLocations: [gpsLocation, ...state.savedLocations],
-            activeLocationId: GPS_LOCATION_ID,
+            activeLocationId: activeExists
+              ? state.activeLocationId
+              : GPS_LOCATION_ID,
           });
         }
       },
@@ -203,6 +233,27 @@ export const useLocationStore = create<LocationState>()(
     {
       name: "@saved_locations",
       storage: createJSONStorage(() => AsyncStorage),
+      onRehydrateStorage: () => (state) => {
+        // Self-heal installs whose persisted activeLocationId points at a
+        // location that no longer exists (e.g. the initial GPS placeholder id
+        // persisted when locations were saved without GPS ever granting)
+        if (
+          !state ||
+          !Array.isArray(state.savedLocations) ||
+          state.savedLocations.length === 0
+        )
+          return;
+        const resolves = state.savedLocations.some(
+          (loc) => loc.id === state.activeLocationId,
+        );
+        if (!resolves) {
+          useLocationStore.setState({
+            activeLocationId:
+              state.savedLocations.find((loc) => loc.isGPS)?.id ??
+              state.savedLocations[0].id,
+          });
+        }
+      },
     },
   ),
 );

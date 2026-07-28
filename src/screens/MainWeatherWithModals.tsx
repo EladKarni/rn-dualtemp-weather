@@ -1,8 +1,6 @@
 import React from 'react';
 import WeatherScreen from './WeatherScreen';
 import LocationDropdown from '../components/LocationDropdown/LocationDropdown';
-import SettingsScreen from './SettingsScreen';
-import AddLocationScreen from './AddLocationScreen';
 import type { Weather } from '../types/WeatherTypes';
 import type { AppError } from '../utils/errors';
 import type { Moment } from 'moment';
@@ -77,16 +75,8 @@ export default function MainWeatherWithModals({
         onAddLocation={openAddLocation}
       />
 
-      <SettingsScreen
-        visible={activeModal === 'settings'}
-        onClose={closeModal}
-        onAddLocationPress={openAddLocation}
-      />
-
-      <AddLocationScreen
-        visible={activeModal === 'addLocation'}
-        onClose={closeModal}
-      />
+      {/* SettingsScreen and AddLocationScreen are mounted globally in
+          App.tsx so they stay reachable when no forecast is loaded */}
     </>
   );
 }

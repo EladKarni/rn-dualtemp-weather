@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
 
 import {
@@ -88,6 +88,9 @@ import LoadingScreen from "./src/screens/LoadingScreen";
 import ErrorScreen from "./src/screens/ErrorScreen";
 import SkeletonScreen from "./src/screens/SkeletonScreen";
 import MainWeatherWithModals from "./src/screens/MainWeatherWithModals";
+import EmptyLocationScreen from "./src/screens/EmptyLocationScreen";
+import AddLocationScreen from "./src/screens/AddLocationScreen";
+import SettingsScreen from "./src/screens/SettingsScreen";
 
 // Error Boundary
 import ErrorBoundary from "./src/components/ErrorBoundary/ErrorBoundary";
@@ -121,8 +124,31 @@ function App() {
     useLocaleQuery();
 
   // Custom hooks
-  useGPSLocation();
+  const { gpsResolved } = useGPSLocation();
   useAppLifecycle();
+
+  // Track persisted-store rehydration reactively — persist finishing with an
+  // empty store doesn't trigger a re-render on its own, so a bare
+  // hasHydrated() call in render could stay false forever
+  const [locationsHydrated, setLocationsHydrated] = useState(() =>
+    useLocationStore.persist.hasHydrated(),
+  );
+  useEffect(() => {
+    const unsubscribe = useLocationStore.persist.onFinishHydration(() =>
+      setLocationsHydrated(true),
+    );
+    // Hydration may have finished between first render and this effect
+    if (useLocationStore.persist.hasHydrated()) {
+      setLocationsHydrated(true);
+    }
+    // Bounded wait: a failed hydration never fires onFinishHydration, and
+    // the empty state must not stay locked behind it forever
+    const timer = setTimeout(() => setLocationsHydrated(true), 3000);
+    return () => {
+      clearTimeout(timer);
+      unsubscribe();
+    };
+  }, []);
 
   const {
     activeWeather: forecast,
@@ -202,6 +228,11 @@ function App() {
     refetch();
   }, [refetch]);
 
+  const closeModal = React.useCallback(
+    () => useModalStore.getState().closeModal(),
+    [],
+  );
+
   // Common props for all screen components
   const screenProps = useScreenProps({
     activeLocation,
@@ -225,6 +256,9 @@ function App() {
     fetchedLocaleSuccessfully,
     localeData,
     fontsLoaded,
+    locationsHydrated,
+    gpsResolved,
+    hasSavedLocations: savedLocations.length > 0,
   });
 
   // Block on splash screen if timeout hasn't expired AND resources not ready
@@ -259,6 +293,17 @@ function App() {
         >
           {(() => {
             switch (screenState) {
+              // EMPTY STATE: no saved locations (e.g. GPS denied on first
+              // run) — a reachable manual-add screen instead of an endless
+              // skeleton
+              case "empty":
+                return (
+                  <EmptyLocationScreen
+                    onAddLocation={openAddLocation}
+                    {...screenProps}
+                  />
+                );
+
               // ERROR STATE: Network/API error with no cached data
               case "error": {
                 const appError = forecastError
@@ -286,7 +331,7 @@ function App() {
                     onRefresh={onRefresh}
                     onLayoutRootView={onLayoutRootView}
                     activeModal={activeModal}
-                    closeModal={() => useModalStore.getState().closeModal()}
+                    closeModal={closeModal}
                     openAddLocation={openAddLocation}
                     appError={
                       hasForecastError && !isErrorDismissed
@@ -309,6 +354,20 @@ function App() {
                 return <SkeletonScreen {...screenProps} />;
             }
           })()}
+
+          {/* GLOBAL MODALS: mounted outside the screenState switch so
+              settings and manual city add stay reachable from every screen
+              state, including the empty state. RN Modal renders nothing
+              while visible is false. */}
+          <SettingsScreen
+            visible={activeModal === "settings"}
+            onClose={closeModal}
+            onAddLocationPress={openAddLocation}
+          />
+          <AddLocationScreen
+            visible={activeModal === "addLocation"}
+            onClose={closeModal}
+          />
         </ErrorBoundary>
       )}
     </QueryErrorResetBoundary>
