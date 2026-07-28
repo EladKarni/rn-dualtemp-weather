@@ -16,16 +16,13 @@ api-gcs.*
 .env.*
 !.env.example
 
-# Native Code
-android/
-ios/
+# Native Code (Expo prebuild output at the repo root only — nested ios/ and
+# android/ dirs such as scripts/widget-screenshots/ios/ are tracked)
+/android/
+/ios/
 
 # macOS
 .DS_Store
-
-# native
-android/
-ios/
 
 # Play Store — never commit the real service-account key (eas submit writes it here)
 serviceKey*.json
