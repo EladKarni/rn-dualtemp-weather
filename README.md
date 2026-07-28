@@ -218,6 +218,18 @@ untouched — an iOS preview build would come out identical to production.
   in the EAS dashboard's "preview" environment). Widget/app data is isolated
   from production automatically because Android scopes AsyncStorage per package.
 
+> **Guardrails:**
+> - Never build the `preview` profile for iOS: the iOS config is deliberately
+>   untouched, so an iOS preview build carries the **production** bundle id and
+>   would overwrite the production app.
+> - Never `eas update` the preview channel without `--environment preview` —
+>   env vars are baked into the bundle at publish time, so a bare run would
+>   silently repoint the preview install at the default (production) proxy.
+> - If the pinned preview URL goes stale (Vercel PR-branch aliases 404 once the
+>   branch is deleted), the app does **not** fall back to the default proxy —
+>   the fallback only applies when the variable is unset. Re-point `eas.json`
+>   and rebuild, or uninstall the preview app when the comparison ends.
+
 #### Building Variants
 
 ```sh
