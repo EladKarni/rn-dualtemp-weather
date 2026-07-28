@@ -104,3 +104,87 @@ describe("app.config.js — effective config after dynamic merge", () => {
     expect(findPluginEntries(cfg.plugins, "@sentry/react-native/expo")).toHaveLength(1);
   });
 });
+
+/**
+ * Preview variant contract (d1ed6cc): the preview profile must install beside
+ * production on one Android device, stay distinguishable in the launcher's
+ * widget picker, and leave the production and iOS config untouched. These
+ * assertions lock that contract so an app.config.js edit that regresses any
+ * side of it fails the gate.
+ */
+describe("app.config.js — preview variant contract", () => {
+  const ORIGINAL_PROFILE = process.env.EAS_BUILD_PROFILE;
+
+  afterAll(() => {
+    if (ORIGINAL_PROFILE === undefined) {
+      delete process.env.EAS_BUILD_PROFILE;
+    } else {
+      process.env.EAS_BUILD_PROFILE = ORIGINAL_PROFILE;
+    }
+  });
+
+  type AndroidConfig = {
+    package?: string;
+    icon?: string;
+    adaptiveIcon?: { foregroundImage?: string };
+  };
+  type WidgetEntry = Record<string, unknown> & { label: string };
+
+  const widgets = (plugins: unknown): WidgetEntry[] =>
+    (getPluginOptions(plugins, "react-native-android-widget")?.widgets as
+      | WidgetEntry[]
+      | undefined) ?? [];
+
+  const omit = (obj: Record<string, unknown>, key: string) => {
+    const copy = { ...obj };
+    delete copy[key];
+    return copy;
+  };
+
+  it("installs beside production: distinct Android package and app name", () => {
+    const cfg = buildEffectiveConfig("preview");
+    expect((cfg.android as AndroidConfig).package).toBe(
+      "com.ekarni.rndualtempweatherapp.preview"
+    );
+    expect(cfg.name).toBe("Dualtemp Weather Preview");
+  });
+
+  it("uses the preview-badged icons", () => {
+    const android = buildEffectiveConfig("preview").android as AndroidConfig;
+    expect(android.icon).toBe("./assets/icon-preview.png");
+    expect(android.adaptiveIcon?.foregroundImage).toBe(
+      "./assets/adaptive-icon-preview.png"
+    );
+  });
+
+  it("prefixes every widget picker label with [Preview] and changes nothing else", () => {
+    const preview = widgets(buildEffectiveConfig("preview").plugins);
+    const base = widgets(appJson.expo.plugins);
+    expect(base.length).toBeGreaterThan(0);
+    expect(preview.map((w) => w.label)).toEqual(
+      base.map((w) => `[Preview] ${w.label}`)
+    );
+    expect(preview.map((w) => omit(w, "label"))).toEqual(
+      base.map((w) => omit(w, "label"))
+    );
+  });
+
+  it("keeps the slug so EAS project validation still passes", () => {
+    expect(buildEffectiveConfig("preview").slug).toBe("dualtemp-weather");
+  });
+
+  it("leaves the iOS config identical to app.json (no bundle id / App Group fork)", () => {
+    expect(buildEffectiveConfig("preview").ios).toEqual(appJson.expo.ios);
+  });
+
+  it("still registers the Sentry Expo plugin exactly once after the plugins rewrite", () => {
+    const cfg = buildEffectiveConfig("preview");
+    expect(findPluginEntries(cfg.plugins, "@sentry/react-native/expo")).toHaveLength(1);
+  });
+
+  it("leaves the production variant identical to app.json outside extra", () => {
+    const prod = omit(buildEffectiveConfig("production"), "extra");
+    const base = omit(appJson.expo as unknown as Record<string, unknown>, "extra");
+    expect(prod).toEqual(base);
+  });
+});
