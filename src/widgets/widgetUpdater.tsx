@@ -19,20 +19,65 @@ import React from 'react';
  * Widgets run in a fresh headless JS task where Zustand's `persist` rehydration
  * is still in flight. Reading `savedLocations` / `i18n.locale` / settings before
  * that async read resolves produces false "no location" renders and wrong-unit
- * output (review finding 5). Awaiting `rehydrate()` on each persisted store
- * closes that race. Only these three stores are persisted; `useForecastStore`
- * (SQLite-backed) and `useModalStore` have no `.persist` API and must not be
- * passed through here.
+ * output (review finding 5). Only these three stores are persisted;
+ * `useForecastStore` (SQLite-backed) and `useModalStore` have no `.persist` API
+ * and must not be passed through here.
  *
  * `useSettingsStore` is included because widgets read settings headlessly —
  * `BaseWeatherWidget` reads `tempScale`, and the widget clock-format path reads
  * `clockFormat` — so its hydration must be guaranteed too.
+ *
+ * WAIT for hydration — never force a re-run in a context that may be live.
+ * `updateAllWeatherWidgets` also executes in the MAIN app context (fired by
+ * `setWeatherData` after every fetch), and `persist.rehydrate()` there replaces
+ * newer in-memory state with the persisted snapshot. That rollback blanked the
+ * "Last Updated" footer for a fresh install's entire first process (the
+ * persisted value was still null) and silently rewound it after every fetch
+ * (2026-07-28 debugging). The forced `rehydrate()` survives only as a bounded
+ * fallback for a headless context whose automatic hydration never completes.
  */
+const HYDRATION_WAIT_TIMEOUT_MS = 3000;
+
+interface PersistLike {
+  hasHydrated: () => boolean;
+  onFinishHydration: (cb: () => void) => () => void;
+  rehydrate: () => Promise<unknown> | unknown;
+}
+
+const ensureStoreHydrated = async (persistApi: PersistLike): Promise<void> => {
+  if (persistApi.hasHydrated()) {
+    return;
+  }
+
+  const completed = await new Promise<boolean>((resolve) => {
+    let unsubscribe: (() => void) | undefined;
+    const timer = setTimeout(() => {
+      unsubscribe?.();
+      resolve(false);
+    }, HYDRATION_WAIT_TIMEOUT_MS);
+    unsubscribe = persistApi.onFinishHydration(() => {
+      clearTimeout(timer);
+      unsubscribe?.();
+      resolve(true);
+    });
+    // Hydration may have finished between the check above and subscribing
+    if (persistApi.hasHydrated()) {
+      clearTimeout(timer);
+      unsubscribe();
+      resolve(true);
+    }
+  });
+
+  if (!completed) {
+    await persistApi.rehydrate();
+  }
+};
+
 export const ensureStoresHydrated = async (): Promise<void> => {
   await Promise.all([
-    useLocationStore.persist.rehydrate(),
-    useLanguageStore.persist.rehydrate(),
-    useSettingsStore.persist.rehydrate(),
+    ensureStoreHydrated(useLocationStore.persist),
+    ensureStoreHydrated(useLanguageStore.persist),
+    ensureStoreHydrated(useSettingsStore.persist),
   ]);
 };
 

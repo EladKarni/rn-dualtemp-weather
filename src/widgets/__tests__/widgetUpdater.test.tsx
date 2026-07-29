@@ -60,18 +60,31 @@ jest.mock('../../store/useForecastStore', () => ({
 }));
 jest.mock('../../store/useLocationStore', () => ({
   GPS_LOCATION_ID: 'gps-location',
-  useLocationStore: { getState: jest.fn(), persist: { rehydrate: jest.fn() } },
+  useLocationStore: {
+    getState: jest.fn(),
+    persist: { rehydrate: jest.fn(), hasHydrated: jest.fn(), onFinishHydration: jest.fn() },
+  },
 }));
 jest.mock('../../store/useLanguageStore', () => ({
-  useLanguageStore: { persist: { rehydrate: jest.fn() } },
+  useLanguageStore: {
+    persist: { rehydrate: jest.fn(), hasHydrated: jest.fn(), onFinishHydration: jest.fn() },
+  },
 }));
 jest.mock('../../store/useSettingsStore', () => ({
-  useSettingsStore: { persist: { rehydrate: jest.fn() } },
+  useSettingsStore: {
+    persist: { rehydrate: jest.fn(), hasHydrated: jest.fn(), onFinishHydration: jest.fn() },
+  },
 }));
 
 const locationRehydrate = useLocationStore.persist.rehydrate as unknown as jest.Mock;
 const languageRehydrate = useLanguageStore.persist.rehydrate as unknown as jest.Mock;
 const settingsRehydrate = useSettingsStore.persist.rehydrate as unknown as jest.Mock;
+const locationHasHydrated = useLocationStore.persist.hasHydrated as unknown as jest.Mock;
+const languageHasHydrated = useLanguageStore.persist.hasHydrated as unknown as jest.Mock;
+const settingsHasHydrated = useSettingsStore.persist.hasHydrated as unknown as jest.Mock;
+const locationOnFinishHydration = useLocationStore.persist.onFinishHydration as unknown as jest.Mock;
+const languageOnFinishHydration = useLanguageStore.persist.onFinishHydration as unknown as jest.Mock;
+const settingsOnFinishHydration = useSettingsStore.persist.onFinishHydration as unknown as jest.Mock;
 const locationGetState = useLocationStore.getState as unknown as jest.Mock;
 const forecastGetState = useForecastStore.getState as unknown as jest.Mock;
 const mockedLogger = logger as unknown as Record<string, jest.Mock>;
@@ -93,6 +106,14 @@ beforeEach(() => {
   locationRehydrate.mockResolvedValue(undefined);
   languageRehydrate.mockResolvedValue(undefined);
   settingsRehydrate.mockResolvedValue(undefined);
+  // Default: live context — hydration already completed, so the helper must
+  // never force a rehydrate (the main-context state-rollback fix).
+  locationHasHydrated.mockReturnValue(true);
+  languageHasHydrated.mockReturnValue(true);
+  settingsHasHydrated.mockReturnValue(true);
+  locationOnFinishHydration.mockReturnValue(jest.fn());
+  languageOnFinishHydration.mockReturnValue(jest.fn());
+  settingsOnFinishHydration.mockReturnValue(jest.fn());
   locationGetState.mockReturnValue({ savedLocations: [], activeLocationId: null });
   forecastGetState.mockReturnValue({
     getWeatherData: jest.fn().mockResolvedValue(null),
@@ -100,12 +121,45 @@ beforeEach(() => {
 });
 
 describe('ensureStoresHydrated', () => {
-  it('rehydrates all three persisted stores', async () => {
+  it('does NOT force a rehydrate when stores are already hydrated (main-context rollback fix)', async () => {
     await ensureStoresHydrated();
 
-    expect(locationRehydrate).toHaveBeenCalledTimes(1);
-    expect(languageRehydrate).toHaveBeenCalledTimes(1);
-    expect(settingsRehydrate).toHaveBeenCalledTimes(1);
+    expect(locationRehydrate).not.toHaveBeenCalled();
+    expect(languageRehydrate).not.toHaveBeenCalled();
+    expect(settingsRehydrate).not.toHaveBeenCalled();
+  });
+
+  it('waits for in-flight hydration instead of forcing a re-run', async () => {
+    settingsHasHydrated.mockReturnValue(false);
+    // Simulate hydration finishing shortly after the helper subscribes.
+    settingsOnFinishHydration.mockImplementation((cb: () => void) => {
+      setTimeout(cb, 0);
+      return jest.fn();
+    });
+
+    await ensureStoresHydrated();
+
+    expect(settingsOnFinishHydration).toHaveBeenCalledTimes(1);
+    expect(settingsRehydrate).not.toHaveBeenCalled();
+  });
+
+  it('falls back to a forced rehydrate when hydration never completes (headless safety net)', async () => {
+    jest.useFakeTimers();
+    try {
+      settingsHasHydrated.mockReturnValue(false);
+      settingsOnFinishHydration.mockReturnValue(jest.fn());
+
+      const pending = ensureStoresHydrated();
+      await jest.advanceTimersByTimeAsync(3000);
+      await pending;
+
+      expect(settingsRehydrate).toHaveBeenCalledTimes(1);
+      // The already-hydrated stores were still left alone.
+      expect(locationRehydrate).not.toHaveBeenCalled();
+      expect(languageRehydrate).not.toHaveBeenCalled();
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
   it('does not depend on a `.persist` API for the non-persisted forecast store', async () => {
@@ -117,15 +171,18 @@ describe('ensureStoresHydrated', () => {
 });
 
 describe('updateAllWeatherWidgets', () => {
-  it('hydrates the persisted stores before reading savedLocations', async () => {
+  it('ensures hydration (without forcing a re-run) before reading savedLocations', async () => {
     await updateAllWeatherWidgets(undefined, GPS);
 
-    expect(locationRehydrate).toHaveBeenCalled();
-    expect(languageRehydrate).toHaveBeenCalled();
-    expect(settingsRehydrate).toHaveBeenCalled();
+    // The hydration gate consulted every persisted store...
+    expect(locationHasHydrated).toHaveBeenCalled();
+    expect(languageHasHydrated).toHaveBeenCalled();
+    expect(settingsHasHydrated).toHaveBeenCalled();
+    // ...and, since they were hydrated, never forced a rollback rehydrate.
+    expect(locationRehydrate).not.toHaveBeenCalled();
 
-    // savedLocations is read (getState) only after rehydration ran.
-    expect(locationRehydrate.mock.invocationCallOrder[0]).toBeLessThan(
+    // savedLocations is read (getState) only after the hydration gate ran.
+    expect(locationHasHydrated.mock.invocationCallOrder[0]).toBeLessThan(
       locationGetState.mock.invocationCallOrder[0]
     );
 

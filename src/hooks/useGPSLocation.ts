@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Platform } from 'react-native';
 import * as Location from 'expo-location';
-import { useLocationStore, GPS_LOCATION_ID } from '../store/useLocationStore';
+import { useLocationStore, GPS_LOCATION_ID, type SavedLocation } from '../store/useLocationStore';
 import { logger } from '../utils/logger';
 import {
   PermissionDeniedError,
@@ -11,7 +11,7 @@ import {
   AppError,
 } from '../utils/errors';
 import { useLanguageStore } from '../store/useLanguageStore';
-import { useModalStore } from '../store/useModalStore';
+import { useModalStore, type ModalType } from '../store/useModalStore';
 import { i18n } from '../localization/i18n';
 import { showErrorAlert, openDeviceSettings } from '../components/ErrorAlert/ErrorAlert';
 import { getDistanceKm } from '../utils/geocoding';
@@ -53,15 +53,38 @@ const waitForLocationHydration = async (): Promise<void> => {
 };
 
 /**
- * GPS failure alerts are only worth an interruption when the user has no
- * manually saved city to fall back on. GPS-only users still get alerted —
- * their only data source just broke.
+ * Pure decision for whether a GPS failure is worth an app-modal alert.
+ * Exported for unit tests.
+ *
+ * - A manually saved city means the app works without GPS — no interruption.
+ * - The Add Location modal being open means the user is ALREADY performing the
+ *   alert's own recovery action; RN's Alert is app-modal and would land on top
+ *   of the city search and swallow taps (observed on-device 2026-07-28) — no
+ *   interruption. The empty-location screen behind the modal remains the
+ *   fallback surface if they cancel out.
+ * - Settings being open deliberately still alerts: the permission alert's
+ *   "Open Settings" action is meaningful there.
+ */
+export const shouldInterruptWithGpsAlert = (
+  savedLocations: SavedLocation[],
+  activeModal: ModalType,
+): boolean => {
+  if (activeModal === 'addLocation') {
+    return false;
+  }
+  return !savedLocations.some((loc) => !loc.isGPS);
+};
+
+/**
+ * Async gate used by the failure paths: waits (bounded) for store hydration so
+ * the decision sees real data, then applies shouldInterruptWithGpsAlert.
  */
 const shouldShowGpsAlert = async (): Promise<boolean> => {
   await waitForLocationHydration();
-  return !useLocationStore
-    .getState()
-    .savedLocations.some((loc) => !loc.isGPS);
+  return shouldInterruptWithGpsAlert(
+    useLocationStore.getState().savedLocations,
+    useModalStore.getState().activeModal,
+  );
 };
 
 /**
