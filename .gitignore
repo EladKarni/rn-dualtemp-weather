@@ -28,3 +28,5 @@ api-gcs.*
 # Play Store — never commit the real service-account key (eas submit writes it here)
 serviceKey*.json
 !serviceKey.example.json
+# Local Netlify folder
+.netlify
