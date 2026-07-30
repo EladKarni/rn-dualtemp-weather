@@ -166,7 +166,7 @@ interface FetchWeatherResult {
 async function fetchWeatherForWidget(): Promise<FetchWeatherResult> {
   // Hydrate persisted stores before reading savedLocations / i18n.locale — the
   // headless task starts before Zustand's async rehydration completes.
-  await ensureStoresHydrated();
+  await ensureStoresHydrated(true);
 
   // Initialize database (widgets run outside React context)
   await useForecastStore.getState().initializeDatabase();
@@ -269,7 +269,7 @@ async function handleWidgetRefresh(props: WidgetTaskHandlerProps): Promise<void>
     // Hydrate persisted stores before reading savedLocations / i18n.locale — the
     // headless task starts before Zustand's async rehydration completes, so
     // reading them first produces a false "no location" alarm (finding 5).
-    await ensureStoresHydrated();
+    await ensureStoresHydrated(true);
 
     // Initialize database
     await useForecastStore.getState().initializeDatabase();

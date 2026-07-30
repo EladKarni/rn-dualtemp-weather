@@ -44,7 +44,22 @@ interface PersistLike {
   rehydrate: () => Promise<unknown> | unknown;
 }
 
-const ensureStoreHydrated = async (persistApi: PersistLike): Promise<void> => {
+const ensureStoreHydrated = async (
+  persistApi: PersistLike,
+  forceRefresh: boolean
+): Promise<void> => {
+  // A headless render must re-read storage even when this context is already
+  // hydrated. Its JS context can outlive a preference change made in the app —
+  // hydration happened once, `hasHydrated()` stays true forever, and the task
+  // keeps serving the snapshot it started with. Observed on-device: changing the
+  // widget colour then resizing a widget re-rendered it in the PREVIOUS colour,
+  // while a widget the app had repainted showed the new one. Force-stopping
+  // "fixed" it only by destroying the stale context.
+  if (forceRefresh) {
+    await persistApi.rehydrate();
+    return;
+  }
+
   if (persistApi.hasHydrated()) {
     return;
   }
@@ -73,11 +88,21 @@ const ensureStoreHydrated = async (persistApi: PersistLike): Promise<void> => {
   }
 };
 
-export const ensureStoresHydrated = async (): Promise<void> => {
+/**
+ * @param forceRefresh Re-read persisted state even if this context already
+ *   hydrated. Pass `true` ONLY from the headless widget task, where nothing
+ *   mutates these stores so their in-memory copy is never authoritative. Must
+ *   stay `false` in the main app context: `updateAllWeatherWidgets` runs there
+ *   too, and `rehydrate()` would replace newer in-memory state with the
+ *   persisted snapshot — the rollback documented above.
+ */
+export const ensureStoresHydrated = async (
+  forceRefresh = false
+): Promise<void> => {
   await Promise.all([
-    ensureStoreHydrated(useLocationStore.persist),
-    ensureStoreHydrated(useLanguageStore.persist),
-    ensureStoreHydrated(useSettingsStore.persist),
+    ensureStoreHydrated(useLocationStore.persist, forceRefresh),
+    ensureStoreHydrated(useLanguageStore.persist, forceRefresh),
+    ensureStoreHydrated(useSettingsStore.persist, forceRefresh),
   ]);
 };
 
