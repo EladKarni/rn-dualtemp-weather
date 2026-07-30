@@ -5,7 +5,7 @@ import { Weather } from "../types/WeatherTypes";
 import { processWidgetData } from "./components/shared/BaseWeatherWidget";
 import { DualTemperatureDisplay } from "./components/shared/DualTemperatureDisplay";
 import { WeatherIcon } from "./components/shared/WeatherIcon";
-import { calculateDailyItemCount } from "./utils/widgetLayoutUtils";
+import { calculateDailyItemCount, getItemSpacing } from "./utils/widgetLayoutUtils";
 import { palette } from "../styles/Palette";
 import moment from "moment";
 import { formatDataAge } from "./utils/widgetDataUtils";
@@ -66,7 +66,11 @@ const DailyForecastRow = ({
             }
           : {
               width: "match_parent",
-              height: 56,
+              // flex rather than a fixed height, mirroring the hourly columns in
+              // WeatherStandard: the rows fill the axis so the visible spacing
+              // comes from the container's flexGap alone, instead of whatever
+              // leftover height justifyContent happened to distribute.
+              flex: 1,
               backgroundColor: palette.widgetElement,
               borderRadius: 8,
               padding: 8,
@@ -191,13 +195,16 @@ export function WeatherExtended({
       }}
       clickAction="REFRESH"
     >
-      {/* Daily Items - Vertical Column */}
+      {/* Daily Items - Vertical Column. Spacing comes from the same
+          getItemSpacing() helper the hourly columns use, so the gap between
+          daily rows and the gap between hourly columns stay identical. */}
       <FlexWidget
         style={{
           flex: 1,
           width: "match_parent",
           flexDirection: "column",
-          justifyContent: "space-evenly",
+          justifyContent: "space-between",
+          flexGap: getItemSpacing(itemCount),
         }}
       >
         {forecastItems.map((forecast, index) => (
