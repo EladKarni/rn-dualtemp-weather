@@ -1,3 +1,7 @@
+// MUST stay first: initializes Sentry as a side effect, before the rest of the
+// module graph is evaluated (widgetTaskHandler pulls in the stores, i18n, the
+// logger and fetchWeather at module scope). See src/config/sentryBootstrap.ts.
+import './src/config/sentryBootstrap';
 import { registerRootComponent } from 'expo';
 import { registerWidgetTaskHandler } from 'react-native-android-widget';
 import { widgetTaskHandler } from './src/widgets/widgetTaskHandler';

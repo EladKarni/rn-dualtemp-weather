@@ -11,61 +11,13 @@ import {
   DMSans_700Bold_Italic,
 } from "@expo-google-fonts/dm-sans";
 import * as Sentry from "@sentry/react-native";
-import Constants from "expo-constants";
 
 import { logger } from "./src/utils/logger";
 import { toAppError, NoConnectionError } from "./src/utils/errors";
-import { scrubBreadcrumb, scrubEventValues } from "./src/utils/sentryScrubbing";
 
-// Initialize Sentry - only if DSN is provided
-const sentryDsn = Constants.expoConfig?.extra?.sentryDsn;
-// EXPO_PUBLIC_SENTRY_FORCE_ENABLE=true opts a dev build into actually sending
-// events, so the pipeline can be smoke-tested without cutting a release build.
-const sentryForceEnable = Constants.expoConfig?.extra?.sentryForceEnable === true;
-// Which build produced this event. Without it every build — including the
-// internal `preview` ones that generate most field traffic — lands in Sentry's
-// default "production" environment and is indistinguishable from a real release.
-// __DEV__ is checked first because `buildProfile` is derived from
-// EAS_BUILD_PROFILE, which is unset outside EAS and falls back to "production" —
-// so a force-enabled dev build would otherwise label itself as a real release.
-const sentryEnvironment: string = __DEV__
-  ? "development"
-  : (Constants.expoConfig?.extra?.buildProfile ?? "production");
-if (sentryDsn) {
-  Sentry.init({
-    dsn: sentryDsn,
-    debug: __DEV__, // Enable debug mode in development
-    enabled: !__DEV__ || sentryForceEnable, // Only send from release builds (or an explicit dev opt-in)
-    environment: sentryEnvironment,
-    sendDefaultPii: false, // don't let Sentry attach IP / default identifiers
-    // Defense-in-depth scrubbing (S2): strip GPS query strings from the default
-    // fetch/XHR breadcrumbs Sentry attaches automatically, and — before any
-    // event leaves the device — delete precise-coordinate extras then value-scrub
-    // every URL/coordinate at any depth. So location can't reach Sentry even if
-    // a call site forgets to sanitize.
-    beforeBreadcrumb: scrubBreadcrumb,
-    beforeSend(event) {
-      const extra = event.extra;
-      if (extra) {
-        for (const key of ["latitude", "longitude", "lat", "long", "lon", "lng"]) {
-          delete extra[key];
-        }
-      }
-      return scrubEventValues(event);
-    },
-  });
-  if (__DEV__) {
-    logger.info(
-      sentryForceEnable
-        ? `Sentry initialized (dev mode - events FORCE-ENABLED, environment: ${sentryEnvironment})`
-        : "Sentry initialized (dev mode - events disabled)",
-    );
-  }
-} else if (__DEV__) {
-  logger.info(
-    "Sentry not initialized: No DSN provided. Set EXPO_PUBLIC_SENTRY_DSN environment variable to enable.",
-  );
-}
+// Sentry is initialized by src/config/sentryBootstrap, imported first in
+// index.js so it runs before the rest of the module graph. Sentry.wrap below is
+// the only Sentry usage left in this file.
 
 // Stores
 import { useSettingsStore } from "./src/store/useSettingsStore";
@@ -146,6 +98,11 @@ function App() {
     );
     // Hydration may have finished between first render and this effect
     if (useLocationStore.persist.hasHydrated()) {
+      // Not replaceable with useSyncExternalStore, which the no-initialize-state
+      // rule suggests: that is a pure subscription, and this effect also needs
+      // the bounded timeout below — a failed hydration never fires
+      // onFinishHydration, and the empty state must not stay locked behind it.
+      // eslint-disable-next-line react-you-might-not-need-an-effect/no-initialize-state
       setLocationsHydrated(true);
     }
     // Bounded wait: a failed hydration never fires onFinishHydration, and
@@ -173,13 +130,6 @@ function App() {
 
   const setActiveLocation = useLocationStore(
     (state) => state.setActiveLocation,
-  );
-
-  const handleLocationSelect = React.useCallback(
-    (locationId: string) => {
-      setActiveLocation(locationId);
-    },
-    [setActiveLocation],
   );
 
   const { splashTimeoutExpired, onLayoutRootView } = useSplashScreen(isFetched);
