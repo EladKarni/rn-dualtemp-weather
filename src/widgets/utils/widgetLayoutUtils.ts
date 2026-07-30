@@ -212,8 +212,6 @@ export const calculateDailyItemCount = (heightPx: number, maxItems: number = 7):
   // Calculate how many items fit
   const itemCount = Math.floor((availableHeight + ITEM_GAP) / (MIN_ITEM_HEIGHT + ITEM_GAP));
 
-  console.log('[calculateDailyItemCount] heightPx:', heightPx, 'availableHeight:', availableHeight, 'itemCount:', itemCount, 'maxItems:', maxItems);
-
   // Clamp between 1 and maxItems
   return Math.max(1, Math.min(itemCount, maxItems));
 };

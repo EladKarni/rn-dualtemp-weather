@@ -7,14 +7,17 @@ import { Weather } from '../../types/WeatherTypes';
 import { useSettingsStore } from '../../store/useSettingsStore';
 import { convertWindSpeed } from '../../utils/temperature';
 import { i18n, translations } from '../../localization/i18n';
+import { logger } from '../../utils/logger';
 
 // Only import ExtensionStorage on iOS
 let ExtensionStorage: any = null;
 if (Platform.OS === 'ios') {
   try {
     ExtensionStorage = require('@bacons/apple-targets').ExtensionStorage;
-  } catch (e) {
-    console.log('ExtensionStorage not available');
+  } catch {
+    // Expected on a build without the apple-targets native module; the iOS
+    // widget simply never receives data. Not an error worth reporting.
+    logger.debug('ExtensionStorage not available');
   }
 }
 
@@ -156,9 +159,9 @@ export async function updateIOSWidgetData(
     // Trigger widget refresh
     ExtensionStorage.reloadWidget();
 
-    console.log('iOS widget data updated successfully');
+    logger.debug('iOS widget data updated successfully');
   } catch (error) {
-    console.error('Failed to update iOS widget data:', error);
+    logger.error('Failed to update iOS widget data:', error);
   }
 }
 
@@ -173,9 +176,9 @@ export function reloadIOSWidgets(): void {
 
   try {
     ExtensionStorage.reloadWidget();
-    console.log('iOS widgets reloaded');
+    logger.debug('iOS widgets reloaded');
   } catch (error) {
-    console.error('Failed to reload iOS widgets:', error);
+    logger.error('Failed to reload iOS widgets:', error);
   }
 }
 
