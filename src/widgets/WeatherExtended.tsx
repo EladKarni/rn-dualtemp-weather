@@ -63,6 +63,13 @@ const DailyForecastRow = ({
   // still answers "how warm is that day".
   const showAverageOnly = density === "narrow";
   const averageTemp = (forecast.temp.min + forecast.temp.max) / 2;
+  // The day column is the only one whose content varies a lot in width
+  // ("Today" against "Fri"), and this renderer treats `flex` as grow-only —
+  // content still sets a minimum, so a long label pushes every later column
+  // right and the rows stop lining up. A fixed width is the only way to pin it.
+  // Sized for "Today"; a longer localized label truncates rather than shifting
+  // its neighbours, which is the better failure of the two.
+  const dayColumnWidth = density === "narrow" ? 44 : 56;
 
   // Only the outer container and the day-label style differ between variants;
   // kept inline so react-native-android-widget's style props stay contextually
@@ -101,23 +108,34 @@ const DailyForecastRow = ({
             }
       }
     >
+      {/* Every column is flex-weighted rather than auto-sized. With auto widths
+          and space-between, a long day label ("Today") left different leftover
+          space than a short one ("Fri"), so the icon and temperatures landed at
+          a different x in each row and the columns visibly failed to line up.
+          A fixed width on the day column plus weights on the rest gives every
+          row identical column geometry regardless of how long its text is. */}
+
       {/* Day name */}
-      <TextWidget
-        text={dayText}
-        style={
-          isCompact
-            ? { fontSize: 14, fontWeight: "bold", color: palette.textColor }
-            : { fontSize: 14, color: palette.highlightColor }
-        }
-      />
+      <FlexWidget style={{ width: dayColumnWidth, flexDirection: "row", alignItems: "center" }}>
+        <TextWidget
+          text={dayText}
+          style={
+            isCompact
+              ? { fontSize: 14, fontWeight: "bold", color: palette.textColor }
+              : { fontSize: 14, color: palette.highlightColor }
+          }
+        />
+      </FlexWidget>
 
       {/* Weather Icon */}
-      <WeatherIcon weatherId={forecast.weather[0].id} size="small" />
+      <FlexWidget style={{ flex: 2, flexDirection: "row", justifyContent: "center", alignItems: "center" }}>
+        <WeatherIcon weatherId={forecast.weather[0].id} size="small" />
+      </FlexWidget>
 
       {/* Max UV index for the day — only the widest row has room for it, and it
           is the metric the hourly widget does not already cover. */}
       {showUv && (
-        <FlexWidget style={{ flexDirection: "row", alignItems: "center" }}>
+        <FlexWidget style={{ flex: 3, flexDirection: "row", justifyContent: "center", alignItems: "center" }}>
           <TextWidget
             text={`${i18n.t("WidgetUV")} ${Math.round(forecast.uvi)}`}
             style={{ color: palette.highlightColor, fontSize: 14 }}
@@ -126,48 +144,50 @@ const DailyForecastRow = ({
       )}
 
       {/* Narrowest width: a single dual-scale average replaces the pair.
-          NB: these are three sibling conditionals rather than a ternary with a
+          NB: these are sibling conditionals rather than a ternary with a
           fragment. react-native-android-widget's renderer calls every element
           type as a function, so a React Fragment throws
           "Symbol(react.fragment) is not a function" and takes the whole render
           down to the error widget. */}
       {showAverageOnly && (
-        <DualTemperatureDisplay
-          temp={averageTemp}
-          size="small"
-          tempScale={tempScale}
-          separator=" / "
-        />
+        <FlexWidget style={{ flex: 5, flexDirection: "row", justifyContent: "center", alignItems: "center" }}>
+          <DualTemperatureDisplay
+            temp={averageTemp}
+            size="small"
+            tempScale={tempScale}
+            separator=" / "
+          />
+        </FlexWidget>
       )}
 
       {/* High Temp */}
       {!showAverageOnly && (
-      <FlexWidget style={{ flexDirection: "row", alignItems: "center" }}>
-        {showHiLoLabels && (
-          <TextWidget text={`${i18n.t("WidgetHi")} `} style={{ color: palette.highlightColor, fontSize: 16 }} />
-        )}
-        <DualTemperatureDisplay
-          temp={forecast.temp.max}
-          size="small"
-          tempScale={tempScale}
-          separator=" / "
-        />
-      </FlexWidget>
+        <FlexWidget style={{ flex: 5, flexDirection: "row", justifyContent: "center", alignItems: "center" }}>
+          {showHiLoLabels && (
+            <TextWidget text={`${i18n.t("WidgetHi")} `} style={{ color: palette.highlightColor, fontSize: 16 }} />
+          )}
+          <DualTemperatureDisplay
+            temp={forecast.temp.max}
+            size="small"
+            tempScale={tempScale}
+            separator=" / "
+          />
+        </FlexWidget>
       )}
 
       {/* Low Temp */}
       {!showAverageOnly && (
-      <FlexWidget style={{ flexDirection: "row", alignItems: "center" }}>
-        {showHiLoLabels && (
-          <TextWidget text={`${i18n.t("WidgetLo")} `} style={{ color: palette.highlightColor, fontSize: 16 }} />
-        )}
-        <DualTemperatureDisplay
-          temp={forecast.temp.min}
-          size="small"
-          tempScale={tempScale}
-          separator=" / "
-        />
-      </FlexWidget>
+        <FlexWidget style={{ flex: 5, flexDirection: "row", justifyContent: "center", alignItems: "center" }}>
+          {showHiLoLabels && (
+            <TextWidget text={`${i18n.t("WidgetLo")} `} style={{ color: palette.highlightColor, fontSize: 16 }} />
+          )}
+          <DualTemperatureDisplay
+            temp={forecast.temp.min}
+            size="small"
+            tempScale={tempScale}
+            separator=" / "
+          />
+        </FlexWidget>
       )}
     </FlexWidget>
   );
