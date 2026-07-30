@@ -54,9 +54,15 @@ const DailyForecastRow = ({
   const isCompact = variant === "compact";
   // The two axes are independent: `variant` comes from height, `density` from
   // width, and every combination has to render.
-  const showIcon = density !== "narrow";
-  const showHiLoLabels = density === "full";
-  const tempSeparator = density === "narrow" ? "/" : " / ";
+  // The icon survives every width — dropping the high/low pair frees far more
+  // room than it occupies, and it is the most scannable thing in the row.
+  const showHiLoLabels = density === "full" || density === "wide";
+  const showUv = density === "wide";
+  // At the narrowest width a high/low pair means four numbers competing for a
+  // two-cell row, which overflows. One dual-scale average reads cleanly and
+  // still answers "how warm is that day".
+  const showAverageOnly = density === "narrow";
+  const averageTemp = (forecast.temp.min + forecast.temp.max) / 2;
 
   // Only the outer container and the day-label style differ between variants;
   // kept inline so react-native-android-widget's style props stay contextually
@@ -105,10 +111,37 @@ const DailyForecastRow = ({
         }
       />
 
-      {/* Weather Icon — first thing dropped when the widget is at its narrowest */}
-      {showIcon && <WeatherIcon weatherId={forecast.weather[0].id} size="small" />}
+      {/* Weather Icon */}
+      <WeatherIcon weatherId={forecast.weather[0].id} size="small" />
+
+      {/* Max UV index for the day — only the widest row has room for it, and it
+          is the metric the hourly widget does not already cover. */}
+      {showUv && (
+        <FlexWidget style={{ flexDirection: "row", alignItems: "center" }}>
+          <TextWidget
+            text={`${i18n.t("WidgetUV")} ${Math.round(forecast.uvi)}`}
+            style={{ color: palette.highlightColor, fontSize: 14 }}
+          />
+        </FlexWidget>
+      )}
+
+      {/* Narrowest width: a single dual-scale average replaces the pair.
+          NB: these are three sibling conditionals rather than a ternary with a
+          fragment. react-native-android-widget's renderer calls every element
+          type as a function, so a React Fragment throws
+          "Symbol(react.fragment) is not a function" and takes the whole render
+          down to the error widget. */}
+      {showAverageOnly && (
+        <DualTemperatureDisplay
+          temp={averageTemp}
+          size="small"
+          tempScale={tempScale}
+          separator=" / "
+        />
+      )}
 
       {/* High Temp */}
+      {!showAverageOnly && (
       <FlexWidget style={{ flexDirection: "row", alignItems: "center" }}>
         {showHiLoLabels && (
           <TextWidget text={`${i18n.t("WidgetHi")} `} style={{ color: palette.highlightColor, fontSize: 16 }} />
@@ -117,11 +150,13 @@ const DailyForecastRow = ({
           temp={forecast.temp.max}
           size="small"
           tempScale={tempScale}
-          separator={tempSeparator}
+          separator=" / "
         />
       </FlexWidget>
+      )}
 
       {/* Low Temp */}
+      {!showAverageOnly && (
       <FlexWidget style={{ flexDirection: "row", alignItems: "center" }}>
         {showHiLoLabels && (
           <TextWidget text={`${i18n.t("WidgetLo")} `} style={{ color: palette.highlightColor, fontSize: 16 }} />
@@ -130,9 +165,10 @@ const DailyForecastRow = ({
           temp={forecast.temp.min}
           size="small"
           tempScale={tempScale}
-          separator={tempSeparator}
+          separator=" / "
         />
       </FlexWidget>
+      )}
     </FlexWidget>
   );
 };

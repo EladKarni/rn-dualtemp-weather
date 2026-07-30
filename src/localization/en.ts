@@ -82,6 +82,7 @@ export const en = {
     WidgetRefreshing: "Refreshing...",
     WidgetLoadError: "Unable to load weather",
     WidgetRefreshError: "Unable to refresh",
+    WidgetUV: "UV",
     WidgetHi: "Hi",
     WidgetLo: "Lo",
     WidgetAgeMinutes: "%{count}m ago",

@@ -23,7 +23,7 @@ describe("calculateDailyRowDensity", () => {
     ["2 cells — the declared minimum", cells(2), "narrow"],
     ["3 cells — the declared default", cells(3), "medium"],
     ["4 cells", cells(4), "full"],
-    ["5 cells — the declared maximum", cells(5), "full"],
+    ["5 cells — the declared maximum", cells(5), "wide"],
   ])("%s (%ddp) -> %s", (_label, width, expected) => {
     expect(calculateDailyRowDensity(width)).toBe(expected);
   });
@@ -33,6 +33,8 @@ describe("calculateDailyRowDensity", () => {
     ["exactly at the medium threshold", 180, "medium"],
     ["just below the full threshold", 249, "medium"],
     ["exactly at the full threshold", 250, "full"],
+    ["just below the wide threshold", 319, "full"],
+    ["exactly at the wide threshold", 320, "wide"],
   ])("%s (%ddp) -> %s", (_label, width, expected) => {
     expect(calculateDailyRowDensity(width)).toBe(expected);
   });
@@ -44,6 +46,23 @@ describe("calculateDailyRowDensity", () => {
     expect(calculateDailyRowDensity(60)).toBe("narrow");
   });
 
+  it("is monotonic — a wider widget never shows less detail", () => {
+    // Guards against a threshold being reordered so that, say, 300dp resolves
+    // to something less detailed than 250dp.
+    const rank: Record<DailyRowDensity, number> = {
+      narrow: 0,
+      medium: 1,
+      full: 2,
+      wide: 3,
+    };
+    let previous = -1;
+    for (let w = 0; w <= 600; w += 5) {
+      const current = rank[calculateDailyRowDensity(w)];
+      expect(current).toBeGreaterThanOrEqual(previous);
+      previous = current;
+    }
+  });
+
   it("assumes medium, not full, when the width is unknown", () => {
     // Guessing too wide overflows the row; guessing too narrow only wastes
     // space. updateAllWeatherWidgets historically omitted the width prop
@@ -52,7 +71,7 @@ describe("calculateDailyRowDensity", () => {
   });
 
   it("never returns a density outside the known set", () => {
-    const allowed: DailyRowDensity[] = ["full", "medium", "narrow"];
+    const allowed: DailyRowDensity[] = ["wide", "full", "medium", "narrow"];
     for (let w = 0; w <= 600; w += 7) {
       expect(allowed).toContain(calculateDailyRowDensity(w));
     }

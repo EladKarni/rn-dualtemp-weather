@@ -82,6 +82,7 @@ export const fr = {
     WidgetRefreshing: "Actualisation...",
     WidgetLoadError: "Impossible de charger la météo",
     WidgetRefreshError: "Impossible d'actualiser",
+    WidgetUV: "UV",
     WidgetHi: "Max",
     WidgetLo: "Min",
     WidgetAgeMinutes: "il y a %{count} min",

@@ -82,6 +82,7 @@ export const zh = {
   WidgetRefreshing: "正在刷新...",
   WidgetLoadError: "无法加载天气",
   WidgetRefreshError: "无法刷新",
+  WidgetUV: "紫外线",
   WidgetHi: "高",
   WidgetLo: "低",
   WidgetAgeMinutes: "%{count} 分钟前",

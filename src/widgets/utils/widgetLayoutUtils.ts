@@ -194,14 +194,19 @@ export const calculateHourlyItemCount = (widthPx: number, maxItems: number = 4):
 /**
  * How much detail a daily-forecast row can carry at a given widget width.
  *
- * - `full`   day · icon · "Hi 31° / 87°" · "Lo 14° / 58°"
- * - `medium` drops the Hi/Lo word labels, keeping icon and both temperatures
- * - `narrow` also drops the icon
+ * - `wide`   day · icon · UV · "Hi 31° / 87°" · "Lo 14° / 58°"
+ * - `full`   drops UV
+ * - `medium` also drops the Hi/Lo word labels
+ * - `narrow` shows a single AVERAGE temperature instead of a high/low pair
  *
- * Both temperature scales survive every step on purpose — showing °C and °F
- * together is the point of the app, so it is the last thing that should go.
+ * The icon survives every step: dropping the high/low pair frees far more room
+ * than the icon occupies, and it is the most scannable thing in the row.
+ *
+ * Both temperature scales survive every step too — showing °C and °F together
+ * is the point of the app, so it is the last thing that should go. At `narrow`
+ * that means one dual-scale average rather than two cramped dual-scale pairs.
  */
-export type DailyRowDensity = 'full' | 'medium' | 'narrow';
+export type DailyRowDensity = 'wide' | 'full' | 'medium' | 'narrow';
 
 /**
  * Widget widths, in dp, at Android's cell sizing (minWidth = 70n - 30).
@@ -209,6 +214,7 @@ export type DailyRowDensity = 'full' | 'medium' | 'narrow';
  */
 const DAILY_WIDTH_3_CELLS = 180;
 const DAILY_WIDTH_4_CELLS = 250;
+const DAILY_WIDTH_5_CELLS = 320;
 
 /**
  * Pick a row density for the given widget width.
@@ -226,6 +232,9 @@ export const calculateDailyRowDensity = (
 ): DailyRowDensity => {
   if (widthDp === undefined) {
     return 'medium';
+  }
+  if (widthDp >= DAILY_WIDTH_5_CELLS) {
+    return 'wide';
   }
   if (widthDp >= DAILY_WIDTH_4_CELLS) {
     return 'full';

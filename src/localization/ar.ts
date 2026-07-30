@@ -82,6 +82,7 @@ export const ar = {
     WidgetRefreshing: "جارٍ التحديث...",
     WidgetLoadError: "تعذّر تحميل الطقس",
     WidgetRefreshError: "تعذّر التحديث",
+    WidgetUV: "UV",
     WidgetHi: "عظمى",
     WidgetLo: "صغرى",
     WidgetAgeMinutes: "قبل %{count} د",

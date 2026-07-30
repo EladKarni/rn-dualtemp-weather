@@ -82,6 +82,7 @@ export const he = {
     WidgetRefreshing: "מרענן...",
     WidgetLoadError: "לא ניתן לטעון מזג אוויר",
     WidgetRefreshError: "לא ניתן לרענן",
+    WidgetUV: "UV",
     WidgetHi: "מקס",
     WidgetLo: "מינ",
     WidgetAgeMinutes: "לפני %{count} ד׳",

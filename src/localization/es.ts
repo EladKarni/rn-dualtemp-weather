@@ -82,6 +82,7 @@ export const es = {
     WidgetRefreshing: "Actualizando...",
     WidgetLoadError: "No se pudo cargar el clima",
     WidgetRefreshError: "No se pudo actualizar",
+    WidgetUV: "UV",
     WidgetHi: "Máx",
     WidgetLo: "Mín",
     WidgetAgeMinutes: "hace %{count} min",
