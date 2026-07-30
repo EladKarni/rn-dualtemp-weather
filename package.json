@@ -12,7 +12,7 @@
     "prebuild:dev": "cross-env EAS_BUILD_PROFILE=development expo prebuild --clean",
     "prebuild:prod": "cross-env EAS_BUILD_PROFILE=production expo prebuild --clean",
     "build:dev": "eas build --profile development",
-    "build:preview": "eas build --profile preview",
+    "build:preview": "eas build --profile preview --platform android",
     "build:prod": "eas build --profile production",
     "test": "jest --ci",
     "lint": "eslint .",
