@@ -8,6 +8,7 @@ import { WeatherIcon } from "./components/shared/WeatherIcon";
 import { convertWindSpeed } from "../utils/temperature";
 import { calculateHourlyItemCount, getItemSpacing } from "./utils/widgetLayoutUtils";
 import { palette } from "../styles/Palette";
+import { getWidgetElementColor } from "./utils/widgetTheme";
 import { formatDataAge } from "./utils/widgetDataUtils";
 import { formatTime } from "../utils/dateFormatting";
 import { useSettingsStore } from "../store/useSettingsStore";
@@ -51,7 +52,7 @@ const HourlyItem = ({
         height: "match_parent",
         flex: 1,
         ...(showBackground && {
-          backgroundColor: palette.widgetElement,
+          backgroundColor: getWidgetElementColor(),
           borderRadius: 8,
           padding: 8,
         }),

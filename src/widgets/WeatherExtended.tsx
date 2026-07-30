@@ -7,6 +7,7 @@ import { DualTemperatureDisplay } from "./components/shared/DualTemperatureDispl
 import { WeatherIcon } from "./components/shared/WeatherIcon";
 import { calculateDailyItemCount, getItemSpacing } from "./utils/widgetLayoutUtils";
 import { palette } from "../styles/Palette";
+import { getWidgetElementColor } from "./utils/widgetTheme";
 import moment from "moment";
 import { formatDataAge } from "./utils/widgetDataUtils";
 import { i18n } from "../localization/i18n";
@@ -56,7 +57,7 @@ const DailyForecastRow = ({
               // Carries its own element fill for the same reason the card
               // variant does: the root is transparent, so a row without one
               // would render straight onto the wallpaper.
-              backgroundColor: palette.widgetElement,
+              backgroundColor: getWidgetElementColor(),
               borderRadius: 8,
               flexDirection: "row",
               alignItems: "center",
@@ -71,7 +72,7 @@ const DailyForecastRow = ({
               // comes from the container's flexGap alone, instead of whatever
               // leftover height justifyContent happened to distribute.
               flex: 1,
-              backgroundColor: palette.widgetElement,
+              backgroundColor: getWidgetElementColor(),
               borderRadius: 8,
               padding: 8,
               flexDirection: "row",

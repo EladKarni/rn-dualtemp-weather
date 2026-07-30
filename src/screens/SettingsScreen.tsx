@@ -16,6 +16,7 @@ import { TempUnitSelector } from "../components/TempUnitSelector/TempUnitSelecto
 import { ClockFormatSelector } from "../components/ClockFormatSelector/ClockFormatSelector";
 import { SunriseSunsetToggle } from "../components/SunriseSunsetToggle/SunriseSunsetToggle";
 import { LanguageSelector } from "../components/LanguageSelector/LanguageSelector";
+import { WidgetThemeSelector } from "../components/WidgetThemeSelector/WidgetThemeSelector";
 import { LocationList } from "../components/Settings/LocationList";
 import { useLocationStore } from "../store/useLocationStore";
 import { useModalAnimation } from "../hooks/useModalAnimation";
@@ -83,6 +84,9 @@ const SettingsScreen = ({
               </SettingItem>
               <SettingItem label={i18n.t("ShowSunriseSunset")}>
                 <SunriseSunsetToggle />
+              </SettingItem>
+              <SettingItem label={i18n.t("WidgetStyle")}>
+                <WidgetThemeSelector />
               </SettingItem>
             </View>
 

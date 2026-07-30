@@ -7,6 +7,7 @@ import { getActualDimensions, calculateOptimalFontSize } from './utils/widgetLay
 import { celsiusToFahrenheit } from '../utils/temperature';
 import { WeatherIcon } from './components/shared/WeatherIcon';
 import { palette } from '../styles/Palette';
+import { getWidgetElementColor } from './utils/widgetTheme';
 import { formatDataAge } from './utils/widgetDataUtils';
 
 interface WeatherCompactProps {
@@ -72,7 +73,7 @@ export function WeatherCompact({
         style={{
           height: 'match_parent',
           width: 'match_parent',
-          backgroundColor: palette.widgetElement,
+          backgroundColor: getWidgetElementColor(),
           borderRadius: 16,
           flexDirection: 'column',
           justifyContent: 'center',
