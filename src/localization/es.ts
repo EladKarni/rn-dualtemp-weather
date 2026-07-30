@@ -32,6 +32,8 @@ export const es = {
     StartTyping: "Comienza a escribir para buscar...",
     Searching: "Buscando...",
     EnableLocation: "Activar ubicación",
+    UseCurrentLocation: "Usar ubicación actual",
+    Locating: "Localizando...",
     NoLocationTitle: "Aún no hay ninguna ubicación",
     NoLocationDescription: "Añade una ciudad para ver su tiempo. No necesitas activar el acceso a la ubicación.",
     DeleteLocation: "Eliminar Ubicación",

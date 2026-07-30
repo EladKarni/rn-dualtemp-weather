@@ -32,6 +32,8 @@ export const he = {
     StartTyping: "התחל להקליד כדי לחפש...",
     Searching: "מחפש...",
     EnableLocation: "הפעל מיקום",
+    UseCurrentLocation: "השתמש במיקום הנוכחי",
+    Locating: "מאתר מיקום...",
     NoLocationTitle: "עדיין אין מיקום",
     NoLocationDescription: "הוסף עיר כדי לראות את מזג האוויר שלה. אין צורך להפעיל גישה למיקום.",
     DeleteLocation: "מחק מיקום",

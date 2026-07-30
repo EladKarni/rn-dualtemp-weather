@@ -32,6 +32,8 @@ export const zh = {
   StartTyping: "开始输入以搜索...",
   Searching: "搜索中...",
   EnableLocation: "开启定位",
+  UseCurrentLocation: "使用当前位置",
+  Locating: "定位中...",
   NoLocationTitle: "暂无位置",
   NoLocationDescription: "添加城市即可查看其天气，无需开启位置权限。",
   DeleteLocation: "删除地点",

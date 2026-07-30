@@ -11,6 +11,29 @@ export const styles = StyleSheet.create({
     flex: 1,
     paddingBottom: spacing.md,
   },
+  // Secondary to the filled "Add Location" button below it: outlined, so the
+  // manual path stays the visually primary one for users without GPS.
+  useCurrentLocationButton: {
+    marginHorizontal: spacing.lg,
+    marginTop: spacing.md,
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: palette.highlightColor,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xl,
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: 48,
+  },
+  useCurrentLocationButtonBusy: {
+    opacity: 0.6,
+  },
+  useCurrentLocationText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: palette.highlightColor,
+    letterSpacing: 0.3,
+  },
   addLocationButton: {
     marginHorizontal: spacing.lg,
     marginTop: spacing.md,

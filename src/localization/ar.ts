@@ -32,6 +32,8 @@ export const ar = {
     StartTyping: "ابدأ الكتابة للبحث...",
     Searching: "جاري البحث...",
     EnableLocation: "تفعيل الموقع",
+    UseCurrentLocation: "استخدام الموقع الحالي",
+    Locating: "جارٍ تحديد الموقع...",
     NoLocationTitle: "لا يوجد موقع بعد",
     NoLocationDescription: "أضف مدينة لعرض حالة الطقس فيها. لا حاجة لتفعيل الوصول إلى الموقع.",
     DeleteLocation: "حذف الموقع",

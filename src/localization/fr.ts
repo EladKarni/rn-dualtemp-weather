@@ -32,6 +32,8 @@ export const fr = {
     StartTyping: "Commencez à taper pour rechercher...",
     Searching: "Recherche...",
     EnableLocation: "Activer la localisation",
+    UseCurrentLocation: "Utiliser ma position",
+    Locating: "Localisation...",
     NoLocationTitle: "Aucun lieu pour l'instant",
     NoLocationDescription: "Ajoutez une ville pour voir sa météo. Pas besoin d'activer l'accès à la localisation.",
     DeleteLocation: "Supprimer l'Emplacement",
