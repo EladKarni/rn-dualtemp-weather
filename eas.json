@@ -14,7 +14,8 @@
       "channel": "preview",
       "environment": "preview",
       "android": {
-        "buildType": "apk"
+        "buildType": "apk",
+        "autoIncrement": true
       },
       "env": {
         "EXPO_PUBLIC_WEATHER_API_URL": "https://open-weather-proxy-q9xk-git-feat-pro-4cc9b7-eladkarnis-projects.vercel.app/api/v1/"
