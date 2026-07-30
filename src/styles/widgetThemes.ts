@@ -14,22 +14,27 @@
  * test is the reason this list is safe — extend it and the test will tell you
  * immediately if a new colour fails a text tier.
  *
+ * Both entries come from the on-device comparison of candidate fills; nothing
+ * here is invented. `indigo` is that comparison's option 2 (the app's
+ * primaryDark) and `midnight` its option 1 (the neutral near-black), each in
+ * opaque form. Its option 5 was primaryDark at 0.85 alpha, which collapses into
+ * `indigo` once opacity is required, so it is not a separate entry.
+ *
  * Both brand blues were candidates and are deliberately absent:
  * primaryColor #3621DC reaches only 3.38 against the secondary tier and
  * primaryLight #6B58FF only 1.82, because they sit close to
  * `textColorSecondary` (#a19ad8) in both luminance and hue. Neither is usable
- * without also changing that text colour.
+ * without also changing that text colour — the comparison flagged the same
+ * thing about its options 3 and 4.
+ *
+ * Ids removed from this list are handled, not orphaned: resolveWidgetTheme
+ * falls back to the default for anything it does not recognise, so an install
+ * still holding a retired preset renders the default rather than breaking.
  */
 
 import type { ColorProp } from "react-native-android-widget";
 
-export type WidgetThemeId =
-  | "indigo"
-  | "midnight"
-  | "slate"
-  | "plum"
-  | "forest"
-  | "maroon";
+export type WidgetThemeId = "indigo" | "midnight";
 
 export interface WidgetTheme {
   id: WidgetThemeId;
@@ -47,10 +52,6 @@ export interface WidgetTheme {
 export const WIDGET_THEMES: Record<WidgetThemeId, WidgetTheme> = {
   indigo: { id: "indigo", element: "rgba(28, 27, 77, 1)", labelKey: "WidgetThemeIndigo" },
   midnight: { id: "midnight", element: "rgba(14, 16, 32, 1)", labelKey: "WidgetThemeMidnight" },
-  slate: { id: "slate", element: "rgba(30, 39, 51, 1)", labelKey: "WidgetThemeSlate" },
-  plum: { id: "plum", element: "rgba(46, 27, 61, 1)", labelKey: "WidgetThemePlum" },
-  forest: { id: "forest", element: "rgba(18, 46, 34, 1)", labelKey: "WidgetThemeForest" },
-  maroon: { id: "maroon", element: "rgba(58, 21, 32, 1)", labelKey: "WidgetThemeMaroon" },
 };
 
 /** Matches the brand indigo the widgets shipped with before the picker existed. */
