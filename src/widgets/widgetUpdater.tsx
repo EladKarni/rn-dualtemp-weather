@@ -208,6 +208,7 @@ export const updateAllWeatherWidgets = async (
               weather={weatherData}
               lastUpdated={lastUpdated}
               locationName={widgetLocation.name}
+              width={widgetInfo.width}
               height={widgetInfo.height}
             />
           ),

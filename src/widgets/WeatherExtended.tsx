@@ -5,7 +5,12 @@ import { Weather } from "../types/WeatherTypes";
 import { processWidgetData } from "./components/shared/BaseWeatherWidget";
 import { DualTemperatureDisplay } from "./components/shared/DualTemperatureDisplay";
 import { WeatherIcon } from "./components/shared/WeatherIcon";
-import { calculateDailyItemCount, getItemSpacing } from "./utils/widgetLayoutUtils";
+import {
+  calculateDailyItemCount,
+  calculateDailyRowDensity,
+  getItemSpacing,
+  type DailyRowDensity,
+} from "./utils/widgetLayoutUtils";
 import { palette } from "../styles/Palette";
 import { getWidgetElementColor } from "./utils/widgetTheme";
 import moment from "moment";
@@ -16,8 +21,8 @@ interface WeatherExtendedProps {
   weather: Weather;
   lastUpdated: Date;
   locationName: string;
-  width?: number;   // Optional: Widget width in pixels (3x1 = 270dp minimum)
-  height?: number;  // Optional: Widget height in pixels for vertical expansion (40dp minimum)
+  width?: number;   // Widget width in dp — drives row density (2-5 cells)
+  height?: number;  // Widget height in dp — drives how many days are shown
   dataAge?: number; // Optional: Age of data in minutes (for stale data indicator)
 }
 
@@ -31,11 +36,15 @@ const DailyForecastRow = ({
   tempScale,
   isToday,
   variant,
+  density,
 }: {
   forecast: any;
   tempScale: "C" | "F";
   isToday: boolean;
+  /** Vertical: how the row is boxed. Driven by widget height. */
   variant: DailyRowVariant;
+  /** Horizontal: how much detail fits. Driven by widget width. */
+  density: DailyRowDensity;
 }) => {
   // "Today" is localized via i18n; other day labels come from moment, whose
   // locale is hydrated in the widget context (Worker C's store-hydration gate).
@@ -43,6 +52,11 @@ const DailyForecastRow = ({
     ? i18n.t("Today")
     : moment(forecast.dt * 1000).format("ddd");
   const isCompact = variant === "compact";
+  // The two axes are independent: `variant` comes from height, `density` from
+  // width, and every combination has to render.
+  const showIcon = density !== "narrow";
+  const showHiLoLabels = density === "full";
+  const tempSeparator = density === "narrow" ? "/" : " / ";
 
   // Only the outer container and the day-label style differ between variants;
   // kept inline so react-native-android-widget's style props stay contextually
@@ -91,28 +105,32 @@ const DailyForecastRow = ({
         }
       />
 
-      {/* Weather Icon */}
-      <WeatherIcon weatherId={forecast.weather[0].id} size="small" />
+      {/* Weather Icon — first thing dropped when the widget is at its narrowest */}
+      {showIcon && <WeatherIcon weatherId={forecast.weather[0].id} size="small" />}
 
       {/* High Temp */}
       <FlexWidget style={{ flexDirection: "row", alignItems: "center" }}>
-        <TextWidget text={`${i18n.t("WidgetHi")} `} style={{ color: palette.highlightColor, fontSize: 16 }} />
+        {showHiLoLabels && (
+          <TextWidget text={`${i18n.t("WidgetHi")} `} style={{ color: palette.highlightColor, fontSize: 16 }} />
+        )}
         <DualTemperatureDisplay
           temp={forecast.temp.max}
           size="small"
           tempScale={tempScale}
-          separator=" / "
+          separator={tempSeparator}
         />
       </FlexWidget>
 
       {/* Low Temp */}
       <FlexWidget style={{ flexDirection: "row", alignItems: "center" }}>
-        <TextWidget text={`${i18n.t("WidgetLo")} `} style={{ color: palette.highlightColor, fontSize: 16 }} />
+        {showHiLoLabels && (
+          <TextWidget text={`${i18n.t("WidgetLo")} `} style={{ color: palette.highlightColor, fontSize: 16 }} />
+        )}
         <DualTemperatureDisplay
           temp={forecast.temp.min}
           size="small"
           tempScale={tempScale}
-          separator=" / "
+          separator={tempSeparator}
         />
       </FlexWidget>
     </FlexWidget>
@@ -123,6 +141,7 @@ export function WeatherExtended({
   weather,
   lastUpdated,
   locationName,
+  width,
   height,
   dataAge,
 }: WeatherExtendedProps) {
@@ -137,6 +156,9 @@ export function WeatherExtended({
   // If no height provided, default to 1 item (compact mode)
   const itemCount = height ? calculateDailyItemCount(height, 7) : 1;
   const isCompact = itemCount <= 1;
+
+  // Height decides how many days fit; width decides how much of each row fits.
+  const density = calculateDailyRowDensity(width);
 
   // Get daily forecast items (first item is today)
   const forecastItems = processedData.dailyForecast.slice(0, Math.max(1, itemCount));
@@ -165,6 +187,7 @@ export function WeatherExtended({
           tempScale={tempScale}
           isToday={true}
           variant="compact"
+          density={density}
         />
 
         {/* Age Indicator for compact mode - positioned at end of row */}
@@ -215,6 +238,7 @@ export function WeatherExtended({
             tempScale={tempScale}
             isToday={index === 0}
             variant="card"
+            density={density}
           />
         ))}
       </FlexWidget>

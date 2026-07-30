@@ -61,9 +61,13 @@ export const getActualDimensions = (widgetName: string): WidgetDimensions => {
       minHeight: '180dp'
     },
     'WeatherExtended': {
+      // Default placement size (targetCellWidth/Height in app.json). Unlike the
+      // others this one is resizable on BOTH axes, 2-5 cells, so these values
+      // describe where it starts, not where it stays — anything that needs the
+      // live size must read the width/height props instead.
       width: 3,
-      height: 1,        // True 3x1 (270dp x 40dp) - expands vertically
-      minWidth: '270dp',
+      height: 1,
+      minWidth: '110dp',  // 2 cells
       minHeight: '40dp'
     }
   };
@@ -185,6 +189,51 @@ export const calculateHourlyItemCount = (widthPx: number, maxItems: number = 4):
 
   // Clamp between 1 and maxItems
   return Math.max(1, Math.min(itemCount, maxItems));
+};
+
+/**
+ * How much detail a daily-forecast row can carry at a given widget width.
+ *
+ * - `full`   day · icon · "Hi 31° / 87°" · "Lo 14° / 58°"
+ * - `medium` drops the Hi/Lo word labels, keeping icon and both temperatures
+ * - `narrow` also drops the icon
+ *
+ * Both temperature scales survive every step on purpose — showing °C and °F
+ * together is the point of the app, so it is the last thing that should go.
+ */
+export type DailyRowDensity = 'full' | 'medium' | 'narrow';
+
+/**
+ * Widget widths, in dp, at Android's cell sizing (minWidth = 70n - 30).
+ * The daily widget is declared resizable from 2 to 5 cells.
+ */
+const DAILY_WIDTH_3_CELLS = 180;
+const DAILY_WIDTH_4_CELLS = 250;
+
+/**
+ * Pick a row density for the given widget width.
+ *
+ * `widthDp` is dp, not pixels — confirmed on device by rendering the raw value
+ * the task handler passes in: a three-row widget reported 203, which only
+ * resolves to three rows when read as dp.
+ *
+ * Undefined width falls to `medium` rather than `full`: an unknown width must
+ * not assume the widest layout, because guessing too wide overflows the row
+ * while guessing too narrow merely leaves space unused.
+ */
+export const calculateDailyRowDensity = (
+  widthDp?: number
+): DailyRowDensity => {
+  if (widthDp === undefined) {
+    return 'medium';
+  }
+  if (widthDp >= DAILY_WIDTH_4_CELLS) {
+    return 'full';
+  }
+  if (widthDp >= DAILY_WIDTH_3_CELLS) {
+    return 'medium';
+  }
+  return 'narrow';
 };
 
 /**
