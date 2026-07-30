@@ -53,16 +53,21 @@ const DailyForecastRow = ({
           ? {
               width: "match_parent",
               height: "match_parent",
+              // Carries its own element fill for the same reason the card
+              // variant does: the root is transparent, so a row without one
+              // would render straight onto the wallpaper.
+              backgroundColor: palette.widgetElement,
+              borderRadius: 8,
               flexDirection: "row",
               alignItems: "center",
               justifyContent: "space-between",
-              paddingLeft: 4,
-              paddingRight: 4,
+              paddingLeft: 8,
+              paddingRight: 8,
             }
           : {
               width: "match_parent",
               height: 56,
-              backgroundColor: "rgba(255, 255, 255, 0.1)",
+              backgroundColor: palette.widgetElement,
               borderRadius: 8,
               padding: 8,
               flexDirection: "row",
@@ -142,7 +147,7 @@ export function WeatherExtended({
         style={{
           height: "match_parent",
           width: "match_parent",
-          backgroundColor: palette.primaryColor,
+          backgroundColor: palette.widgetSurface,
           borderRadius: 16,
           padding: 8,
           flexDirection: "row",
@@ -179,7 +184,7 @@ export function WeatherExtended({
       style={{
         height: "match_parent",
         width: "match_parent",
-        backgroundColor: palette.primaryColor,
+        backgroundColor: palette.widgetSurface,
         borderRadius: 16,
         padding: 12,
         flexDirection: "column",

@@ -51,7 +51,7 @@ const HourlyItem = ({
         height: "match_parent",
         flex: 1,
         ...(showBackground && {
-          backgroundColor: "rgba(255, 255, 255, 0.1)",
+          backgroundColor: palette.widgetElement,
           borderRadius: 8,
           padding: 8,
         }),
@@ -133,7 +133,7 @@ export function WeatherStandard({
       style={{
         height: "match_parent",
         width: "match_parent",
-        backgroundColor: palette.primaryColor,
+        backgroundColor: palette.widgetSurface,
         borderRadius: 16,
         padding: 12,
         flexDirection: "column",
@@ -163,12 +163,15 @@ export function WeatherStandard({
           ))}
         </FlexWidget>
       ) : (
-        // Compact layout: Single item without background, fills space
+        // Compact layout: one item filling the space. It still draws its own
+        // element background — at this size it used to rely on the root's solid
+        // fill, which is now transparent, so without it the text would sit
+        // directly on the wallpaper.
         forecastItems.length > 0 && (
           <HourlyItem
             forecast={forecastItems[0]}
             tempScale={tempScale}
-            showBackground={false}
+            showBackground={true}
           />
         )
       )}
