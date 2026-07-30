@@ -12,7 +12,6 @@ import { getWidgetElementColor } from "./utils/widgetTheme";
 import { formatDataAge } from "./utils/widgetDataUtils";
 import { formatTime } from "../utils/dateFormatting";
 import { useSettingsStore } from "../store/useSettingsStore";
-import { i18n } from "../localization/i18n";
 
 interface WeatherStandardProps {
   weather: Weather;
@@ -190,22 +189,6 @@ export function WeatherStandard({
         />
       )}
 
-      {/* Footer */}
-      <FlexWidget
-        style={{
-          width: "match_parent",
-          alignItems: "center",
-          marginTop: 8,
-        }}
-      >
-        <TextWidget
-          text={i18n.t("WidgetTapToRefresh")}
-          style={{
-            fontSize: 9,
-            color: palette.textColorSecondary,
-          }}
-        />
-      </FlexWidget>
     </FlexWidget>
   );
 }

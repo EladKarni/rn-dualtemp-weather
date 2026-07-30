@@ -83,7 +83,6 @@ export const en = {
     // Widget chrome
     WidgetUnavailable: "Weather data unavailable",
     WidgetTapToRetry: "Tap to retry",
-    WidgetTapToRefresh: "Tap to refresh",
     WidgetRefreshing: "Refreshing...",
     WidgetLoadError: "Unable to load weather",
     WidgetRefreshError: "Unable to refresh",

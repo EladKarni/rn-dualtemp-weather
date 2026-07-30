@@ -83,7 +83,6 @@ export const fr = {
     // Widget chrome
     WidgetUnavailable: "Données météo indisponibles",
     WidgetTapToRetry: "Touchez pour réessayer",
-    WidgetTapToRefresh: "Touchez pour actualiser",
     WidgetRefreshing: "Actualisation...",
     WidgetLoadError: "Impossible de charger la météo",
     WidgetRefreshError: "Impossible d'actualiser",

@@ -83,7 +83,6 @@ export const zh = {
   // Widget chrome
   WidgetUnavailable: "天气数据不可用",
   WidgetTapToRetry: "点按以重试",
-  WidgetTapToRefresh: "点按以刷新",
   WidgetRefreshing: "正在刷新...",
   WidgetLoadError: "无法加载天气",
   WidgetRefreshError: "无法刷新",
