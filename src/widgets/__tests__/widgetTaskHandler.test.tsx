@@ -92,7 +92,13 @@ jest.mock('../widgetUpdater', () => ({
 
 jest.mock('../../store/useLocationStore', () => ({
   GPS_LOCATION_ID: 'gps-location',
-  useLocationStore: { getState: jest.fn() },
+  // `persist` is part of the real store's surface (zustand's persist
+  // middleware always attaches it) and the no-location diagnostic reads
+  // hasHydrated(), so the mock has to carry it too.
+  useLocationStore: {
+    getState: jest.fn(),
+    persist: { hasHydrated: jest.fn(() => true) },
+  },
 }));
 
 jest.mock('../../store/useForecastStore', () => ({

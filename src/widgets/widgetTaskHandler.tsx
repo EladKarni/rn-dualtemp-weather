@@ -129,6 +129,19 @@ function getWidgetLocationOrWarn(
       extra: {
         widgetName: props.widgetInfo.widgetName,
         activeLocationId: locationStore.activeLocationId,
+        // Without these, an empty store and a stale-but-populated one produce
+        // an identical report, and the two have opposite causes (nothing saved
+        // yet vs. hydration serving an old snapshot). Ids only — no city names,
+        // which would leak location to Sentry.
+        savedLocationCount: locationStore.savedLocations.length,
+        savedLocationIds: locationStore.savedLocations.map((loc) => loc.id),
+        hasGpsEntry: locationStore.savedLocations.some((loc) => loc.isGPS),
+        // Optional-chained on purpose: this whole block is instrumentation
+        // inside an error path, and it must never be able to escalate the
+        // failure it is describing. Reporting `null` for an unreadable field
+        // beats turning a clean no-location warning into a TypeError.
+        locationStoreHydrated:
+          useLocationStore.persist?.hasHydrated() ?? null,
       },
       level: 'warning',
     });

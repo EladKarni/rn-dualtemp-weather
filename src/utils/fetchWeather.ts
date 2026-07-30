@@ -121,7 +121,7 @@ const throwInvalidResponse = (opts: {
   throw error;
 };
 
-export const fetchForecast = async (
+const runFetchForecast = async (
   locale: string,
   latitude: number,
   longitude: number
@@ -268,4 +268,61 @@ export const fetchForecast = async (
     // Re-throw so React Query marks this as an error state.
     throw error;
   }
+};
+
+/**
+ * Identical requests in flight right now, keyed by request identity
+ * (coords + locale). See fetchForecast.
+ */
+const inFlightForecasts = new Map<string, Promise<Weather>>();
+
+/**
+ * Fetch the forecast, collapsing concurrent identical requests into one.
+ *
+ * Android delivers a separate WIDGET_UPDATE broadcast per widget provider, so a
+ * device with the Compact, Standard and Extended widgets installed runs three
+ * headless tasks at essentially the same moment. Each checks
+ * isLocationDataFresh, all three see the same stale cache because none has
+ * written yet, and all three hit the network — three requests for one payload
+ * that already contains everything all three render. The SQLite cache only
+ * deduplicates callers that arrive *after* a write lands, which is exactly the
+ * case that doesn't happen here.
+ *
+ * Joining the in-flight promise also means a failure is reported once rather
+ * than three times, preserving the single-report policy above.
+ *
+ * Keyed on coords + locale rather than location id: that is the real request
+ * identity, so two saved locations at the same point still share one call.
+ */
+export const fetchForecast = (
+  locale: string,
+  latitude: number,
+  longitude: number
+): Promise<Weather> => {
+  const key = `${latitude}|${longitude}|${locale}`;
+  const existing = inFlightForecasts.get(key);
+  if (existing) {
+    logger.debug("Joining in-flight weather request");
+    return existing;
+  }
+
+  // The slot is released inside this chain rather than from a detached
+  // .finally(), so cleanup completes BEFORE an awaiting caller resumes. A
+  // detached chain releases two microtasks late, which is long enough for a
+  // sequential `await fetch(); await fetch();` to join the already-resolved
+  // promise and silently skip the second request. try/finally also releases on
+  // failure, so a failed attempt can't poison later retries.
+  // Unconditional delete is safe: a second request for this key can only be
+  // created once the entry is gone, and nothing else removes it — so when this
+  // finally runs, the slot holds this request or nothing.
+  const request = (async () => {
+    try {
+      return await runFetchForecast(locale, latitude, longitude);
+    } finally {
+      inFlightForecasts.delete(key);
+    }
+  })();
+
+  inFlightForecasts.set(key, request);
+  return request;
 };

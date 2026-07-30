@@ -40,7 +40,13 @@ interface NewestRow {
 export class WeatherDatabase {
   private db: SQLite.SQLiteDatabase | null = null;
   private readonly DB_NAME = 'weather_forecasts.db';
-  private readonly FRESHNESS_THRESHOLD = 30 * 60 * 1000; // 30 minutes
+  // 25 minutes, deliberately BELOW the widgets' updatePeriodMillis of 30 min
+  // (app.json -> react-native-android-widget). At an equal 30/30 the two race:
+  // an update that lands even slightly early sees `age < threshold`, treats the
+  // cache as fresh and re-renders the same data without fetching, pushing the
+  // effective refresh out to 60 minutes. The 5-minute margin means every
+  // scheduled widget tick finds the cache stale and actually refetches.
+  private readonly FRESHNESS_THRESHOLD = 25 * 60 * 1000; // 25 minutes
   private initPromise: Promise<void> | null = null;
 
   async initialize(): Promise<void> {
