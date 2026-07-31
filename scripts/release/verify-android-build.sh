@@ -46,32 +46,60 @@ fi
 # An APK older than the code is the same trap wearing a different hat: the right
 # file installed, built before the change you mean to test.
 #
-# Compared against SOURCE FILE mtimes rather than commit times. Commit time is
-# the wrong clock — building from a dirty tree and committing afterwards is
-# normal, and would make a perfectly good APK look stale. A source file modified
-# after the APK was written, however, is definitively not in it.
-NEWER_THAN_APK="$(
-  cd "$REPO_ROOT" || exit 0
-  git ls-files -z -- src app.json app.config.js ':(exclude)src/**/__tests__/**' 2>/dev/null |
-    xargs -0 -r ls -t 2>/dev/null |
-    while IFS= read -r f; do
-      [ "$f" -nt "$APK" ] || break
-      printf '%s\n' "$f"
-    done
-)"
+# Answered from CONTENT when the APK carries a build-info sidecar (written by
+# build-android.sh), and only from mtimes when it does not. mtimes lie in both
+# directions — `git stash`, `git checkout` and `git restore` touch files whose
+# content never changed, so an mtime-only check reports phantom drift, and a
+# check that cries wolf trains people to skip it.
+INFO="${APK}.build-info"
 
-if [ -z "$NEWER_THAN_APK" ]; then
-  pass "no shipped source file is newer than the APK"
+if [ -f "$INFO" ]; then
+  BUILT_FROM="$(grep -oE '^commit=.*' "$INFO" | cut -d= -f2)"
+  BUILT_TREE="$(grep -oE '^tree=.*' "$INFO" | cut -d= -f2)"
+
+  if ! git -C "$REPO_ROOT" cat-file -e "${BUILT_FROM}^{commit}" 2>/dev/null; then
+    warn "APK records commit ${BUILT_FROM:0:7}, which is not in this repo"
+  else
+    DRIFT="$(git -C "$REPO_ROOT" diff --name-only "$BUILT_FROM" HEAD -- \
+      src app.json app.config.js ':(exclude)src/**/__tests__/**' 2>/dev/null || true)"
+
+    if [ -z "$DRIFT" ] && [ "$BUILT_TREE" = "clean" ]; then
+      pass "APK contains exactly the shipped source at HEAD"
+    elif [ -z "$DRIFT" ]; then
+      warn "APK matches HEAD, but was built from a dirty tree"
+      note "it may contain changes that were never committed"
+    else
+      COUNT="$(printf '%s\n' "$DRIFT" | wc -l | tr -d ' ')"
+      fail "${COUNT} shipped file(s) changed since this APK was built" \
+           "$(printf '%s' "$DRIFT" | head -3 | tr '\n' ' ')— rebuild before testing"
+    fi
+  fi
+
+  # Uncommitted work is never in an APK built before it.
+  if [ -n "$(git -C "$REPO_ROOT" status --porcelain -- src app.json ':(exclude)src/**/__tests__/**' 2>/dev/null)" ]; then
+    warn "working tree has uncommitted source changes not in this APK"
+  fi
 else
-  COUNT="$(printf '%s\n' "$NEWER_THAN_APK" | wc -l | tr -d ' ')"
-  fail "${COUNT} source file(s) changed after this APK was built" \
-       "$(printf '%s' "$NEWER_THAN_APK" | head -3 | tr '\n' ' ')— rebuild before testing"
-fi
+  note "no build-info sidecar — falling back to modification times"
+  note "build with 'yarn build:android' to get a content-based check instead"
 
-# Uncommitted changes are not in any APK unless the APK was built from them.
-# Reported, not failed: mid-iteration local builds are the normal case.
-if [ -n "$(git -C "$REPO_ROOT" status --porcelain -- src app.json ':(exclude)src/**/__tests__/**' 2>/dev/null)" ]; then
-  note "working tree has uncommitted source changes (fine if this APK was built from them)"
+  NEWER="$(
+    cd "$REPO_ROOT" || exit 0
+    git ls-files -z -- src app.json app.config.js ':(exclude)src/**/__tests__/**' 2>/dev/null |
+      xargs -0 -r ls -t 2>/dev/null |
+      while IFS= read -r f; do
+        [ "$f" -nt "$APK" ] || break
+        printf '%s\n' "$f"
+      done
+  )"
+
+  if [ -z "$NEWER" ]; then
+    pass "no shipped source file is newer than the APK"
+  else
+    COUNT="$(printf '%s\n' "$NEWER" | wc -l | tr -d ' ')"
+    warn "${COUNT} source file(s) have a newer mtime than the APK"
+    note "mtime is not proof of a content change; rebuild if in doubt"
+  fi
 fi
 
 summary

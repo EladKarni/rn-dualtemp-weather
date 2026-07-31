@@ -18,7 +18,8 @@
     "gate": "tsc --noEmit && eslint . && jest --ci",
     "smoke:android": "bash scripts/release/android-smoke.sh",
     "verify:build": "bash scripts/release/verify-android-build.sh",
-    "build:preview:local": "eas build --profile preview --platform android --local"
+    "build:preview:local": "eas build --profile preview --platform android --local",
+    "build:android": "bash scripts/release/build-android.sh"
   },
   "jest": {
     "projects": [

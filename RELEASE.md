@@ -51,12 +51,16 @@ What it covers that is easy to underestimate:
 ## 2. Build
 
 ```
+yarn build:android          # local, and records what it was built from
 yarn build:preview          # EAS cloud
-# or, to conserve cloud credits:
-npx eas build --profile preview --platform android --local
 ```
 
-Local builds land as `build-<epoch>.apk` in the repo root. They are gitignored.
+Local builds land as `build-<epoch>.apk` in the repo root, gitignored, each
+with a `.build-info` sidecar recording the commit and whether the tree was
+clean. That sidecar is what lets step 3 answer "is this APK my code?" from
+content; without it the check falls back to modification times, which lie in
+both directions — `git stash`, `git checkout` and `git restore` all touch files
+whose content never changed.
 
 ---
 

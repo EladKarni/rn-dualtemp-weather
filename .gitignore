@@ -36,3 +36,6 @@ serviceKey*.json
 
 # Jest coverage output
 coverage/
+
+# Build provenance sidecars (written next to local APKs)
+*.build-info
