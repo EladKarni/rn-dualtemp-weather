@@ -137,3 +137,26 @@ describe("scripts referenced by package.json exist", () => {
     ).toBe(true);
   });
 });
+
+describe("the backend URL comes from the environment, not from a fallback", () => {
+  // fetchWeather reads EXPO_PUBLIC_WEATHER_API_URL at module load and falls
+  // back to a hardcoded proxy when it is unset. That fallback is a safety net,
+  // not a configuration mechanism: a production build that silently used it
+  // would work perfectly right up until the day that URL changes, and nothing
+  // would connect the outage to a missing variable.
+  it.each(Object.keys(build))(
+    "%s declares the EAS environment it resolves variables from",
+    (profile) => {
+      // Without this, EAS resolves NO variables for the profile — the build
+      // succeeds and quietly bakes in the fallback.
+      expect(build[profile].environment).toBeDefined();
+    }
+  );
+
+  it("production does not pin a URL in eas.json, so the environment supplies it", () => {
+    // preview deliberately pins one (it points at a scratch proxy). Production
+    // must not: a value here overrides the EAS environment, which would put the
+    // real backend URL in version control and make rotating it a code change.
+    expect(build.production?.env?.EXPO_PUBLIC_WEATHER_API_URL).toBeUndefined();
+  });
+});

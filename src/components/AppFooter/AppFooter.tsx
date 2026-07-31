@@ -5,7 +5,7 @@ import Constants from "expo-constants";
 const AppFooter = () => {
   // Read the version from app config (single source of truth); fall back to the
   // current shipped version if the manifest is unavailable.
-  const version = Constants.expoConfig?.version ?? "2.1.0";
+  const version = Constants.expoConfig?.version ?? "2.2.0";
 
   return (
     <View style={styles.footerContainer}>

@@ -31,20 +31,32 @@ without an EAS build.
 
 ## Android
 
-`react-native-android-widget` renders widgets from the app process, so captures
-come from a device/emulator (the existing `assets/widget-preview/*.png` were made
-this way). From WSL, use the Windows-hosted emulator recipe (see README "Running
-on an emulator from WSL" / the project notes):
+```bash
+bash scripts/widget-screenshots/android/capture.sh            # -> assets/widget-preview/
+bash scripts/widget-screenshots/android/capture.sh preview /tmp/out
+```
 
-1. Launch the emulator with working DNS:
-   `emulator.exe -avd Pixel_10 -dns-server 8.8.8.8,8.8.4.4`
-2. Build + install the app, open it once so weather data loads and the widgets
-   have a payload.
-3. Long-press the home screen → Widgets → place DualTemp's Compact, Standard,
-   and Extended widgets.
-4. Capture: `adb.exe exec-out screencap -p > store/screenshots/widgets/android/home.png`
-   (crop per-widget afterwards, or screencap once per widget placement).
+Automated end to end except placement. The script dims the wallpaper to black
+(`cmd wallpaper set-dim-amount 1`) so the widgets' deliberately transparent
+surface can be keyed back out to real alpha while the opaque element cards are
+untouched, finds each widget by the launcher's `content-desc` — which carries
+the widget label verbatim, so placement order and on-screen size do not matter —
+crops to the exact host-view bounds, and restores the previous dim amount on
+exit even if it fails.
 
-For store use, prefer a clean launcher page (no other icons), default wallpaper,
-and a full-charge status bar, or composite the cropped widgets onto a clean
-home-screen mock in the `sharp` step.
+**Placement is the one manual step, and cannot be automated.** `cmd appwidget`
+has no shell implementation, the launcher's widget picker is gated behind a
+`signature|privileged` permission, and `APPWIDGET_UPDATE` is a protected
+broadcast. Place all three widgets by hand once and save an AVD snapshot.
+
+Re-run this whenever a widget's layout changes: `app.json` points the picker at
+these files, so until they are regenerated the launcher — and the Play listing —
+advertises a widget that no longer exists.
+
+The keying fuzz is deliberately tight (4%). The darkest widget preset is
+`rgba(14, 16, 32)`, under 9% away from black, so a generous tolerance would eat
+the widget's own background along with the wallpaper.
+
+For store imagery (as opposed to picker previews), prefer a clean launcher page,
+default wallpaper and a full-charge status bar, or composite the cropped widgets
+onto a home-screen mock in the store plan's `sharp` step.

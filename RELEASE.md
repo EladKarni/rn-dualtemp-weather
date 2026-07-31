@@ -115,10 +115,11 @@ round to it.
       and return to the app. Confirm the app recovers without a restart.
       *Why manual:* the emulator's Play image routes location through the fused
       provider, which ignores `adb emu geo fix`.
-- [ ] **Regenerate the widget picker previews** if any widget's layout changed.
-      See `scripts/widget-screenshots/README.md`. They are hand-captured, so
-      they go stale silently and the Play listing keeps advertising the old
-      design.
+- [ ] **Regenerate the widget picker previews** if any widget's layout changed:
+      `bash scripts/widget-screenshots/android/capture.sh`. Automated apart from
+      placement. `app.json` points the picker at these files, so until they are
+      regenerated the launcher and the Play listing advertise a widget that no
+      longer exists.
 
 ---
 
@@ -149,10 +150,17 @@ unverified no matter how green CI is.
 - [ ] Bump the version in `package.json`, `app.json` and the `AppFooter`
       fallback — the gate enforces that all three agree.
 - [ ] Tag the release: `git tag v<version> && git push --tags`.
-- [ ] Confirm `EXPO_PUBLIC_SENTRY_DSN` and `SENTRY_AUTH_TOKEN` are set in the
-      EAS **production** environment. Without the first, crash reporting is
-      silently off; without the second, every stack trace arrives
-      unsymbolicated. The build succeeds either way.
+- [ ] **Review the translations.** Several strings were agent-authored and have
+      never had a human pass. Nothing in the gate checks meaning — `i18nParity`
+      only proves the six tables have matching keys.
+- [ ] Confirm the EAS **production** environment defines every variable the
+      build needs, because each of these fails silently:
+      - `EXPO_PUBLIC_WEATHER_API_URL` — unset, the app falls back to a
+        hardcoded proxy. The build succeeds and works, right up until that URL
+        changes and nothing connects the outage to a missing variable.
+      - `EXPO_PUBLIC_SENTRY_DSN` — unset, `Sentry.init` is skipped entirely and
+        crash reporting is off with no warning.
+      - `SENTRY_AUTH_TOKEN` — unset, every stack trace arrives unsymbolicated.
 - [ ] Build production, submit, and verify the first Sentry event arrives under
       the new release identity.
 

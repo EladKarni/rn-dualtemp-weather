@@ -1,6 +1,6 @@
 {
   "name": "dualtemp-weather",
-  "version": "2.1.0",
+  "version": "2.2.0",
   "main": "index.js",
   "scripts": {
     "start": "expo start --dev-client",
