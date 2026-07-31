@@ -30,3 +30,9 @@ serviceKey*.json
 !serviceKey.example.json
 # Local Netlify folder
 .netlify
+
+# Device smoke-test artifacts (screenshots, logcat)
+.smoke/
+
+# Jest coverage output
+coverage/

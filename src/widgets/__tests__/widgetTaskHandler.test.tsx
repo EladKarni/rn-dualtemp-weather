@@ -250,6 +250,13 @@ describe('widget refresh — hydration gate (finding 5)', () => {
     await widgetTaskHandler(props);
 
     expect(mockedEnsureHydrated).toHaveBeenCalledTimes(1);
+    // ...and forces a re-read. Asserting the ARGUMENT, not just the call: the
+    // headless task's JS context can outlive a preference change made in the
+    // app, so without `true` it serves the snapshot it hydrated with and the
+    // widget repaints in the previous widget style after a resize. That shipped
+    // once (5a4519c); dropping the argument as redundant would restore it, and
+    // a test that only counts calls would stay green.
+    expect(mockedEnsureHydrated).toHaveBeenCalledWith(true);
     // The GPS entry was read post-hydration → the refresh proceeded to fetch.
     expect(forecastState.refreshWeather).toHaveBeenCalledWith(
       GPS,
@@ -272,6 +279,13 @@ describe('widget refresh — hydration gate (finding 5)', () => {
 
     const renderWidget = props.renderWidget as unknown as jest.Mock;
     expect(mockedEnsureHydrated).toHaveBeenCalledTimes(1);
+    // ...and forces a re-read. Asserting the ARGUMENT, not just the call: the
+    // headless task's JS context can outlive a preference change made in the
+    // app, so without `true` it serves the snapshot it hydrated with and the
+    // widget repaints in the previous widget style after a resize. That shipped
+    // once (5a4519c); dropping the argument as redundant would restore it, and
+    // a test that only counts calls would stay green.
+    expect(mockedEnsureHydrated).toHaveBeenCalledWith(true);
     expect(renderWidget).toHaveBeenCalled();
     // Hydration (which rehydrates useSettingsStore) precedes the render that
     // reads settings headlessly.

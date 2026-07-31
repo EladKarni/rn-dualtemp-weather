@@ -129,6 +129,29 @@ describe('ensureStoresHydrated', () => {
     expect(settingsRehydrate).not.toHaveBeenCalled();
   });
 
+  it('DOES force a rehydrate when the caller asks for one, even though this context is hydrated', async () => {
+    // The headless widget task passes forceRefresh: true. Without it, a JS
+    // context that outlives a preference change keeps serving the snapshot it
+    // started with — hydration happened once, hasHydrated() stays true forever,
+    // and the widget repaints in the OLD colour after a resize while a widget
+    // the app repainted shows the new one. Shipped exactly that way once.
+    await ensureStoresHydrated(true);
+
+    expect(locationRehydrate).toHaveBeenCalledTimes(1);
+    expect(languageRehydrate).toHaveBeenCalledTimes(1);
+    expect(settingsRehydrate).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not wait on hydration events when forcing — it re-reads and returns', async () => {
+    // The forced path must not also subscribe to onFinishHydration: in a
+    // headless task that has already hydrated, nothing would ever fire it and
+    // the handler would sit there until the 3s timeout, burning budget the
+    // task does not have.
+    await ensureStoresHydrated(true);
+
+    expect(settingsOnFinishHydration).not.toHaveBeenCalled();
+  });
+
   it('waits for in-flight hydration instead of forcing a re-run', async () => {
     settingsHasHydrated.mockReturnValue(false);
     // Simulate hydration finishing shortly after the helper subscribes.

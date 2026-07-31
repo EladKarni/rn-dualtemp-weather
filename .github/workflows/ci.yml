@@ -1,10 +1,10 @@
 name: CI
 
+# Every branch, not just main. Release work happens on a branch, so gating only
+# main meant the branches where the gate matters most were never checked.
 on:
   push:
-    branches: [main]
   pull_request:
-    branches: [main]
 
 jobs:
   gate:
