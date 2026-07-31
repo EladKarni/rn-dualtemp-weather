@@ -194,8 +194,11 @@ export const calculateHourlyItemCount = (widthPx: number, maxItems: number = 4):
 /**
  * How much detail a daily-forecast row can carry at a given widget width.
  *
- * - `wide`   day · icon · UV · "Hi 31° / 87°" · "Lo 14° / 58°" at 16dp
- * - `full`   drops UV and tightens the type to 13dp
+ * Each temperature is a two-line stack — the preferred scale over the other,
+ * e.g. "31°C" over "87°F" — so a "reading" below means that block, not a line.
+ *
+ * - `wide`   day · icon · UV · "Hi" + reading · "Lo" + reading
+ * - `full`   drops UV
  * - `medium` also drops the Hi/Lo labels
  * - `narrow` shows a single AVERAGE temperature instead of a high/low pair
  *
@@ -224,20 +227,25 @@ export type DailyRowDensity = 'wide' | 'full' | 'medium' | 'narrow';
  * declaration formula therefore misclassify every size, so these come from what
  * each layout NEEDS instead.
  *
- * Budgets below are measured from rendered pixels, in dp: a dual-scale reading
- * is 42dp at 13dp type (48dp allowing for a three-digit Fahrenheit value like
- * "38°/100°") and 60dp at 16dp type; "Today" is 36dp inside a 44dp column; the
- * icon column is 26dp and UV 38dp; an "Hi "/"Lo " label is 17dp at 13dp type
- * and 21dp at 16dp; columns are 4dp apart; and the widget's own padding plus
- * the row's costs a flat 40dp.
+ * Budgets below are measured from rendered pixels, in dp. A stacked reading is
+ * only as wide as its widest line, so 36dp covers even "100°F"; "Today" is 36dp
+ * inside a 44dp column; the icon column is 26dp and UV 38dp; an "Hi "/"Lo "
+ * label is 17dp; columns are 4dp apart; and the widget's own padding plus the
+ * row's costs a flat 40dp.
  *
- *   narrow  44 + 26 + 48 + 8               + 40 = 166
- *   medium  44 + 26 + 48x2 + 12            + 40 = 218
- *   full    44 + 26 + (17 + 48)x2 + 12     + 40 = 252
- *   wide    44 + 26 + 38 + (21 + 60)x2 + 16 + 40 = 326
+ *   narrow  44 + 26 + 36 + 8                + 40 = 154
+ *   medium  44 + 26 + 36x2 + 12             + 40 = 194
+ *   full    44 + 26 + (17 + 36)x2 + 12      + 40 = 228
+ *   wide    44 + 26 + 38 + (17 + 36)x2 + 16 + 40 = 270
+ *
+ * The thresholds sit above those figures rather than on them, and the `wide`
+ * one deliberately sits far above: 3 cells measured 276dp on the reference
+ * device and app.json declares targetCellWidth 3, so 276dp is the size most
+ * users get by default. Letting the wide threshold fall below it would put UV
+ * in the default row, which is the one place it was explicitly not wanted.
  */
-const DAILY_WIDTH_HIGH_LOW = 220;
-const DAILY_WIDTH_LABELS = 255;
+const DAILY_WIDTH_HIGH_LOW = 200;
+const DAILY_WIDTH_LABELS = 235;
 const DAILY_WIDTH_UV = 330;
 
 /**
@@ -278,15 +286,35 @@ export const getItemSpacing = (itemCount: number): number => {
 };
 
 /**
- * Calculate how many daily forecast items can fit in the given height
- * @param heightPx - Widget height in pixels (minimum 40dp for 3x1)
+ * Calculate how many daily forecast items fit in the given height.
+ *
+ * The widget root is measured with MeasureSpec.EXACTLY and drawn into a bitmap:
+ * there is no scrolling and no overflow warning, so asking for one row too many
+ * does not fail loudly — the rows quietly shrink below their natural height and
+ * the bottom of each one is cut off. This function is the only thing standing
+ * between the widget and that, so its two constants have to stay honest.
+ *
+ * MIN_ITEM_HEIGHT tracks the daily row's natural height, which is set by the
+ * tallest thing in it — since the readings became two stacked lines, that is the
+ * reading: two lines of 13dp type is ~34dp, plus the row card's 8dp padding top
+ * and bottom, so 50dp. It is NOT independent of WeatherExtended's `tempSize`;
+ * raising that raises this.
+ *
+ * ITEM_GAP is 2x the flexGap, not 1x, because the row container uses
+ * `justifyContent: "space-between"` and this renderer implements that by
+ * injecting an invisible weighted child between every pair of rows — so each
+ * visible gap is TWO dividers with a phantom row between them, and n rows cost
+ * 2n-2 dividers rather than n-1.
+ *
+ * @param heightPx - Widget height in dp, already net of anything drawn below
+ *   the list (the stale-data indicator) — see WeatherExtended.
  * @param maxItems - Maximum items to show (default: 7 for full week)
  * @returns Number of items that fit (1-7)
  */
 export const calculateDailyItemCount = (heightPx: number, maxItems: number = 7): number => {
-  const MIN_ITEM_HEIGHT = 56;   // Height per daily item
-  const CONTAINER_PADDING = 12 * 2; // 12px padding top/bottom
-  const ITEM_GAP = 4;           // Minimal gap (space-evenly handles distribution)
+  const MIN_ITEM_HEIGHT = 50;   // Two stacked 13dp lines (~34dp) + 8dp padding x2
+  const CONTAINER_PADDING = 12 * 2; // 12dp padding top/bottom
+  const ITEM_GAP = 12;          // 6dp flexGap x 2 dividers per visible gap
 
   // Calculate available height for items (no header/footer in new design)
   const availableHeight = heightPx - CONTAINER_PADDING;
@@ -297,3 +325,14 @@ export const calculateDailyItemCount = (heightPx: number, maxItems: number = 7):
   // Clamp between 1 and maxItems
   return Math.max(1, Math.min(itemCount, maxItems));
 };
+
+/**
+ * Height, in dp, that the stale-data indicator takes below the daily list.
+ *
+ * It is a 9dp line with a 4dp top margin, and it only renders when the data is
+ * over 30 minutes old — which is why it is easy to miss: the widget looks right
+ * on a fresh emulator and clips its bottom row hours later, in the field, where
+ * it reads as a flake rather than a layout bug. Subtract it from the height
+ * handed to calculateDailyItemCount whenever it is showing.
+ */
+export const DAILY_AGE_INDICATOR_HEIGHT = 16;

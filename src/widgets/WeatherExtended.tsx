@@ -9,6 +9,7 @@ import {
   calculateDailyItemCount,
   calculateDailyRowDensity,
   getItemSpacing,
+  DAILY_AGE_INDICATOR_HEIGHT,
   type DailyRowDensity,
 } from "./utils/widgetLayoutUtils";
 import { palette } from "../styles/Palette";
@@ -68,15 +69,21 @@ const DailyForecastRow = ({
   // still answers "how warm is that day".
   const showAverageOnly = density === "narrow";
   const averageTemp = (forecast.temp.min + forecast.temp.max) / 2;
-  // Only the widest row has room for the roomy form: at 16dp a dual-scale
-  // reading is ~60dp against ~48dp at 13dp, and two of them plus UV only fit
-  // once the widget clears the `wide` threshold.
-  const isTight = density !== "wide";
-  const tempSize = isTight ? "tiny" : "small";
-  const tempSeparator = isTight ? "/" : " / ";
+  // Stacked everywhere except the compact variant. Stacking spends height to
+  // buy width — a reading goes from ~48dp wide and one line tall to ~36dp wide
+  // and two lines tall — and the compact variant is the one place with no
+  // height to spend: at app.json's declared minHeight of 40dp its content box
+  // is 24dp, which fits one line of 13dp type and not two.
+  const tempLayout = isCompact ? "inline" : "stacked";
+  // 13dp at every density. The stacked reading is the tallest thing in the row,
+  // so its height decides how many days fit; going to 16dp at the widest size
+  // costs ~8dp per row, which is enough to drop a whole day from a tall widget.
+  // calculateDailyItemCount's per-row budget is derived from this number, so
+  // the two have to move together.
+  const tempSize = "tiny";
   // Labels sit a step below the reading they qualify, so the eye lands on the
   // temperature first.
-  const labelSize = isTight ? 12 : 14;
+  const labelSize = 12;
 
   // Every column except the temperatures gets a FIXED width, sized for its
   // known-longest content, and only the temperatures are weighted. That is what
@@ -179,7 +186,8 @@ const DailyForecastRow = ({
             temp={averageTemp}
             size={tempSize}
             tempScale={tempScale}
-            separator={tempSeparator}
+            layout={tempLayout}
+            separator="/"
             maxLines={1}
           />
         </FlexWidget>
@@ -195,7 +203,8 @@ const DailyForecastRow = ({
             temp={forecast.temp.max}
             size={tempSize}
             tempScale={tempScale}
-            separator={tempSeparator}
+            layout={tempLayout}
+            separator="/"
             maxLines={1}
           />
         </FlexWidget>
@@ -211,7 +220,8 @@ const DailyForecastRow = ({
             temp={forecast.temp.min}
             size={tempSize}
             tempScale={tempScale}
-            separator={tempSeparator}
+            layout={tempLayout}
+            separator="/"
             maxLines={1}
           />
         </FlexWidget>
@@ -235,9 +245,18 @@ export function WeatherExtended({
     size: "extended",
   });
 
+  // Format age indicator if data is stale. Computed BEFORE the row count
+  // because it is drawn below the list and therefore takes height away from it —
+  // it returns null for anything under 30 minutes old, so on fresh data this
+  // costs nothing.
+  const ageText = dataAge !== undefined ? formatDataAge(dataAge) : null;
+
   // Calculate how many items to show based on height
   // If no height provided, default to 1 item (compact mode)
-  const itemCount = height ? calculateDailyItemCount(height, 7) : 1;
+  const listHeight = height
+    ? height - (ageText ? DAILY_AGE_INDICATOR_HEIGHT : 0)
+    : 0;
+  const itemCount = height ? calculateDailyItemCount(listHeight, 7) : 1;
   const isCompact = itemCount <= 1;
 
   // Height decides how many days fit; width decides how much of each row fits.
@@ -245,9 +264,6 @@ export function WeatherExtended({
 
   // Get daily forecast items (first item is today)
   const forecastItems = processedData.dailyForecast.slice(0, Math.max(1, itemCount));
-
-  // Format age indicator if data is stale
-  const ageText = dataAge !== undefined ? formatDataAge(dataAge) : null;
 
   // Compact mode: single horizontal row, no header/footer
   if (isCompact) {
