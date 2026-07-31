@@ -6,13 +6,17 @@ import { palette } from '../../../styles/Palette';
 
 interface DualTemperatureDisplayProps {
   temp: number;
-  size: 'small' | 'medium' | 'large';
+  size: 'tiny' | 'small' | 'medium' | 'large';
   tempScale: 'C' | 'F';  // User's preferred temperature scale
   separator?: string; // default: " / "
 }
 
 const getDualTempFontSize = (size: DualTemperatureDisplayProps['size']): number => {
   switch (size) {
+    // `tiny` exists for the narrow daily rows: a dual-scale reading is nine
+    // characters ("32° / 89°"), which at 16dp needs ~80dp and wraps onto two
+    // lines in a two- or three-cell widget.
+    case 'tiny': return 13;
     case 'small': return 16;
     case 'medium': return 24;
     case 'large': return 32;

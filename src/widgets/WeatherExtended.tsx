@@ -56,20 +56,44 @@ const DailyForecastRow = ({
   // width, and every combination has to render.
   // The icon survives every width — dropping the high/low pair frees far more
   // room than it occupies, and it is the most scannable thing in the row.
-  const showHiLoLabels = density === "full" || density === "wide";
-  const showUv = density === "wide";
+  // At four cells there is room for exactly one thing beyond day/icon/high/low,
+  // and UV is the better use of it than "Hi"/"Lo" word labels — position already
+  // says which number is which, whereas UV is information the row does not
+  // otherwise carry. The labels therefore wait for the widest size, where they
+  // fit without squeezing the temperatures onto two lines.
+  const showUv = density === "full" || density === "wide";
+  const showHiLoLabels = density === "wide";
   // At the narrowest width a high/low pair means four numbers competing for a
   // two-cell row, which overflows. One dual-scale average reads cleanly and
   // still answers "how warm is that day".
   const showAverageOnly = density === "narrow";
   const averageTemp = (forecast.temp.min + forecast.temp.max) / 2;
-  // The day column is the only one whose content varies a lot in width
-  // ("Today" against "Fri"), and this renderer treats `flex` as grow-only —
-  // content still sets a minimum, so a long label pushes every later column
-  // right and the rows stop lining up. A fixed width is the only way to pin it.
-  // Sized for "Today"; a longer localized label truncates rather than shifting
-  // its neighbours, which is the better failure of the two.
-  const dayColumnWidth = density === "narrow" ? 44 : 56;
+  // Every column except the temperatures gets a FIXED width, sized for its
+  // known-longest content. Two reasons:
+  //
+  //  - This renderer treats `flex` as grow-only, with content still setting the
+  //    minimum, so a weighted column does not actually pin anything: "Today" is
+  //    wider than its share and pushes every later column right.
+  //  - With the fixed columns removed from the equation, the temperature blocks
+  //    split *all* remaining space equally, so they are the same width in every
+  //    row and at every density. That is what makes the temps line up.
+  //
+  // "Today" is the longest label by construction — every other day is a
+  // three-letter abbreviation — so sizing for it means no English label
+  // truncates. A longer localized label truncates rather than displacing its
+  // neighbours, which is the better of the two failures.
+  // Narrow rows need a smaller type and a tighter separator or the nine-character
+  // dual-scale reading wraps; wider rows can afford the roomier form.
+  // Only the widest row has room for the roomy form. Four cells already carries
+  // day + icon + UV + two dual-scale readings; at 16dp those nine-character
+  // readings overflow and wrap, so everything below `wide` uses the tight one.
+  const isTight = density !== "wide";
+  const tempSize = isTight ? "tiny" : "small";
+  const tempSeparator = isTight ? "/" : " / ";
+
+  const DAY_COLUMN_WIDTH = 44;
+  const ICON_COLUMN_WIDTH = 26;
+  const UV_COLUMN_WIDTH = 38;
 
   // Only the outer container and the day-label style differ between variants;
   // kept inline so react-native-android-widget's style props stay contextually
@@ -89,6 +113,7 @@ const DailyForecastRow = ({
               flexDirection: "row",
               alignItems: "center",
               justifyContent: "space-between",
+              flexGap: 4,
               paddingLeft: 8,
               paddingRight: 8,
             }
@@ -105,6 +130,7 @@ const DailyForecastRow = ({
               flexDirection: "row",
               alignItems: "center",
               justifyContent: "space-between",
+              flexGap: 4,
             }
       }
     >
@@ -116,7 +142,7 @@ const DailyForecastRow = ({
           row identical column geometry regardless of how long its text is. */}
 
       {/* Day name */}
-      <FlexWidget style={{ width: dayColumnWidth, flexDirection: "row", alignItems: "center" }}>
+      <FlexWidget style={{ width: DAY_COLUMN_WIDTH, flexDirection: "row", alignItems: "center" }}>
         <TextWidget
           text={dayText}
           style={
@@ -128,14 +154,14 @@ const DailyForecastRow = ({
       </FlexWidget>
 
       {/* Weather Icon */}
-      <FlexWidget style={{ flex: 2, flexDirection: "row", justifyContent: "center", alignItems: "center" }}>
+      <FlexWidget style={{ width: ICON_COLUMN_WIDTH, flexDirection: "row", justifyContent: "center", alignItems: "center" }}>
         <WeatherIcon weatherId={forecast.weather[0].id} size="small" />
       </FlexWidget>
 
       {/* Max UV index for the day — only the widest row has room for it, and it
           is the metric the hourly widget does not already cover. */}
       {showUv && (
-        <FlexWidget style={{ flex: 3, flexDirection: "row", justifyContent: "center", alignItems: "center" }}>
+        <FlexWidget style={{ width: UV_COLUMN_WIDTH, flexDirection: "row", justifyContent: "center", alignItems: "center" }}>
           <TextWidget
             text={`${i18n.t("WidgetUV")} ${Math.round(forecast.uvi)}`}
             style={{ color: palette.highlightColor, fontSize: 14 }}
@@ -150,42 +176,42 @@ const DailyForecastRow = ({
           "Symbol(react.fragment) is not a function" and takes the whole render
           down to the error widget. */}
       {showAverageOnly && (
-        <FlexWidget style={{ flex: 5, flexDirection: "row", justifyContent: "center", alignItems: "center" }}>
+        <FlexWidget style={{ flex: 1, flexDirection: "row", justifyContent: "center", alignItems: "center" }}>
           <DualTemperatureDisplay
             temp={averageTemp}
-            size="small"
+            size={tempSize}
             tempScale={tempScale}
-            separator=" / "
+            separator={tempSeparator}
           />
         </FlexWidget>
       )}
 
       {/* High Temp */}
       {!showAverageOnly && (
-        <FlexWidget style={{ flex: 5, flexDirection: "row", justifyContent: "center", alignItems: "center" }}>
+        <FlexWidget style={{ flex: 1, flexDirection: "row", justifyContent: "center", alignItems: "center" }}>
           {showHiLoLabels && (
-            <TextWidget text={`${i18n.t("WidgetHi")} `} style={{ color: palette.highlightColor, fontSize: 16 }} />
+            <TextWidget text={`${i18n.t("WidgetHi")} `} style={{ color: palette.highlightColor, fontSize: 13 }} />
           )}
           <DualTemperatureDisplay
             temp={forecast.temp.max}
-            size="small"
+            size={tempSize}
             tempScale={tempScale}
-            separator=" / "
+            separator={tempSeparator}
           />
         </FlexWidget>
       )}
 
       {/* Low Temp */}
       {!showAverageOnly && (
-        <FlexWidget style={{ flex: 5, flexDirection: "row", justifyContent: "center", alignItems: "center" }}>
+        <FlexWidget style={{ flex: 1, flexDirection: "row", justifyContent: "center", alignItems: "center" }}>
           {showHiLoLabels && (
-            <TextWidget text={`${i18n.t("WidgetLo")} `} style={{ color: palette.highlightColor, fontSize: 16 }} />
+            <TextWidget text={`${i18n.t("WidgetLo")} `} style={{ color: palette.highlightColor, fontSize: 13 }} />
           )}
           <DualTemperatureDisplay
             temp={forecast.temp.min}
-            size="small"
+            size={tempSize}
             tempScale={tempScale}
-            separator=" / "
+            separator={tempSeparator}
           />
         </FlexWidget>
       )}
