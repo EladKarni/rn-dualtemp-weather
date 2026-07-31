@@ -14,11 +14,27 @@
  * test is the reason this list is safe — extend it and the test will tell you
  * immediately if a new colour fails a text tier.
  *
- * Both entries come from the on-device comparison of candidate fills; nothing
- * here is invented. `indigo` is that comparison's option 2 (the app's
- * primaryDark) and `midnight` its option 1 (the neutral near-black), each in
- * opaque form. Its option 5 was primaryDark at 0.85 alpha, which collapses into
- * `indigo` once opacity is required, so it is not a separate entry.
+ * The entries differ in where they come from, and that difference is worth
+ * being straight about rather than papering over:
+ *
+ * `indigo` and `midnight` have provenance. They are the on-device comparison's
+ * option 2 (the app's primaryDark) and option 1 (the neutral near-black), each
+ * in opaque form. Its option 5 was primaryDark at 0.85 alpha, which collapses
+ * into `indigo` once opacity is required, so it is not a separate entry.
+ *
+ * `slate`, `plum`, `forest` and `maroon` do not. They were picked by eye and
+ * only ever validated against the contrast test below. fd89d7b removed them for
+ * exactly that reason; they are back because a two-swatch picker reads as a
+ * toggle rather than a choice, and the owner made that call explicitly with the
+ * provenance gap on the table. Treat them as placeholders with a legibility
+ * guarantee, not as a designed palette — if a real comparison is ever run,
+ * these are the entries it should replace.
+ *
+ * What the contrast test still guarantees for all six: the binding constraint
+ * is `textColorSecondary` (#a19ad8) at 4.5:1, which caps a fill's relative
+ * luminance at 0.0403. That is why every preset here is a dark colour, and why
+ * "pick a nicer colour" is not free — the cap, not taste, is what rules most
+ * candidates out.
  *
  * Both brand blues were candidates and are deliberately absent:
  * primaryColor #3621DC reaches only 3.38 against the secondary tier and
@@ -34,7 +50,13 @@
 
 import type { ColorProp } from "react-native-android-widget";
 
-export type WidgetThemeId = "indigo" | "midnight";
+export type WidgetThemeId =
+  | "indigo"
+  | "midnight"
+  | "slate"
+  | "plum"
+  | "forest"
+  | "maroon";
 
 export interface WidgetTheme {
   id: WidgetThemeId;
@@ -48,10 +70,18 @@ export interface WidgetTheme {
   labelKey: string;
 }
 
-/** Order here is the order the swatches render in. */
+/**
+ * Order here is the order the swatches render in. Ids and hexes are restored
+ * byte-for-byte from before fd89d7b so that an install still holding a retired
+ * preference resurrects its old colour instead of silently falling back.
+ */
 export const WIDGET_THEMES: Record<WidgetThemeId, WidgetTheme> = {
   indigo: { id: "indigo", element: "rgba(28, 27, 77, 1)", labelKey: "WidgetThemeIndigo" },
   midnight: { id: "midnight", element: "rgba(14, 16, 32, 1)", labelKey: "WidgetThemeMidnight" },
+  slate: { id: "slate", element: "rgba(30, 39, 51, 1)", labelKey: "WidgetThemeSlate" },
+  plum: { id: "plum", element: "rgba(46, 27, 61, 1)", labelKey: "WidgetThemePlum" },
+  forest: { id: "forest", element: "rgba(18, 46, 34, 1)", labelKey: "WidgetThemeForest" },
+  maroon: { id: "maroon", element: "rgba(58, 21, 32, 1)", labelKey: "WidgetThemeMaroon" },
 };
 
 /** Matches the brand indigo the widgets shipped with before the picker existed. */

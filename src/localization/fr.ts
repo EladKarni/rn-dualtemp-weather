@@ -33,7 +33,14 @@ export const fr = {
     Searching: "Recherche...",
     WidgetStyle: "Style du widget",
     WidgetThemeIndigo: "Indigo",
-    WidgetThemeMidnight: "Minuit",
+    WidgetThemeMidnight: "Bleu nuit",
+    WidgetThemeSlate: "Gris ardoise",
+    WidgetThemePlum: "Prune",
+    WidgetThemeForest: "Vert forêt",
+    // Deliberately NOT "marron", which is French for brown — the false friend
+    // that would rename this dark red to a colour it is not. "Bordeaux" is the
+    // idiomatic French for maroon/burgundy.
+    WidgetThemeMaroon: "Bordeaux",
     EnableLocation: "Activer la localisation",
     UseCurrentLocation: "Utiliser ma position",
     Locating: "Localisation...",

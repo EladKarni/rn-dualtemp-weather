@@ -32,8 +32,20 @@ export const he = {
     StartTyping: "התחל להקליד כדי לחפש...",
     Searching: "מחפש...",
     WidgetStyle: "סגנון הווידג'ט",
+    // Hebrew colour idioms, NOT calques of the English. חצות/צפחה/יער are the
+    // right words for midnight, slate and forest as *things*, but Hebrew does
+    // not form shade names from object nouns the way English does, so they read
+    // as the object rather than the colour. Each of these is attested Hebrew
+    // usage: ירוק בקבוק and אפור פחם are live design/fashion terms, חציל and
+    // אינדיגו are shade names in the Hebrew Wikipedia סגול article (the latter an
+    // Academy of the Hebrew Language designation), and רשימת צבעים maps בורדו
+    // straight to Maroon.
     WidgetThemeIndigo: "אינדיגו",
-    WidgetThemeMidnight: "חצות",
+    WidgetThemeMidnight: "כחול כהה",
+    WidgetThemeSlate: "אפור פחם",
+    WidgetThemePlum: "סגול חציל",
+    WidgetThemeForest: "ירוק בקבוק",
+    WidgetThemeMaroon: "בורדו",
     EnableLocation: "הפעל מיקום",
     UseCurrentLocation: "השתמש במיקום הנוכחי",
     Locating: "מאתר מיקום...",

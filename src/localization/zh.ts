@@ -32,8 +32,14 @@ export const zh = {
   StartTyping: "开始输入以搜索...",
   Searching: "搜索中...",
   WidgetStyle: "小组件样式",
+  // Chinese already carried the colour head on every entry (蓝/灰/紫/绿/红), so
+  // only 午夜 "midnight" needed 蓝 appended.
   WidgetThemeIndigo: "靛蓝",
-  WidgetThemeMidnight: "午夜",
+  WidgetThemeMidnight: "午夜蓝",
+  WidgetThemeSlate: "石板灰",
+  WidgetThemePlum: "梅紫",
+  WidgetThemeForest: "森林绿",
+  WidgetThemeMaroon: "酒红",
   EnableLocation: "开启定位",
   UseCurrentLocation: "使用当前位置",
   Locating: "定位中...",

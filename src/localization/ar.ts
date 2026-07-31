@@ -32,8 +32,16 @@ export const ar = {
     StartTyping: "ابدأ الكتابة للبحث...",
     Searching: "جاري البحث...",
     WidgetStyle: "نمط الأداة",
+    // نيلي / برقوقي / عنابي / أردوازي are nisba adjectives — they already mean
+    // "indigo-coloured", "plum-coloured" and so on, so they stay bare. Only the
+    // two that were plain nouns (غابة "a forest", منتصف الليل "midnight") needed
+    // a colour head added.
     WidgetThemeIndigo: "نيلي",
-    WidgetThemeMidnight: "منتصف الليل",
+    WidgetThemeMidnight: "أزرق منتصف الليل",
+    WidgetThemeSlate: "رمادي أردوازي",
+    WidgetThemePlum: "برقوقي",
+    WidgetThemeForest: "أخضر غابي",
+    WidgetThemeMaroon: "عنابي",
     EnableLocation: "تفعيل الموقع",
     UseCurrentLocation: "استخدام الموقع الحالي",
     Locating: "جارٍ تحديد الموقع...",

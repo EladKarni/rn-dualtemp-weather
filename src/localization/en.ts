@@ -32,8 +32,17 @@ export const en = {
     StartTyping: "Start typing to search...",
     Searching: "Searching...",
     WidgetStyle: "Widget Style",
+    // Widget swatch names. These are spoken accessibility labels, never drawn —
+    // the swatch itself is the visual label, so a screen-reader user gets the
+    // colour ONLY from this string. That is why each one names a colour family
+    // ("Midnight blue", not "Midnight"): heard in isolation, the bare noun is a
+    // time of day, a rock or a tree. Length is free here; clarity is not.
     WidgetThemeIndigo: "Indigo",
-    WidgetThemeMidnight: "Midnight",
+    WidgetThemeMidnight: "Midnight blue",
+    WidgetThemeSlate: "Slate gray",
+    WidgetThemePlum: "Plum",
+    WidgetThemeForest: "Forest green",
+    WidgetThemeMaroon: "Maroon",
     EnableLocation: "Enable Location",
     UseCurrentLocation: "Use Current Location",
     Locating: "Locating...",
