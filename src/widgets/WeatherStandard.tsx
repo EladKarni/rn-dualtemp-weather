@@ -92,8 +92,18 @@ const HourlyItem = ({
       {/* Weather Icon */}
       <WeatherIcon weatherId={forecast.weather[0].id} size="small" />
 
-      {/* Dual Temperature */}
-      <DualTemperatureDisplay temp={forecast.temp} size="small" tempScale={tempScale} />
+      {/* Dual Temperature. Stacked rather than left to wrap: the column was
+          already narrow enough that the inline form broke onto a second line by
+          itself, so this keeps the two-line shape but makes it deliberate —
+          which is what lets the preferred scale carry its own weight and both
+          lines carry their unit letter. */}
+      <DualTemperatureDisplay
+        temp={forecast.temp}
+        size="small"
+        tempScale={tempScale}
+        layout="stacked"
+        maxLines={1}
+      />
     </FlexWidget>
   );
 };

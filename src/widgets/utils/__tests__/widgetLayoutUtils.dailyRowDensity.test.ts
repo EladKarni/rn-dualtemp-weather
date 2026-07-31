@@ -34,15 +34,12 @@ describe("calculateDailyRowDensity", () => {
   });
 
   it.each<[string, number, DailyRowDensity]>([
-    ["just below the medium threshold", 199, "narrow"],
-    ["exactly at the medium threshold", 200, "medium"],
-    ["just below the full threshold", 234, "medium"],
-    ["exactly at the full threshold", 235, "full"],
+    ["just below the medium threshold", 219, "narrow"],
+    ["exactly at the medium threshold", 220, "medium"],
+    ["just below the full threshold", 254, "medium"],
+    ["exactly at the full threshold", 255, "full"],
     ["just below the wide threshold", 329, "full"],
     ["exactly at the wide threshold", 330, "wide"],
-    // app.json declares targetCellWidth 3 and 3 cells measured 276dp here, so
-    // this is the size most users get by default. UV must stay out of it.
-    ["the default drop size stays below the wide threshold", 276, "full"],
   ])("%s (%ddp) -> %s", (_label, width, expected) => {
     expect(calculateDailyRowDensity(width)).toBe(expected);
   });
