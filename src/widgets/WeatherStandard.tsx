@@ -51,6 +51,13 @@ const HourlyItem = ({
     <FlexWidget
       style={{
         height: "match_parent",
+        // width 0 WITH flex is what makes every column identical. Without an
+        // explicit width the native side defaults to WRAP_CONTENT, and a
+        // weighted WRAP_CONTENT child gets its natural size PLUS a share of the
+        // leftover — so "5:00 אחה״צ" produced a visibly wider column than
+        // "6:00 בערב". At width 0 the weight alone decides, so every column is
+        // the same regardless of how long its label happens to be.
+        width: 0,
         flex: 1,
         ...(showBackground && {
           backgroundColor: getWidgetElementColor(),
@@ -165,7 +172,10 @@ export function WeatherStandard({
             flex: 1,
             width: "match_parent",
             flexDirection: "row",
-            justifyContent: "space-between",
+            // NOT space-between: this renderer implements the space-* values by
+            // injecting an invisible `flex: 1` child between every pair, which
+            // both takes width from the real columns and makes their final
+            // widths depend on content again. Spacing comes from flexGap.
             flexGap: itemGap,
           }}
         >

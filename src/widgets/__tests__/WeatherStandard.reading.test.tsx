@@ -160,3 +160,62 @@ describe("hourly column order follows the reading direction", () => {
     expect(hours()).toEqual([...ltr].reverse());
   });
 });
+
+describe("hourly columns are the same width whatever the time reads", () => {
+  // "5:00 אחה״צ" is longer than "6:00 בערב", and a weighted WRAP_CONTENT child
+  // keeps its natural size plus a share of the leftover — so the columns came
+  // out 230/235/255/260px. width 0 + weight is LinearLayout's exact-division
+  // idiom and is what forces them equal.
+  const columns = (): TreeNode[] => {
+    const tree = buildWidgetTree(
+      <WeatherStandard
+        weather={weather}
+        lastUpdated={new Date(1_753_900_000_000)}
+        locationName="Testville"
+        width={373}
+        height={180}
+      />
+    );
+    const row = tree.children?.[0];
+    return (row?.children ?? []).filter((c) => (c.children?.length ?? 0) > 0);
+  };
+
+  it("gives every column width 0 and an equal weight", () => {
+    const cols = columns();
+    expect(cols.length).toBeGreaterThan(1);
+    for (const col of cols) {
+      expect(col.props.width).toBe(0);
+      expect(col.props.weight).toBe(1);
+    }
+  });
+
+  it("injects no spacers between them", () => {
+    // A childless weighted node is an injected space-* spacer. Each one takes
+    // width from the real columns and makes the result content-dependent again.
+    const tree = buildWidgetTree(
+      <WeatherStandard
+        weather={weather}
+        lastUpdated={new Date(1_753_900_000_000)}
+        locationName="Testville"
+        width={373}
+        height={180}
+      />
+    );
+    const row = tree.children?.[0];
+    const spacers = (row?.children ?? []).filter(
+      (c) => !(c.children?.length ?? 0) && c.props.weight
+    );
+    expect(spacers).toEqual([]);
+  });
+
+  it("stays equal in Hebrew, where the labels differ most in length", () => {
+    i18n.locale = "he";
+    try {
+      for (const col of columns()) {
+        expect(col.props.width).toBe(0);
+      }
+    } finally {
+      i18n.locale = "en";
+    }
+  });
+});
