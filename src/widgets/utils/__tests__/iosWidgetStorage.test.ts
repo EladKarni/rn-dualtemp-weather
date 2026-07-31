@@ -125,7 +125,7 @@ describe('updateIOSWidgetData payload (schema v2)', () => {
     expect(locale).toBe('he');
     expect(chrome.today).toBe('היום');
     expect(chrome.hi).toBe('מקס');
-    expect(chrome.lo).toBe('מינ');
+    expect(chrome.lo).toBe('מ״נ');
     // Age strings are templates — Swift substitutes %{count} at render time.
     expect(chrome.ageMinutes).toContain('%{count}');
     expect(chrome.ageHours).toContain('%{count}');
