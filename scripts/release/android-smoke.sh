@@ -143,7 +143,32 @@ else
   printf '%s\n' "$FALLBACKS" | head -5 | sed 's/^/      /'
 fi
 
-step "6. Permissions still resolve"
+step "6. SQLite concurrency"
+# The app shares weather_forecasts.db between its own React context and the
+# headless widget task's — two connections to one file. Left on expo-sqlite's
+# defaults (rollback journal, busy_timeout 0) a writer that meets a held lock
+# fails on the spot, which is how "database is locked" reached a user.
+#
+# Checked negatively because logger.debug is stripped in release builds, so
+# success is silence. The positive signal is the sqlite.journal_mode tag on
+# Sentry events; here we can only assert the failure markers are absent.
+LOCKED="$(grep -aE 'database is locked|SQLITE_BUSY|ERR_INTERNAL_SQLITE_ERROR' "${OUT}/logcat.txt" 2>/dev/null || true)"
+if [ -z "$LOCKED" ]; then
+  pass "no SQLite lock contention"
+else
+  fail "SQLite reported lock contention" "see ${OUT}/logcat.txt"
+  printf '%s\n' "$LOCKED" | head -5 | sed 's/^/      /'
+fi
+
+WAL_WARN="$(grep -aE 'WAL conversion did not take|Could not enable WAL|Could not set busy_timeout' "${OUT}/logcat.txt" 2>/dev/null || true)"
+if [ -z "$WAL_WARN" ]; then
+  pass "no journal-mode warnings"
+else
+  fail "SQLite did not get the concurrency pragmas it asked for" "check sqlite.journal_mode in Sentry"
+  printf '%s\n' "$WAL_WARN" | head -3 | sed 's/^/      /'
+fi
+
+step "7. Permissions still resolve"
 # The path that shipped broken once: launched without location permission, and
 # no in-app route to recover after granting it in system Settings.
 PERMS="$(adb_run shell dumpsys package "$PKG" 2>/dev/null | grep -A2 'ACCESS_FINE_LOCATION' || true)"

@@ -227,20 +227,49 @@ export const useForecastStore = create<ForecastStore>((set, get) => ({
   },
 }));
 
-// Initialize database when the store is first used
-let databaseInitialized = false;
+// Initialize database when the store is first used.
+//
+// Holds the PROMISE, not a boolean. A `let done = false` flag set after an
+// await is not a guard: both callers (App.tsx on mount and useMultiLocationWeather
+// on mount) read it in the same tick, both see false, and both proceed.
+let initPromise: Promise<void> | null = null;
 
-export const initializeForecastStore = async () => {
-  if (!databaseInitialized) {
+export const initializeForecastStore = async (): Promise<void> => {
+  if (initPromise) {
+    return initPromise;
+  }
+
+  initPromise = (async () => {
     try {
       await useForecastStore.getState().initializeDatabase();
-      databaseInitialized = true;
-      
-      // Cleanup old data on initialization
-      await useForecastStore.getState().cleanupOldData();
     } catch (error) {
+      // Let the next caller retry rather than caching the failure forever.
+      initPromise = null;
       logger.error('Failed to initialize forecast store:', error);
       throw error;
     }
-  }
+  })();
+
+  return initPromise;
+};
+
+/**
+ * Evict cache entries older than 24 hours.
+ *
+ * Deliberately NOT part of initializeForecastStore. It used to be, and it was
+ * the operation observed failing with "database is locked" at startup: a DELETE
+ * fired while the headless widget task's connection was mid-read, at the one
+ * moment the app has the least slack. Nothing needs it to have happened before
+ * the first render — it is a 24-hour eviction, so being seconds or minutes late
+ * costs nothing, while racing the cold start costs a failed write.
+ *
+ * Call it from an idle moment instead. Errors are swallowed by cleanupOldData
+ * itself, so this is fire-and-forget by design.
+ */
+export const scheduleForecastCleanup = (delayMs = 10_000): (() => void) => {
+  const timer = setTimeout(() => {
+    void useForecastStore.getState().cleanupOldData();
+  }, delayMs);
+
+  return () => clearTimeout(timer);
 };

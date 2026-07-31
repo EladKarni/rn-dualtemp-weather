@@ -36,7 +36,10 @@ import { useWeatherLoadingState } from "./src/hooks/useWeatherLoadingState";
 import { useLocaleQuery } from "./src/hooks/useLocaleQuery";
 import { useScreenProps } from "./src/hooks/useScreenProps";
 import { useRenderDecision } from "./src/hooks/useRenderDecision";
-import { initializeForecastStore } from "./src/store/useForecastStore";
+import {
+  initializeForecastStore,
+  scheduleForecastCleanup,
+} from "./src/store/useForecastStore";
 
 // Screens
 import LoadingScreen from "./src/screens/LoadingScreen";
@@ -51,11 +54,23 @@ import SettingsScreen from "./src/screens/SettingsScreen";
 import ErrorBoundary from "./src/components/ErrorBoundary/ErrorBoundary";
 
 function App() {
-  // Initialize forecast store
+  // Initialize forecast store, then evict stale cache entries once the app has
+  // settled. The eviction is deliberately deferred rather than chained onto
+  // initialization: as a startup step its DELETE raced the widget task's
+  // connection and failed with "database is locked", and nothing needs a
+  // 24-hour eviction to have finished before the first render.
   useEffect(() => {
-    initializeForecastStore().catch((error) => {
-      console.error("Failed to initialize forecast store:", error);
-    });
+    let cancelCleanup: (() => void) | undefined;
+
+    initializeForecastStore()
+      .then(() => {
+        cancelCleanup = scheduleForecastCleanup();
+      })
+      .catch((error) => {
+        console.error("Failed to initialize forecast store:", error);
+      });
+
+    return () => cancelCleanup?.();
   }, []);
 
   // Repaint widgets when the location they resolve to changes (returns its

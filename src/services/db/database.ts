@@ -49,6 +49,70 @@ export class WeatherDatabase {
   private readonly FRESHNESS_THRESHOLD = 25 * 60 * 1000; // 25 minutes
   private initPromise: Promise<void> | null = null;
 
+  /**
+   * Make this connection survive contention with the OTHER connection to the
+   * same file.
+   *
+   * There are always two. expo-sqlite caches connections in `cachedDatabases`,
+   * a private INSTANCE field of its native SQLiteModule, so the cache is scoped
+   * to one React context rather than to the process. The headless widget task
+   * runs in its own context inside the same OS process (no android:process
+   * anywhere in the manifest), which gives it its own module instance, its own
+   * cache, and therefore its own sqlite3 connection to weather_forecasts.db.
+   * Two connections contend exactly like two processes.
+   *
+   * expo-sqlite issues no PRAGMA on any open path and its vendored amalgamation
+   * defines no SQLITE_DEFAULT_JOURNAL_MODE, so without this the database runs on
+   * a rollback journal with busy_timeout = 0 — a writer that meets a held lock
+   * fails on the spot rather than waiting. Observed on device as
+   * "database is locked" from the startup cleanup, 32ms after libexpo-sqlite.so
+   * was first loaded into the process.
+   *
+   * Never throws: a database that works with default pragmas is enormously
+   * better than one that failed to open because a tuning statement did.
+   */
+  private async applyConcurrencyPragmas(db: SQLite.SQLiteDatabase): Promise<void> {
+    // Order matters. busy_timeout goes first because it cannot fail and because
+    // the WAL conversion below can itself return SQLITE_BUSY — with a timeout
+    // already installed, that conversion waits its turn instead of giving up.
+    try {
+      await db.execAsync('PRAGMA busy_timeout = 5000;');
+    } catch (error) {
+      logger.warn('Could not set busy_timeout; lock contention will fail fast', error);
+    }
+
+    // Separate try/catch, deliberately. Folded into the CREATE TABLE block this
+    // would be worse than doing nothing: a BUSY during the conversion would
+    // throw inside initialize(), null the connection and take the whole
+    // database down over a performance setting.
+    try {
+      // journal_mode returns the mode actually in force, which is not always
+      // the one requested — the conversion needs a moment with no other
+      // connection reading, and silently stays "delete" if it cannot get it.
+      const result = await db.getFirstAsync<{ journal_mode: string }>(
+        'PRAGMA journal_mode = WAL;'
+      );
+      const mode = result?.journal_mode ?? 'unknown';
+      // Tagged rather than only logged, because logger.debug/info are stripped
+      // in release builds — so on a real device "it worked" would be indicated
+      // by silence, which is indistinguishable from "this code never ran". The
+      // tag rides along on every Sentry event and answers, across the actual
+      // fleet, the one question the pragmas cannot answer locally: did the
+      // conversion take on THIS device?
+      logger.setTag('sqlite.journal_mode', mode);
+
+      if (mode.toLowerCase() === 'wal') {
+        logger.debug(`SQLite journal mode: ${mode}`);
+      } else {
+        // Not fatal — busy_timeout still covers writer-vs-writer. It does mean
+        // a reader can still block a writer, so it is worth knowing about.
+        logger.warn(`SQLite stayed in "${mode}" mode; WAL conversion did not take`);
+      }
+    } catch (error) {
+      logger.warn('Could not enable WAL; continuing on the rollback journal', error);
+    }
+  }
+
   async initialize(): Promise<void> {
     // If already initializing, wait for that to complete
     if (this.initPromise) {
@@ -65,6 +129,8 @@ export class WeatherDatabase {
     this.initPromise = (async () => {
       try {
         this.db = await SQLite.openDatabaseAsync(this.DB_NAME);
+
+        await this.applyConcurrencyPragmas(this.db);
 
         // Create tables
         await this.db.execAsync(`
