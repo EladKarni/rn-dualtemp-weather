@@ -84,7 +84,9 @@ export const he = {
     WidgetRefreshError: "לא ניתן לרענן",
     WidgetUV: "UV",
     WidgetHi: "מקס",
-    WidgetLo: "מינ",
+    // Hebrew abbreviates "מינימום" as מ״נ, written with a gershayim (U+05F4) —
+    // the Hebrew punctuation mark for an abbreviation — not an ASCII quote.
+    WidgetLo: "מ״נ",
     WidgetAgeMinutes: "לפני %{count} ד׳",
     WidgetAgeHours: "לפני %{count} ש׳",
     WidgetAgeDays: "לפני %{count} י׳",
