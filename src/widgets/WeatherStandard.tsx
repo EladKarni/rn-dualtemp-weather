@@ -11,6 +11,8 @@ import { palette } from "../styles/Palette";
 import { getWidgetElementColor } from "./utils/widgetTheme";
 import { formatDataAge } from "./utils/widgetDataUtils";
 import { formatTime } from "../utils/dateFormatting";
+import { i18n } from "../localization/i18n";
+import { isRTLLanguage } from "../utils/rtlDetection";
 import { useSettingsStore } from "../store/useSettingsStore";
 
 interface WeatherStandardProps {
@@ -135,6 +137,10 @@ export function WeatherStandard({
   // Always use compact layout when itemCount is 1 or less
   const isExpanded = itemCount > 1;
 
+  // Read from the locale rather than a store field: this also runs in the
+  // headless widget context, where i18n is hydrated but React state is not.
+  const isRTL = isRTLLanguage(i18n.locale);
+
   // Format age indicator if data is stale
   const ageText = dataAge !== undefined ? formatDataAge(dataAge) : null;
 
@@ -163,7 +169,11 @@ export function WeatherStandard({
             flexGap: itemGap,
           }}
         >
-          {forecastItems.map((forecast) => (
+          {/* Chronological order carries the layout direction. In an RTL locale
+              time reads right-to-left, so the earliest hour belongs on the
+              right — this renderer has no layoutDirection and no row-reverse,
+              so reversing the items is the only way to express that. */}
+          {(isRTL ? [...forecastItems].reverse() : forecastItems).map((forecast) => (
             <HourlyItem
               key={forecast.dt}
               forecast={forecast}

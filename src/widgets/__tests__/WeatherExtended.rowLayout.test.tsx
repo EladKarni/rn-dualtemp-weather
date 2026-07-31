@@ -42,6 +42,9 @@ jest.mock("../../localization/i18n", () => ({
   i18n: { locale: "en", t: (key: string) => key },
 }));
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { i18n } = require("../../localization/i18n");
+
 // The widget reads tempScale from the persisted settings store, which pulls in
 // AsyncStorage at module scope.
 jest.mock("@react-native-async-storage/async-storage", () =>
@@ -177,5 +180,56 @@ describe("daily row structure", () => {
       const readings = JSON.stringify(row).match(/"maxLines":1/g) ?? [];
       expect(readings.length).toBeGreaterThan(0);
     }
+  });
+});
+
+describe("right-to-left locales", () => {
+  // This renderer exposes no layoutDirection, and its flexDirection is only
+  // 'row' | 'column' — there is no row-reverse. Child ORDER is the only lever,
+  // so these assert order rather than any style property.
+  afterEach(() => {
+    i18n.locale = "en";
+  });
+
+  const orderAt = (width: number): string[] =>
+    (buildRow(width).children ?? []).map((c) =>
+      c.props.width === 44 ? "day" : c.props.width === 26 ? "icon" : c.props.width === 38 ? "uv" : "temp"
+    );
+
+  it("puts the day first in English", () => {
+    expect(orderAt(373)[0]).toBe("day");
+  });
+
+  it.each(["he", "ar", "he-IL"])("puts the day last in %s", (locale) => {
+    i18n.locale = locale;
+    const order = orderAt(373);
+    expect(order[order.length - 1]).toBe("day");
+    expect(order).toEqual([...orderAt(373)]);
+  });
+
+  it("reverses the whole row, not just its ends", () => {
+    i18n.locale = "en";
+    const ltr = orderAt(373);
+    i18n.locale = "he";
+    const rtl = orderAt(373);
+    expect(rtl).toEqual([...ltr].reverse());
+  });
+
+  it("reverses the label and its reading too", () => {
+    // Reversing only the outer row would leave "Hi 32°/89°" internally
+    // left-to-right inside a right-to-left row, which reads worse than not
+    // reversing at all.
+    i18n.locale = "he";
+    const texts = textsIn(buildRow(276));
+    const hiLabel = texts.indexOf("WidgetHi");
+    expect(hiLabel).toBeGreaterThan(-1);
+    // In RTL the reading is emitted BEFORE its label.
+    expect(texts[hiLabel - 1]).toMatch(/\u00b0/);
+  });
+
+  it("still renders every column, so nothing is lost in translation", () => {
+    i18n.locale = "he";
+    expect(orderAt(373).sort()).toEqual(["day", "icon", "temp", "temp", "uv"]);
+    expect(orderAt(179).sort()).toEqual(["day", "icon", "temp"]);
   });
 });

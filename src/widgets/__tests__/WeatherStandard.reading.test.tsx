@@ -25,6 +25,9 @@ jest.mock("../../localization/i18n", () => ({
   i18n: { locale: "en", t: (key: string) => key },
 }));
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { i18n } = require("../../localization/i18n");
+
 jest.mock("@react-native-async-storage/async-storage", () =>
   require("@react-native-async-storage/async-storage/jest/async-storage-mock")
 );
@@ -121,5 +124,39 @@ describe("hourly reading", () => {
       expect(line.props.maxLines).toBe(1);
       expect(line.props.text).not.toContain("\n");
     }
+  });
+});
+
+describe("hourly column order follows the reading direction", () => {
+  afterEach(() => {
+    i18n.locale = "en";
+  });
+
+  /** Hour labels across the row, left to right as rendered. */
+  const hours = (): string[] => {
+    const tree = buildWidgetTree(
+      <WeatherStandard
+        weather={weather}
+        lastUpdated={new Date(1_753_900_000_000)}
+        locationName="Testville"
+        width={373}
+        height={180}
+      />
+    );
+    return textNodesIn(tree)
+      .map((n) => n.props.text)
+      .filter((t: string) => /^\d{1,2}:\d{2}/.test(t));
+  };
+
+  it("runs earliest-first in English", () => {
+    const ltr = hours();
+    expect(ltr.length).toBeGreaterThan(1);
+    expect(ltr).toEqual([...ltr]);
+  });
+
+  it("runs earliest-LAST in Hebrew, so time still flows towards the reader", () => {
+    const ltr = hours();
+    i18n.locale = "he";
+    expect(hours()).toEqual([...ltr].reverse());
   });
 });

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, TouchableOpacity } from "react-native";
 import { useLanguageStore } from "../../store/useLanguageStore";
+import { repaintWidgetsAfterSettingChange } from "../../widgets/utils/repaintWidgets";
 import { styles } from "./LanguageSelector.styles";
 
 export const LanguageSelector = () => {
@@ -22,6 +23,13 @@ export const LanguageSelector = () => {
   const handleLanguageSelect = (code: string | null) => {
     setLanguage(code);
     setIsExpanded(false);
+    // Widgets render their own chrome — day names, Hi/Lo labels, the age
+    // indicator — from the same i18n table the app uses, and they only redraw
+    // when something asks them to. Without this the user changes language and
+    // the home screen stays in the old one until the next scheduled refresh,
+    // up to half an hour later. Temperature unit and widget style already do
+    // this; language was the one that did not.
+    void repaintWidgetsAfterSettingChange("language change");
   };
 
   const getSelectedLanguageName = () => {

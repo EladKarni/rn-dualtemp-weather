@@ -16,6 +16,7 @@ import { getWidgetElementColor } from "./utils/widgetTheme";
 import moment from "moment";
 import { formatDataAge } from "./utils/widgetDataUtils";
 import { i18n } from "../localization/i18n";
+import { isRTLLanguage } from "../utils/rtlDetection";
 
 interface WeatherExtendedProps {
   weather: Weather;
@@ -52,6 +53,10 @@ const DailyForecastRow = ({
     ? i18n.t("Today")
     : moment(forecast.dt * 1000).format("ddd");
   const isCompact = variant === "compact";
+  // Read from the locale rather than a store field: this also runs in the
+  // headless widget context, where i18n has been hydrated but React state has
+  // not. isRTLLanguage normalises "he-IL" and friends to "he".
+  const isRTL = isRTLLanguage(i18n.locale);
   // The two axes are independent: `variant` comes from height, `density` from
   // width, and every combination has to render.
   // The icon survives every width — dropping the high/low pair frees far more
@@ -92,7 +97,91 @@ const DailyForecastRow = ({
   const ICON_COLUMN_WIDTH = 26;
   const UV_COLUMN_WIDTH = 38;
 
-  // Only the outer container and the day-label style differ between variants;
+  // A dual-scale reading with its label, e.g. "Hi 32° / 89°". In an RTL locale
+  // the label belongs to the right of the number, so the pair reverses too —
+  // reversing only the outer row would leave each column internally LTR.
+  const labelledTemp = (key: string, labelKey: string, temp: number) => {
+    const parts = [
+      showHiLoLabels ? (
+        <TextWidget
+          key="label"
+          text={i18n.t(labelKey)}
+          style={{ color: palette.highlightColor, fontSize: labelSize }}
+        />
+      ) : null,
+      <DualTemperatureDisplay
+        key="temp"
+        temp={temp}
+        size={tempSize}
+        tempScale={tempScale}
+        separator={tempSeparator}
+        maxLines={1}
+      />,
+    ].filter(Boolean);
+
+    return (
+      <FlexWidget
+        key={key}
+        style={{ flex: 1, flexDirection: "row", justifyContent: "center", alignItems: "center", flexGap: 4 }}
+      >
+        {isRTL ? parts.reverse() : parts}
+      </FlexWidget>
+    );
+  };
+
+  // Columns in reading order, then reversed wholesale for RTL. This renderer
+  // exposes no layoutDirection and its flexDirection is only 'row' | 'column',
+  // so reversing the children is the only way to put the day on the right where
+  // a Hebrew or Arabic reader expects it.
+  //
+  // An ARRAY is safe where a React.Fragment is not: the renderer calls every
+  // element type as a function, so a Fragment throws
+  // "Symbol(react.fragment) is not a function" and drops the whole widget to
+  // the error view. Arrays are ordinary children.
+  const columns = [
+    <FlexWidget key="day" style={{ width: DAY_COLUMN_WIDTH, flexDirection: "row", alignItems: "center" }}>
+      <TextWidget
+        text={dayText}
+        style={
+          isCompact
+            ? { fontSize: 14, fontWeight: "bold", color: palette.textColor }
+            : { fontSize: 14, color: palette.highlightColor }
+        }
+      />
+    </FlexWidget>,
+
+    <FlexWidget key="icon" style={{ width: ICON_COLUMN_WIDTH, flexDirection: "row", justifyContent: "center", alignItems: "center" }}>
+      <WeatherIcon weatherId={forecast.weather[0].id} size="small" />
+    </FlexWidget>,
+
+    // UV is added last and dropped first — see showUv above.
+    showUv ? (
+      <FlexWidget key="uv" style={{ width: UV_COLUMN_WIDTH, flexDirection: "row", justifyContent: "center", alignItems: "center" }}>
+        <TextWidget
+          text={`${i18n.t("WidgetUV")} ${Math.round(forecast.uvi)}`}
+          style={{ color: palette.highlightColor, fontSize: 14 }}
+        />
+      </FlexWidget>
+    ) : null,
+
+    // At the narrowest width a high/low pair is four numbers competing for a
+    // two-cell row, so one dual-scale average replaces them.
+    showAverageOnly ? (
+      <FlexWidget key="avg" style={{ flex: 1, flexDirection: "row", justifyContent: "center", alignItems: "center" }}>
+        <DualTemperatureDisplay
+          temp={averageTemp}
+          size={tempSize}
+          tempScale={tempScale}
+          separator={tempSeparator}
+          maxLines={1}
+        />
+      </FlexWidget>
+    ) : null,
+
+    showAverageOnly ? null : labelledTemp("hi", "WidgetHi", forecast.temp.max),
+    showAverageOnly ? null : labelledTemp("lo", "WidgetLo", forecast.temp.min),
+  ].filter(Boolean);
+
   // kept inline so react-native-android-widget's style props stay contextually
   // typed (its FlexWidgetStyle/TextWidgetStyle aren't re-exported to annotate).
   return (
@@ -129,97 +218,9 @@ const DailyForecastRow = ({
             }
       }
     >
-      {/* NB: the row must NOT use justifyContent: "space-between". This
-          renderer implements the space-* values by INJECTING an invisible
-          `flex: 1` FlexWidget between every pair of children
-          (FlexWidget.processChildren), so the temperature columns end up
-          splitting the leftover width with two to four phantom columns instead
-          of taking it. At the narrow sizes that starved them badly enough that
-          a seven-character reading wrapped onto two lines with ~100dp of the
-          row sitting empty. Column positions come from the fixed widths below
-          and the temperature weights alone; spacing comes from flexGap. */}
-
-      {/* Day name */}
-      <FlexWidget style={{ width: DAY_COLUMN_WIDTH, flexDirection: "row", alignItems: "center" }}>
-        <TextWidget
-          text={dayText}
-          style={
-            isCompact
-              ? { fontSize: 14, fontWeight: "bold", color: palette.textColor }
-              : { fontSize: 14, color: palette.highlightColor }
-          }
-        />
-      </FlexWidget>
-
-      {/* Weather Icon */}
-      <FlexWidget style={{ width: ICON_COLUMN_WIDTH, flexDirection: "row", justifyContent: "center", alignItems: "center" }}>
-        <WeatherIcon weatherId={forecast.weather[0].id} size="small" />
-      </FlexWidget>
-
-      {/* Max UV index for the day — only the widest row has room for it, and it
-          is the metric the hourly widget does not already cover. */}
-      {showUv && (
-        <FlexWidget style={{ width: UV_COLUMN_WIDTH, flexDirection: "row", justifyContent: "center", alignItems: "center" }}>
-          <TextWidget
-            text={`${i18n.t("WidgetUV")} ${Math.round(forecast.uvi)}`}
-            style={{ color: palette.highlightColor, fontSize: 14 }}
-          />
-        </FlexWidget>
-      )}
-
-      {/* Narrowest width: a single dual-scale average replaces the pair.
-          NB: these are sibling conditionals rather than a ternary with a
-          fragment. react-native-android-widget's renderer calls every element
-          type as a function, so a React Fragment throws
-          "Symbol(react.fragment) is not a function" and takes the whole render
-          down to the error widget. */}
-      {showAverageOnly && (
-        <FlexWidget style={{ flex: 1, flexDirection: "row", justifyContent: "center", alignItems: "center", flexGap: 4 }}>
-          <DualTemperatureDisplay
-            temp={averageTemp}
-            size={tempSize}
-            tempScale={tempScale}
-            separator={tempSeparator}
-            maxLines={1}
-          />
-        </FlexWidget>
-      )}
-
-      {/* High Temp. The label and the reading are spaced by flexGap, never by a
-          trailing space in the label string: a trailing space is
-          direction-dependent, and in an RTL locale it lands on the far side of
-          the label, rendering "מקס34°" with the two jammed together. Observed
-          in Hebrew during the 2.2.0 release pass. */}
-      {!showAverageOnly && (
-        <FlexWidget style={{ flex: 1, flexDirection: "row", justifyContent: "center", alignItems: "center", flexGap: 4 }}>
-          {showHiLoLabels && (
-            <TextWidget text={i18n.t("WidgetHi")} style={{ color: palette.highlightColor, fontSize: labelSize }} />
-          )}
-          <DualTemperatureDisplay
-            temp={forecast.temp.max}
-            size={tempSize}
-            tempScale={tempScale}
-            separator={tempSeparator}
-            maxLines={1}
-          />
-        </FlexWidget>
-      )}
-
-      {/* Low Temp */}
-      {!showAverageOnly && (
-        <FlexWidget style={{ flex: 1, flexDirection: "row", justifyContent: "center", alignItems: "center", flexGap: 4 }}>
-          {showHiLoLabels && (
-            <TextWidget text={i18n.t("WidgetLo")} style={{ color: palette.highlightColor, fontSize: labelSize }} />
-          )}
-          <DualTemperatureDisplay
-            temp={forecast.temp.min}
-            size={tempSize}
-            tempScale={tempScale}
-            separator={tempSeparator}
-            maxLines={1}
-          />
-        </FlexWidget>
-      )}
+      {/* Column ORDER carries the layout direction; see `columns` above for why
+          it cannot be done with a style. */}
+      {isRTL ? [...columns].reverse() : columns}
     </FlexWidget>
   );
 };
