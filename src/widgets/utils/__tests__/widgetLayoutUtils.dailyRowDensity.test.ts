@@ -9,32 +9,37 @@
  * raw value the task handler passes in reported 203 for a three-row widget,
  * which only resolves to three rows when read as dp (at pixels it would be 74dp,
  * too short for even one row).
+ *
+ * They are also the width the LAUNCHER measured, not the width app.json
+ * declared. `minWidth = 70n - 30` sizes the declaration only; the Pixel
+ * launcher on a 411dp screen was measured stepping ~97dp per cell (179dp and
+ * 276dp at consecutive resize steps, 2026-07-30). Cases below therefore use
+ * measured widths, and the cell numbers in their labels are that launcher's —
+ * another launcher will land the same layouts on different cell counts, which
+ * is exactly why the thresholds are expressed in dp.
  */
 import {
   calculateDailyRowDensity,
   type DailyRowDensity,
 } from "../widgetLayoutUtils";
 
-/** Android sizes widget cells as minWidth = 70n - 30. */
-const cells = (n: number): number => 70 * n - 30;
-
 describe("calculateDailyRowDensity", () => {
   it.each<[string, number, DailyRowDensity]>([
-    ["2 cells — the declared minimum", cells(2), "narrow"],
-    ["3 cells — the declared default", cells(3), "medium"],
-    ["4 cells", cells(4), "full"],
-    ["5 cells — the declared maximum", cells(5), "wide"],
+    ["2 cells on a 411dp Pixel launcher", 179, "narrow"],
+    ["3 cells on a 411dp Pixel launcher", 276, "full"],
+    ["4 cells on a 411dp Pixel launcher", 373, "wide"],
+    ["5 cells on a 411dp Pixel launcher", 470, "wide"],
   ])("%s (%ddp) -> %s", (_label, width, expected) => {
     expect(calculateDailyRowDensity(width)).toBe(expected);
   });
 
   it.each<[string, number, DailyRowDensity]>([
-    ["just below the medium threshold", 179, "narrow"],
-    ["exactly at the medium threshold", 180, "medium"],
-    ["just below the full threshold", 249, "medium"],
-    ["exactly at the full threshold", 250, "full"],
-    ["just below the wide threshold", 319, "full"],
-    ["exactly at the wide threshold", 320, "wide"],
+    ["just below the medium threshold", 219, "narrow"],
+    ["exactly at the medium threshold", 220, "medium"],
+    ["just below the full threshold", 254, "medium"],
+    ["exactly at the full threshold", 255, "full"],
+    ["just below the wide threshold", 329, "full"],
+    ["exactly at the wide threshold", 330, "wide"],
   ])("%s (%ddp) -> %s", (_label, width, expected) => {
     expect(calculateDailyRowDensity(width)).toBe(expected);
   });
@@ -63,11 +68,11 @@ describe("calculateDailyRowDensity", () => {
     }
   });
 
-  it("assumes medium, not full, when the width is unknown", () => {
+  it("assumes the narrowest layout when the width is unknown", () => {
     // Guessing too wide overflows the row; guessing too narrow only wastes
     // space. updateAllWeatherWidgets historically omitted the width prop
     // entirely, so this path is reachable in practice.
-    expect(calculateDailyRowDensity(undefined)).toBe("medium");
+    expect(calculateDailyRowDensity(undefined)).toBe("narrow");
   });
 
   it("never returns a density outside the known set", () => {

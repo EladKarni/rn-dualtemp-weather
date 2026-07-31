@@ -9,6 +9,14 @@ interface DualTemperatureDisplayProps {
   size: 'tiny' | 'small' | 'medium' | 'large';
   tempScale: 'C' | 'F';  // User's preferred temperature scale
   separator?: string; // default: " / "
+  /**
+   * Cap the reading at one line. Callers that lay the reading out in a sized
+   * column want this: a wrapped reading breaks the row's shared baseline and
+   * makes the columns look ragged, whereas a clipped one keeps the geometry
+   * intact. Left unset by default because the hourly columns deliberately let
+   * the reading wrap onto a second line.
+   */
+  maxLines?: number;
 }
 
 const getDualTempFontSize = (size: DualTemperatureDisplayProps['size']): number => {
@@ -28,7 +36,8 @@ export const DualTemperatureDisplay: React.FC<DualTemperatureDisplayProps> = ({
   temp,
   size,
   tempScale,
-  separator = " / "
+  separator = " / ",
+  maxLines
 }) => {
   const fontSize = getDualTempFontSize(size);
 
@@ -44,6 +53,7 @@ export const DualTemperatureDisplay: React.FC<DualTemperatureDisplayProps> = ({
   return (
     <TextWidget
       text={dualTempText}
+      {...(maxLines ? { maxLines } : {})}
       style={{
         fontSize,
         color: palette.textColor,
