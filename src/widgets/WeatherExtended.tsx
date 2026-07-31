@@ -174,7 +174,7 @@ const DailyForecastRow = ({
           "Symbol(react.fragment) is not a function" and takes the whole render
           down to the error widget. */}
       {showAverageOnly && (
-        <FlexWidget style={{ flex: 1, flexDirection: "row", justifyContent: "center", alignItems: "center" }}>
+        <FlexWidget style={{ flex: 1, flexDirection: "row", justifyContent: "center", alignItems: "center", flexGap: 4 }}>
           <DualTemperatureDisplay
             temp={averageTemp}
             size={tempSize}
@@ -185,11 +185,15 @@ const DailyForecastRow = ({
         </FlexWidget>
       )}
 
-      {/* High Temp */}
+      {/* High Temp. The label and the reading are spaced by flexGap, never by a
+          trailing space in the label string: a trailing space is
+          direction-dependent, and in an RTL locale it lands on the far side of
+          the label, rendering "מקס34°" with the two jammed together. Observed
+          in Hebrew during the 2.2.0 release pass. */}
       {!showAverageOnly && (
-        <FlexWidget style={{ flex: 1, flexDirection: "row", justifyContent: "center", alignItems: "center" }}>
+        <FlexWidget style={{ flex: 1, flexDirection: "row", justifyContent: "center", alignItems: "center", flexGap: 4 }}>
           {showHiLoLabels && (
-            <TextWidget text={`${i18n.t("WidgetHi")} `} style={{ color: palette.highlightColor, fontSize: labelSize }} />
+            <TextWidget text={i18n.t("WidgetHi")} style={{ color: palette.highlightColor, fontSize: labelSize }} />
           )}
           <DualTemperatureDisplay
             temp={forecast.temp.max}
@@ -203,9 +207,9 @@ const DailyForecastRow = ({
 
       {/* Low Temp */}
       {!showAverageOnly && (
-        <FlexWidget style={{ flex: 1, flexDirection: "row", justifyContent: "center", alignItems: "center" }}>
+        <FlexWidget style={{ flex: 1, flexDirection: "row", justifyContent: "center", alignItems: "center", flexGap: 4 }}>
           {showHiLoLabels && (
-            <TextWidget text={`${i18n.t("WidgetLo")} `} style={{ color: palette.highlightColor, fontSize: labelSize }} />
+            <TextWidget text={i18n.t("WidgetLo")} style={{ color: palette.highlightColor, fontSize: labelSize }} />
           )}
           <DualTemperatureDisplay
             temp={forecast.temp.min}

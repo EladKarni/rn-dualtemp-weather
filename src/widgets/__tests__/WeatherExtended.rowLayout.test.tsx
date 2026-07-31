@@ -154,7 +154,7 @@ describe("daily row structure", () => {
     // UV is the only element the row can lose without losing meaning, so it is
     // added last: at 276dp the labels are in and UV is not.
     const labelled = textsIn(buildRow(276));
-    expect(labelled).toEqual(["Today", "☀️", "WidgetHi ", "32°/90°", "WidgetLo ", "15°/59°"]);
+    expect(labelled).toEqual(["Today", "☀️", "WidgetHi", "32°/90°", "WidgetLo", "15°/59°"]);
     expect(labelled.join(" ")).not.toContain("WidgetUV");
 
     const withUv = textsIn(buildRow(373));
@@ -162,9 +162,9 @@ describe("daily row structure", () => {
       "Today",
       "☀️",
       "WidgetUV 9",
-      "WidgetHi ",
+      "WidgetHi",
       "32° / 90°",
-      "WidgetLo ",
+      "WidgetLo",
       "15° / 59°",
     ]);
   });

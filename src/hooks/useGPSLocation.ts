@@ -107,6 +107,37 @@ export type GpsAcquireOutcome =
  * second copy of the hook to reach it would fire a duplicate permission
  * request on startup.
  */
+/**
+ * Position-provider failures that are ordinary user-environment states rather
+ * than defects: location services off, no fix indoors, a request superseded.
+ * These fall back to the last known position and log as warnings; anything else
+ * is genuinely unexpected and becomes a Sentry error event.
+ *
+ * Both spellings are listed on purpose. expo-location derives an error code
+ * from its exception CLASS NAME — CurrentLocationIsUnavailableException becomes
+ * ERR_CURRENT_LOCATION_IS_UNAVAILABLE — and the `E_`-prefixed names below are
+ * the pre-CodedException spellings from older SDKs. Only the legacy pair was
+ * listed here originally, which meant the modern code an emulator (and any
+ * device without a current fix) actually raises fell straight through to the
+ * error path: no last-known fallback for the user, and a Sentry error for a
+ * condition that is not one. Observed as ERR_CURRENT_LOCATION_IS_UNAVAILABLE
+ * during the 2.2.0 Android release pass.
+ */
+const EXPECTED_POSITION_FAILURES = new Set([
+  // Current spellings (expo-location LocationExceptions.kt)
+  'ERR_CURRENT_LOCATION_IS_UNAVAILABLE',
+  'ERR_LOCATION_UNAVAILABLE',
+  'ERR_LOCATION_UNKNOWN',
+  'ERR_LOCATION_REQUEST_CANCELLED',
+  'ERR_LOCATION_SETTINGS_UNSATISFIED',
+  // Legacy spellings, kept so an older runtime does not regress
+  'E_LOCATION_UNAVAILABLE',
+  'E_LOCATION_TIMEOUT',
+]);
+
+const isExpectedPositionFailure = (code: unknown): boolean =>
+  typeof code === 'string' && EXPECTED_POSITION_FAILURES.has(code);
+
 const runGPSAcquisition =
   async (): Promise<GpsAcquireOutcome> => {
     try {
@@ -121,10 +152,7 @@ const runGPSAcquisition =
           accuracy: Location.Accuracy.Balanced,
         });
       } catch (positionError: any) {
-        if (
-          positionError?.code !== 'E_LOCATION_UNAVAILABLE' &&
-          positionError?.code !== 'E_LOCATION_TIMEOUT'
-        ) {
+        if (!isExpectedPositionFailure(positionError?.code)) {
           throw positionError;
         }
 
@@ -138,9 +166,9 @@ const runGPSAcquisition =
           return {
             status: 'failed',
             error:
-              positionError.code === 'E_LOCATION_UNAVAILABLE'
-                ? new LocationUnavailableError()
-                : new PositionTimeoutError(),
+              positionError.code === 'E_LOCATION_TIMEOUT'
+                ? new PositionTimeoutError()
+                : new LocationUnavailableError(),
           };
         }
 
