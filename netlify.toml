@@ -1,0 +1,33 @@
+# Netlify build configuration.
+#
+# This lives in the repo because it previously did not. The build command was
+# set only in the Netlify UI, where it went stale silently: it was still
+# `npx expo export:web`, which Expo removed in SDK 50, so from the SDK upgrade
+# onwards every deploy failed with
+#
+#   CommandError: expo export:web can only be used with Webpack.
+#                 Use expo export for other bundlers.
+#
+# and exited 2 — while the app itself built perfectly well. Nothing in the repo
+# referenced the command, so nothing could flag it, and the red X sat on the PR
+# looking like a test failure. Settings that have to change with the code belong
+# next to the code.
+#
+# The three Netlify checks that accompany the deploy (Header rules, Pages
+# changed, Redirect rules) only run against a successful deploy, so they failed
+# for no reason of their own.
+
+[build]
+  # SDK 50+ spelling. Emits to dist/, not the old web-build/.
+  command = "npx expo export --platform web"
+  publish = "dist"
+
+[build.environment]
+  # Match .github/workflows/ci.yml, so a build that passes the gate cannot fail
+  # here on a Node version difference alone.
+  NODE_VERSION = "20"
+
+# No redirects on purpose. This app has no router — expo-router is not a
+# dependency and the export is a single index.html — so a catch-all
+# /* -> /index.html would serve the app for genuinely missing paths and turn
+# every 404 into a blank screen. Add one here if client-side routing lands.
