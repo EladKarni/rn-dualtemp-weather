@@ -132,6 +132,13 @@ round to it.
 The Linux gate never compiles Swift. Until this runs, the iOS widget is
 unverified no matter how green CI is.
 
+> **For the 2.2.0 cycle, work from [RELEASE-IOS.md](RELEASE-IOS.md) instead of
+> this section.** A large amount of Swift was written on Linux without a
+> compiler, so this release needs a compile gate, a feature-parity pass against
+> Android, and a schema v2 → v3 back-compatibility check that the checklist
+> below does not cover. This section remains the standing minimum for an
+> ordinary patch release.
+
 - [ ] `bash scripts/widget-screenshots/ios/render.sh` — renders the widget via
       SwiftUI's `ImageRenderer` without a simulator. This is the fastest way to
       catch a Swift compile error; do it first.
