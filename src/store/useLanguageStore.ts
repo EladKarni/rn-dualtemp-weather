@@ -9,11 +9,16 @@ import "moment/locale/ar";
 import "moment/locale/fr";
 import "moment/locale/zh-cn";
 import { i18n, translations } from "../localization/i18n";
+import { installHebrewMeridiem } from "../utils/hebrewMeridiem";
 import { isRTLLanguage, getTextDirection } from "../utils/rtlDetection";
 import { logger } from "../utils/logger";
 
+// Must run before anything formats a Hebrew time — see the module for why.
+installHebrewMeridiem();
+
 // CRITICAL: Reset moment to English after importing locales
-// Some locale files (especially zh-cn) set themselves as the default global locale on import
+// Some locale files (especially zh-cn) set themselves as the default global
+// locale on import, and updateLocale above also switches to the locale it edits
 moment.locale('en');
 
 /**
