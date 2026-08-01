@@ -15,7 +15,9 @@ export const styles = StyleSheet.create({
   },
   // The label stretches the row's full width, so without this it stays pinned
   // left in Hebrew — `textAlign: "auto"` follows the app's layout direction,
-  // which is LTR here because forceRTL is never called.
+  // which is LTR because native RTL is disabled in app.json (`supportsRTL` /
+  // `ExpoLocalization_supportsRTL`). See SettingsScreen.styles.ts for why those
+  // must stay false.
   labelRTL: {
     textAlign: "right",
   },

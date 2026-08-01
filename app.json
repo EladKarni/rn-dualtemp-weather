@@ -12,7 +12,7 @@
     },
     "assetBundlePatterns": ["**/*"],
     "extra": {
-      "supportsRTL": true
+      "supportsRTL": false
     },
     "plugins": [
       [
@@ -102,7 +102,7 @@
       "appleTeamId": "RUW8C26QSP",
       "supportsTablet": true,
       "infoPlist": {
-        "ExpoLocalization_supportsRTL": true,
+        "ExpoLocalization_supportsRTL": false,
         "ITSAppUsesNonExemptEncryption": false,
         "UIStatusBarStyle": "UIStatusBarStyleLightContent"
       },

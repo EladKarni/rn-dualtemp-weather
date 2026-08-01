@@ -126,6 +126,27 @@ describe("app.json — static config policy", () => {
     expect([...(options!.supportedLocales as string[])].sort()).toEqual(shipped);
   });
 
+  it("keeps native RTL OFF, because the app mirrors by hand", () => {
+    // This shipped broken once and the gate could not see it.
+    //
+    // Every RTL-aware component in this app opts into mirroring itself with
+    // `isRTL && styles.somethingRTL` (row-reverse, textAlign, swapped offsets).
+    // That is only correct while React Native is laying out left-to-right. Set
+    // these flags true and expo-localization turns native RTL ON for devices
+    // whose SYSTEM language is Hebrew or Arabic — RN then mirrors everything
+    // itself and the manual pass runs on top of it, flipping each row back to
+    // LTR while directional margins swap underneath. Observed on a Hebrew
+    // simulator as the gear in the wrong corner and headings clipped off the
+    // screen edge.
+    //
+    // Note this is invisible to a grep for I18nManager: expo-localization
+    // writes it into Info.plist and strings.xml from exactly these two keys, so
+    // the JS can look clean while the shipped binary is RTL. Both must stay
+    // false, or the manual mirroring must be removed app-wide — not both.
+    expect(appJson.expo.extra?.supportsRTL).toBe(false);
+    expect(appJson.expo.ios?.infoPlist?.ExpoLocalization_supportsRTL).toBe(false);
+  });
+
   it("renders light status-bar glyphs, which the app's dark surface requires", () => {
     // UIViewControllerBasedStatusBarAppearance resolves to false here, so this
     // plist key governs the pre-JS window (splash). App.tsx renders

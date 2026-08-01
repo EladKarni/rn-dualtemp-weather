@@ -33,10 +33,18 @@ export const styles = StyleSheet.create({
     borderBottomColor: palette.primaryLight,
   },
   /**
-   * This app mirrors by hand: I18nManager.forceRTL is never called, so React
-   * Native lays everything out left-to-right regardless of language and each
-   * component that needs to mirror opts in. Reversing the row moves the title
-   * to the reading edge and the close button opposite it.
+   * This app mirrors BY HAND, and that only works because native RTL is turned
+   * off: `extra.supportsRTL` and `ios.infoPlist.ExpoLocalization_supportsRTL`
+   * are both false in app.json, so React Native lays out left-to-right whatever
+   * the device language and each component opts into mirroring itself.
+   *
+   * Do not flip those flags back on. With native RTL active, `row` already
+   * renders right-to-left, so this `row-reverse` flips the row BACK to LTR
+   * while RN independently swaps every directional margin and offset — the app
+   * ends up double-mirrored, with Hebrew headings clipped off the screen edge.
+   * Grepping for I18nManager is not enough to rule this out: expo-localization
+   * sets it natively from those app.json keys, so the JS can be clean while the
+   * shipped binary is RTL.
    */
   headerRTL: {
     flexDirection: "row-reverse",
