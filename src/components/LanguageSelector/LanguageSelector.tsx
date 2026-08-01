@@ -45,12 +45,21 @@ export const LanguageSelector = () => {
   return (
     <View>
       <TouchableOpacity
-        style={styles.dropdownButton}
+        style={[styles.dropdownButton, isRTL && styles.dropdownButtonRTL]}
         onPress={() => setIsExpanded(!isExpanded)}
         activeOpacity={0.7}
       >
-        <Text style={styles.dropdownButtonText}>{getSelectedLanguageName()}</Text>
-        <Text style={styles.dropdownArrow}>{getDropdownArrow()}</Text>
+        <Text
+          style={[
+            styles.dropdownButtonText,
+            isRTL && styles.dropdownButtonTextRTL,
+          ]}
+        >
+          {getSelectedLanguageName()}
+        </Text>
+        <Text style={[styles.dropdownArrow, isRTL && styles.dropdownArrowRTL]}>
+          {getDropdownArrow()}
+        </Text>
       </TouchableOpacity>
 
       {isExpanded && (

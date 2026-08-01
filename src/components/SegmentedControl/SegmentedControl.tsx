@@ -20,6 +20,15 @@ interface SegmentedControlProps<T> {
    * Awaited so async side effects complete before the press handler resolves.
    */
   onAfterChange?: (value: T) => void | Promise<void>;
+  /**
+   * Lay the segments out right-to-left, putting `options[0]` at the right.
+   * Callers pass their RTL flag here.
+   *
+   * Taken as a prop rather than read from the language store so this stays a
+   * pure presentational component — its test asserts exactly that by needing no
+   * module mocks, and a store import would drag AsyncStorage into it.
+   */
+  reversed?: boolean;
 }
 
 /**
@@ -31,9 +40,14 @@ export function SegmentedControl<T>({
   value,
   onChange,
   onAfterChange,
+  reversed = false,
 }: SegmentedControlProps<T>) {
   return (
-    <View style={styles.container}>
+    // Flipped with row-reverse rather than by reversing the options array: the
+    // array order is the control's semantic order, and the rounded ends come
+    // from this container's own borderRadius + overflow rather than from
+    // per-segment corners, so changing direction cannot leave a square end cap.
+    <View style={[styles.container, reversed && styles.containerRTL]}>
       {options.map((option, index) => {
         const isActive = option.value === value;
         return (

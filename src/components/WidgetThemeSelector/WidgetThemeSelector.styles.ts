@@ -19,6 +19,18 @@ export const styles = StyleSheet.create({
     paddingVertical: 2,
     borderRadius: 24,
   },
+  /**
+   * Both properties are needed, and they fight each other if only one changes.
+   * The LTR row is `row` + `flex-end`, which packs the swatches against the
+   * right. Under `row-reverse` the main axis runs right-to-left, so `flex-end`
+   * would pack them against the LEFT — the opposite of the reading edge. Moving
+   * to `flex-start` keeps them packed right while the first preset now sits
+   * rightmost, which is where a Hebrew reader starts.
+   */
+  containerRTL: {
+    flexDirection: "row-reverse",
+    justifyContent: "flex-start",
+  },
   // The tap target is deliberately larger than the swatch it draws, so six of
   // them stay comfortably tappable on a phone-width settings row.
   swatchTarget: {

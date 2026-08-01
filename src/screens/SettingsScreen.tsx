@@ -19,6 +19,7 @@ import { LanguageSelector } from "../components/LanguageSelector/LanguageSelecto
 import { WidgetThemeSelector } from "../components/WidgetThemeSelector/WidgetThemeSelector";
 import { LocationList } from "../components/Settings/LocationList";
 import { useLocationStore } from "../store/useLocationStore";
+import { useLanguageStore } from "../store/useLanguageStore";
 import { useModalAnimation } from "../hooks/useModalAnimation";
 import { styles } from "./SettingsScreen.styles";
 type SettingsScreenProps = {
@@ -37,6 +38,7 @@ const SettingsScreen = ({
   const canAddMoreLocations = useLocationStore((state) =>
     state.canAddMoreLocations()
   );
+  const isRTL = useLanguageStore((state) => state.isRTL);
 
   const { fadeAnim, slideAnim } = useModalAnimation(visible);
 
@@ -62,7 +64,7 @@ const SettingsScreen = ({
             { transform: [{ translateY: slideAnim }] },
           ]}
         >
-          <View style={styles.header}>
+          <View style={[styles.header, isRTL && styles.headerRTL]}>
             <Text style={styles.title}>{i18n.t("Settings")}</Text>
             <TouchableOpacity
               style={styles.closeButton}
@@ -75,7 +77,7 @@ const SettingsScreen = ({
 
           <ScrollView style={styles.content}>
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>{i18n.t("Units")}</Text>
+              <Text style={[styles.sectionTitle, isRTL && styles.textRTL]}>{i18n.t("Units")}</Text>
               <SettingItem label={i18n.t("TemperatureUnit")}>
                 <TempUnitSelector />
               </SettingItem>
@@ -91,14 +93,14 @@ const SettingsScreen = ({
             </View>
 
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>{i18n.t("Language")}</Text>
+              <Text style={[styles.sectionTitle, isRTL && styles.textRTL]}>{i18n.t("Language")}</Text>
               <SettingItem label={i18n.t("AppLanguage")}>
                 <LanguageSelector />
               </SettingItem>
             </View>
 
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>{i18n.t("Locations")}</Text>
+              <Text style={[styles.sectionTitle, isRTL && styles.textRTL]}>{i18n.t("Locations")}</Text>
 
               <LocationList
                 savedLocations={savedLocations}

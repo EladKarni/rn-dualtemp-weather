@@ -13,16 +13,30 @@ export const styles = StyleSheet.create({
     borderColor: palette.primaryLight,
     backgroundColor: "transparent",
   },
+  // The list rows already mirrored; the button above them did not.
+  dropdownButtonRTL: {
+    flexDirection: "row-reverse",
+  },
   dropdownButtonText: {
     fontSize: 16,
     fontWeight: "600",
     color: palette.textColor,
     flex: 1,
   },
+  // flex: 1 makes this fill the row, so it needs telling which end to sit at.
+  dropdownButtonTextRTL: {
+    textAlign: "right",
+  },
   dropdownArrow: {
     fontSize: 12,
     color: palette.highlightColor,
     marginLeft: 8,
+  },
+  // The gap belongs between the arrow and the label, which is now on the other
+  // side; left unreset it would push the arrow off the row's edge instead.
+  dropdownArrowRTL: {
+    marginLeft: 0,
+    marginRight: 8,
   },
   dropdownList: {
     marginTop: 8,

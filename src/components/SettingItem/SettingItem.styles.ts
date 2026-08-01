@@ -13,4 +13,10 @@ export const styles = StyleSheet.create({
     marginBottom: 12,
     fontWeight: "500",
   },
+  // The label stretches the row's full width, so without this it stays pinned
+  // left in Hebrew — `textAlign: "auto"` follows the app's layout direction,
+  // which is LTR here because forceRTL is never called.
+  labelRTL: {
+    textAlign: "right",
+  },
 });

@@ -3,6 +3,7 @@ import { View, TouchableOpacity } from "react-native";
 import { useSettingsStore } from "../../store/useSettingsStore";
 import { useForecastStore } from "../../store/useForecastStore";
 import { useLocationStore } from "../../store/useLocationStore";
+import { useLanguageStore } from "../../store/useLanguageStore";
 import { WIDGET_THEME_LIST, type WidgetThemeId } from "../../styles/widgetThemes";
 import { updateAllWeatherWidgets } from "../../widgets/widgetUpdater";
 import { resolveWidgetLocation } from "../../widgets/utils/widgetDataUtils";
@@ -21,6 +22,7 @@ import { styles } from "./WidgetThemeSelector.styles";
 export const WidgetThemeSelector = () => {
   const widgetTheme = useSettingsStore((state) => state.widgetTheme);
   const setWidgetTheme = useSettingsStore((state) => state.setWidgetTheme);
+  const isRTL = useLanguageStore((state) => state.isRTL);
 
   /**
    * Repaint the home-screen widgets in the new colour. Same shape as
@@ -60,7 +62,7 @@ export const WidgetThemeSelector = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, isRTL && styles.containerRTL]}>
       {WIDGET_THEME_LIST.map((theme) => {
         const isActive = theme.id === widgetTheme;
         return (

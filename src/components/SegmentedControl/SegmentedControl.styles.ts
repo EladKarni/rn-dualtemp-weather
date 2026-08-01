@@ -9,6 +9,12 @@ export const styles = StyleSheet.create({
     borderColor: palette.primaryLight,
     overflow: "hidden",
   },
+  // Puts the first segment at the reading edge in Hebrew and Arabic. Safe to
+  // flip because the rounded ends belong to this container, not to the end
+  // segments, and the dividers sit between children either way.
+  containerRTL: {
+    flexDirection: "row-reverse",
+  },
   button: {
     flex: 1,
     paddingVertical: 12,

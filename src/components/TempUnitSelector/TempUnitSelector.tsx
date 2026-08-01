@@ -1,5 +1,6 @@
 import React from "react";
 import { useSettingsStore } from "../../store/useSettingsStore";
+import { useLanguageStore } from "../../store/useLanguageStore";
 import { useForecastStore } from "../../store/useForecastStore";
 import { useLocationStore } from "../../store/useLocationStore";
 import { i18n } from "../../localization/i18n";
@@ -8,6 +9,7 @@ import { updateAllWeatherWidgets } from "../../widgets/widgetUpdater";
 import { resolveWidgetLocation } from "../../widgets/utils/widgetDataUtils";
 
 export const TempUnitSelector = () => {
+  const isRTL = useLanguageStore((state) => state.isRTL);
   const tempScale = useSettingsStore((state) => state.tempScale);
   const setTempScale = useSettingsStore((state) => state.setTempScale);
 
@@ -36,6 +38,7 @@ export const TempUnitSelector = () => {
 
   return (
     <SegmentedControl
+      reversed={isRTL}
       value={tempScale}
       onChange={setTempScale}
       onAfterChange={() => pushUnitChangeToWidgets()}

@@ -18,6 +18,10 @@ export const styles = StyleSheet.create({
     borderRadius: 16,
     minHeight: 64,
   },
+  // Puts the name at the reading edge and the delete button opposite it.
+  gradientCardRTL: {
+    flexDirection: "row-reverse",
+  },
   locationInfo: {
     flex: 1,
   },
@@ -32,5 +36,9 @@ export const styles = StyleSheet.create({
     color: palette.textColorSecondary,
     marginTop: spacing.xs / 2,
     opacity: 0.8,
+  },
+  // locationInfo is flex: 1, so both lines stretch the row and need aligning.
+  locationTextRTL: {
+    textAlign: "right",
   },
 });
