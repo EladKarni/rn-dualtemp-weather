@@ -2,6 +2,7 @@ import { base_url } from "./fetchWeather";
 import { logger } from "./logger";
 import { ApiError } from "./errors";
 import { fetchWithTimeout, handleFetchError, mapHttpError } from "./httpClient";
+import { APP_TOKEN_HEADERS } from "./appToken";
 
 export interface CityResult {
   name: string;
@@ -59,7 +60,8 @@ export const searchCities = async (query: string, locale: string = 'en'): Promis
   try {
     const response = await fetchWithTimeout(
       `${base_url}search-cities?q=${encodeURIComponent(query.trim())}&limit=5&lang=${locale}`,
-      10000
+      10000,
+      { headers: APP_TOKEN_HEADERS }
     );
 
     if (!response.ok) {

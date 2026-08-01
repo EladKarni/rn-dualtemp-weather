@@ -8,7 +8,10 @@
       "developmentClient": true,
       "distribution": "internal",
       "channel": "development",
-      "environment": "development"
+      "environment": "development",
+      "env": {
+        "EXPO_PUBLIC_WEATHER_APP_TOKEN": "4274b43fed7f81acae0e7aeec9383401d144bbedd555fb24fc743528eb8f708f"
+      }
     },
     "preview": {
       "distribution": "internal",
@@ -19,7 +22,8 @@
         "autoIncrement": true
       },
       "env": {
-        "EXPO_PUBLIC_WEATHER_API_URL": "https://open-weather-proxy-q9xk-git-feat-pro-4cc9b7-eladkarnis-projects.vercel.app/api/v1/"
+        "EXPO_PUBLIC_WEATHER_API_URL": "https://open-weather-proxy-q9xk-git-feat-pro-4cc9b7-eladkarnis-projects.vercel.app/api/v1/",
+        "EXPO_PUBLIC_WEATHER_APP_TOKEN": "4274b43fed7f81acae0e7aeec9383401d144bbedd555fb24fc743528eb8f708f"
       }
     },
     "production": {
@@ -30,6 +34,9 @@
       },
       "ios": {
         "autoIncrement": true
+      },
+      "env": {
+        "EXPO_PUBLIC_WEATHER_APP_TOKEN": "4274b43fed7f81acae0e7aeec9383401d144bbedd555fb24fc743528eb8f708f"
       }
     }
   },

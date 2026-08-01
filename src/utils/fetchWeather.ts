@@ -2,6 +2,7 @@ import * as Network from "expo-network";
 import { Weather } from "../types/WeatherTypes";
 import { logger } from "./logger";
 import { fetchWithTimeout } from "./httpClient";
+import { APP_TOKEN_HEADERS } from "./appToken";
 import {
   ApiError,
   AuthenticationError,
@@ -147,7 +148,9 @@ const runFetchForecast = async (
     // 10s timeout leaves room for the cached-fallback path to run before the
     // widget headless task is killed at 30s (finding 6b). A timed-out fetch
     // rejects with an AbortError, mapped to TimeoutError in the catch below.
-    const response = await fetchWithTimeout(url, 10_000);
+    const response = await fetchWithTimeout(url, 10_000, {
+      headers: APP_TOKEN_HEADERS,
+    });
 
     // Read the body as text first so a non-JSON response (e.g. an HTML error
     // page from a misconfigured URL) doesn't blow up with an opaque
