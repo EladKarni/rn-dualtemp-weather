@@ -281,9 +281,10 @@ struct WeatherProvider: TimelineProvider {
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<WeatherEntry>) -> Void) {
-        // The data doesn't change until the app (or its background task) rewrites
-        // the App Group payload, so a single entry refreshed every 30 minutes
-        // (matching the Android cycle) is sufficient.
+        // The data only changes when the foregrounded app rewrites the App Group
+        // payload — there is no background refresh task on iOS — so a single
+        // entry re-read every 30 minutes (matching the Android cycle) is
+        // sufficient; the age label surfaces staleness in between.
         let currentDate = Date()
         let entry = WeatherEntry(date: currentDate, weatherData: getWeatherData())
         let nextUpdate = Calendar.current.date(byAdding: .minute, value: 30, to: currentDate)!
@@ -296,8 +297,13 @@ struct WeatherProvider: TimelineProvider {
 struct WidgetColors {
     static let background = Color(red: 0.11, green: 0.106, blue: 0.302) // #1C1B4D
     static let textPrimary = Color.white
-    static let textSecondary = Color.white.opacity(0.7)
-    static let highlight = Color(red: 0.29, green: 0.565, blue: 0.886) // #4A90E2
+    // The two label tiers mirror src/styles/Palette.ts (`textColorSecondary`,
+    // `highlightColor`) — the Android widget is the reference implementation,
+    // and widgetThemes.contrast.test.ts guarantees both against every element
+    // fill a payload can carry. This replaced white-70% and #4A90E2, which
+    // matched nothing in the app and carried no contrast guarantee.
+    static let textSecondary = Color(red: 0.631, green: 0.604, blue: 0.847) // #A19AD8
+    static let highlight = Color(red: 0.918, green: 0.918, blue: 0.953) // #EAEAF3
     static let ageText = Color(red: 0.61, green: 0.64, blue: 0.69) // #9CA3AF
 
     /// Fallback element fill for a pre-v3 payload: the "indigo" preset, which is
@@ -389,7 +395,11 @@ struct WeatherCompactView: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(WidgetColors.background)
+            // The element fill, not the fixed background: on Android the whole
+            // visible face of the compact widget is one themed element card, so
+            // this surface is what the style picker repaints. Standard and
+            // Extended keep the fixed background behind their per-item cards.
+            .background(weather.resolvedElement)
             .environment(\.layoutDirection, weather.isRTL ? .rightToLeft : .leftToRight)
         } else {
             PlaceholderView()
@@ -403,7 +413,10 @@ struct WeatherCompactWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: WeatherProvider()) { entry in
             WeatherCompactView(entry: entry)
-                .widgetBackground(WidgetColors.background)
+                // Must track the view's own fill: on iOS 17+ this is the
+                // containerBackground that shows through the system content
+                // margins, and a fixed colour there would ring a themed face.
+                .widgetBackground(entry.weatherData?.resolvedElement ?? WidgetColors.background)
         }
         .configurationDisplayName("Weather (Compact)")
         .description("Essential weather info with dual temperature display")
@@ -452,9 +465,12 @@ struct HourlyItemView: View {
                 .foregroundColor(WidgetColors.textPrimary)
                 .minimumScaleFactor(0.7)
 
+            // White like the primary reading, not the secondary tier: Android's
+            // stacked DualTemperatureDisplay renders both scales in textColor,
+            // with weight alone marking which is preferred.
             Text(temps.secondary)
                 .font(.system(size: 9))
-                .foregroundColor(WidgetColors.textSecondary)
+                .foregroundColor(WidgetColors.textPrimary)
                 .minimumScaleFactor(0.7)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -533,24 +549,54 @@ struct DailyItemView: View {
     let dayFormatter: DateFormatter
     /// See HourlyItemView.elementColor.
     let elementColor: Color
+    /// Whether this row gets the roomier five-day (systemLarge) metrics.
+    ///
+    /// Content-sized rows left that layout occupying under half the widget with
+    /// dead bands above and below. Roomy rows get a height CEILING, a larger
+    /// icon and more vertical padding.
+    ///
+    /// There is deliberately no height FLOOR. A floor is a hard constraint, and
+    /// five floored rows plus spacing and padding would demand more height than
+    /// the systemLarge content box offers on every iPhone except the 6.7"/6.9"
+    /// — clipping the end rows and pushing the age label out entirely, worst on
+    /// the stale payload that is the steady state. A ceiling alone still fills
+    /// a roomy widget, because the rows expand into whatever space exists, and
+    /// degrades safely on a small one by letting them shrink back toward their
+    /// content height.
+    let isRoomy: Bool
 
     var body: some View {
         let highTemps = formatDualTemp(tempCelsius: forecast.tempMax, primaryScale: tempScale)
         let lowTemps = formatDualTemp(tempCelsius: forecast.tempMin, primaryScale: tempScale)
         let date = Date(timeIntervalSince1970: TimeInterval(forecast.dt))
 
-        HStack {
+        // Every column except the temperatures gets a FIXED width and the two
+        // temperature groups split the leftover equally — the same shape as the
+        // Android row (WeatherExtended.tsx), and for the same reason: fixed
+        // widths are identical in every row whatever that row's text, so the
+        // columns line up. Spacers cannot do this — a Spacer absorbs whatever
+        // its neighbours don't claim, so each row's temperature groups landed
+        // wherever that row's digit and label widths happened to push them.
+        // (RTL needs nothing here: SwiftUI reverses an HStack with the
+        // layoutDirection environment, which the container view already sets.)
+        // Tighter than SwiftUI's default 8pt between columns, which returns
+        // 12pt across the three gaps to the temperature groups — that is what
+        // buys the larger type below without the Hebrew labels wrapping.
+        HStack(spacing: 4) {
             Text(isToday ? chrome.today : dayFormatter.string(from: date))
                 .font(.system(size: 14, weight: .semibold))
                 .foregroundColor(WidgetColors.textPrimary)
                 .frame(width: 50, alignment: .leading)
 
+            // The icon is the one glyph that can grow freely: it sits in a
+            // fixed-width column, so a larger size costs no horizontal room.
+            // Roomy-only, like the padding below — both grow the row's height,
+            // and the three-day layout has no spare height to give.
             Text(getWeatherIcon(weatherId: forecast.weatherId))
-                .font(.system(size: 16))
+                .font(.system(size: isRoomy ? 20 : 16))
+                .frame(width: 26)
 
-            Spacer()
-
-            HStack(spacing: 2) {
+            HStack(spacing: 3) {
                 Text(chrome.hi)
                     .font(.system(size: 11))
                     .foregroundColor(WidgetColors.highlight)
@@ -558,10 +604,9 @@ struct DailyItemView: View {
                     .font(.system(size: 11))
                     .foregroundColor(WidgetColors.textPrimary)
             }
+            .frame(maxWidth: .infinity)
 
-            Spacer()
-
-            HStack(spacing: 2) {
+            HStack(spacing: 3) {
                 Text(chrome.lo)
                     .font(.system(size: 11))
                     .foregroundColor(WidgetColors.highlight)
@@ -569,9 +614,23 @@ struct DailyItemView: View {
                     .font(.system(size: 11))
                     .foregroundColor(WidgetColors.textPrimary)
             }
+            .frame(maxWidth: .infinity)
         }
+        // Text sizes here are deliberately NOT raised. The screenshot harness
+        // renders this view at a full 364pt, but WidgetKit insets the real
+        // widget by its content margins, so the device has appreciably less
+        // width than render.sh suggests — 13pt temperatures looked right in the
+        // harness and truncated to "32°C / 9…" on an actual home screen. Verify
+        // any type change on a device, not on the rendered PNG.
+        //
+        // Scale before truncating: a sub-zero dual reading ("-18°C / -64°F") is
+        // wider than anything the fixtures cover, and shrinking slightly reads
+        // better than losing the unit.
+        .lineLimit(1)
+        .minimumScaleFactor(0.85)
         .padding(.horizontal, 8)
-        .padding(.vertical, 6)
+        .padding(.vertical, isRoomy ? 8 : 6)
+        .frame(maxHeight: isRoomy ? 62 : nil)
         .background(elementColor)
         .cornerRadius(8)
     }
@@ -589,8 +648,16 @@ struct WeatherExtendedContent: View {
             calculateDataAge(timestamp: $0, chrome: weather.resolvedChrome)
         }
         let dayFormatter = makeDayFormatter(locale: weather.resolvedLocale)
+        // Only the five-day (systemLarge) layout gets the roomier metrics. At
+        // three days the rows already fill their smaller frame, and its content
+        // box has no spare height — so every value below stays as it was there.
+        let isLarge = dayCount >= 5
 
-        VStack(spacing: 4) {
+        // 10 rather than 12: at 12 the five-row stale stack needs 295pt, which
+        // overflows the systemLarge content box on a 4.7" device once content
+        // margins are taken off. The four gaps buy back the 8pt that costs, and
+        // the cards still read as separate at this spacing.
+        VStack(spacing: isLarge ? 10 : 4) {
             ForEach(Array(weather.dailyForecast.prefix(dayCount).enumerated()), id: \.element.dt) { index, forecast in
                 DailyItemView(
                     forecast: forecast,
@@ -598,7 +665,8 @@ struct WeatherExtendedContent: View {
                     isToday: index == 0,
                     chrome: weather.resolvedChrome,
                     dayFormatter: dayFormatter,
-                    elementColor: weather.resolvedElement
+                    elementColor: weather.resolvedElement,
+                    isRoomy: isLarge
                 )
             }
 
@@ -609,7 +677,7 @@ struct WeatherExtendedContent: View {
                     .foregroundColor(WidgetColors.ageText)
             }
         }
-        .padding(8)
+        .padding(isLarge ? 12 : 8)
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(WidgetColors.background)
         .environment(\.layoutDirection, weather.isRTL ? .rightToLeft : .leftToRight)

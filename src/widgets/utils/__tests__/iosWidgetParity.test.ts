@@ -9,7 +9,7 @@
  *
  * That is not hypothetical here. The Swift icon mapping was written as ranges
  * (`case 701...781: return "🌫️"`) where the JS is a per-id table, and ranges
- * cannot express a table whose adjacent entries differ. Twelve condition codes
+ * cannot express a table whose adjacent entries differ. Eleven condition codes
  * resolved to a different icon on iOS than on Android, including all four
  * tornado codes, which showed fog.
  *
