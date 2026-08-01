@@ -3,6 +3,13 @@ import { palette } from "../styles/Palette";
 import { spacing } from "../styles/Spacing";
 
 export const styles = StyleSheet.create({
+  // flex-end rather than absolute positioning for the sheet: an absolutely
+  // positioned child ignores the KeyboardAvoidingView's padding, so the
+  // keyboard would cover it. In flow, the sheet rides above the keyboard.
+  overlay: {
+    flex: 1,
+    justifyContent: "flex-end",
+  },
   backdrop: {
     position: "absolute",
     top: 0,
@@ -12,10 +19,6 @@ export const styles = StyleSheet.create({
     backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
   modalContainer: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    right: 0,
     height: "90%",
     backgroundColor: palette.primaryDark,
     borderTopLeftRadius: 20,

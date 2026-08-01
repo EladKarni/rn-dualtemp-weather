@@ -5,6 +5,7 @@ import {
   Text,
   TouchableOpacity,
   TouchableWithoutFeedback,
+  KeyboardAvoidingView,
   Platform,
   Animated,
   TextInput,
@@ -150,6 +151,14 @@ const AddLocationScreen = ({ visible, onClose }: AddLocationScreenProps) => {
       onRequestClose={onClose}
       statusBarTranslucent
     >
+      {/* Same shape as SettingsScreen: the sheet lives in flex flow inside a
+          KeyboardAvoidingView, so the keyboard shrinks the sheet instead of
+          covering the results list — the search field autofocuses, so on iOS
+          the keyboard is up for the entire life of this screen. */}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.overlay}
+      >
       <TouchableWithoutFeedback onPress={onClose}>
         <Animated.View style={[styles.backdrop, { opacity: fadeAnim }]} />
       </TouchableWithoutFeedback>
@@ -235,6 +244,7 @@ const AddLocationScreen = ({ visible, onClose }: AddLocationScreenProps) => {
           )}
         </View>
       </Animated.View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 };
