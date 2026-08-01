@@ -125,6 +125,53 @@ describe("weather icons resolve identically on both platforms", () => {
   });
 });
 
+describe("the widget theme survives the trip to Swift", () => {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { WIDGET_THEME_LIST, WIDGET_THEMES, DEFAULT_WIDGET_THEME } =
+    require("../../../styles/widgetThemes");
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const { toHexColor } = require("../hexColor");
+
+  it("can express every preset as the opaque #RRGGBB the payload carries", () => {
+    // Swift parses exactly six hex digits. A preset that cannot be normalised —
+    // a named colour, or a translucent one — would silently fall back to the
+    // default on iOS while rendering correctly on Android.
+    for (const theme of WIDGET_THEME_LIST) {
+      expect(toHexColor(theme.element)).toMatch(/^#[0-9A-F]{6}$/);
+    }
+    expect(WIDGET_THEME_LIST.length).toBeGreaterThan(1);
+  });
+
+  it("falls back to the same colour Swift hardcodes for a pre-v3 payload", () => {
+    // A device holding a payload from an older app build has no elementColor,
+    // so Swift uses WidgetColors.defaultElement. That literal has to be the
+    // default preset, or upgrading the app would silently change the widget's
+    // colour for anyone who never opened the picker.
+    const expected = toHexColor(WIDGET_THEMES[DEFAULT_WIDGET_THEME].element);
+
+    const match = SWIFT.match(
+      /static let defaultElement = Color\(red: ([\d.]+), green: ([\d.]+), blue: ([\d.]+)\)/
+    );
+    expect(match).not.toBeNull();
+
+    const [, r, g, b] = match!;
+    const channel = (v: string) =>
+      Math.round(Number(v) * 255)
+        .toString(16)
+        .padStart(2, "0");
+    expect(`#${channel(r)}${channel(g)}${channel(b)}`.toUpperCase()).toBe(
+      expected
+    );
+  });
+
+  it("declares elementColor as optional, so older payloads still decode", () => {
+    // Swift's synthesised decoder is all-or-nothing: a non-optional addition
+    // makes every pre-v3 payload throw, getWeatherData() return nil, and the
+    // widget show its grey placeholder with nothing logged.
+    expect(SWIFT).toMatch(/let elementColor: String\?/);
+  });
+});
+
 describe("right-to-left layout agrees on which languages are RTL", () => {
   it("lists the same RTL locales as the JS detector", () => {
     // widgets.swift:68 hardcodes `["he", "ar"]`. If a third RTL language is

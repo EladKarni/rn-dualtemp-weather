@@ -8,6 +8,12 @@ import { useSettingsStore } from '../../store/useSettingsStore';
 import { convertWindSpeed } from '../../utils/temperature';
 import { i18n, translations } from '../../localization/i18n';
 import { logger } from '../../utils/logger';
+import {
+  DEFAULT_WIDGET_THEME,
+  WIDGET_THEMES,
+  resolveWidgetTheme,
+} from '../../styles/widgetThemes';
+import { toHexColor } from './hexColor';
 
 // Only import ExtensionStorage on iOS
 let ExtensionStorage: any = null;
@@ -42,7 +48,8 @@ interface IOSWeatherData {
   /**
    * Payload contract version. v2 adds locale/is24Hour/chrome and changes
    * hourlyForecast.windSpeed from m/s to the display unit matching windUnit.
-   * The Swift side treats a missing value as v1 and falls back to English.
+   * v3 adds elementColor. The Swift side treats a missing value as v1 and falls
+   * back to English.
    */
   schemaVersion: number;
   temp: number;
@@ -58,6 +65,17 @@ interface IOSWeatherData {
   locale: string;       // Resolved app language (en/es/fr/ar/he/zh) for date formatting
   is24Hour: boolean;    // Resolved clock-format preference ("auto" already applied)
   chrome: IOSWidgetChrome;
+  /**
+   * v3: the user's chosen widget-element fill, as opaque #RRGGBB.
+   *
+   * Sent as a resolved COLOUR rather than a theme id on purpose. An id would
+   * oblige widgets.swift to carry its own copy of the preset table, and the two
+   * copies would then be free to disagree — which is precisely the class of bug
+   * iosWidgetParity.test.ts exists to catch. Sending the colour keeps
+   * src/styles/widgetThemes.ts the single source, so adding or retiring a
+   * preset needs no Swift change at all.
+   */
+  elementColor: string;
   hourlyForecast: Array<{
     dt: number;
     temp: number;
@@ -85,6 +103,25 @@ function resolveWidgetLocale(): keyof typeof translations {
 }
 
 /**
+ * The user's widget-element fill as opaque #RRGGBB.
+ *
+ * resolveWidgetTheme already falls back to the default for an unrecognised
+ * persisted id, so the only way toHexColor returns null here is a malformed
+ * entry in WIDGET_THEMES itself — a developer error, not a user state. Falling
+ * back to the default theme's colour keeps a widget render from ever depending
+ * on that being true, which matters more here than elsewhere: this runs in the
+ * headless task where a throw is invisible.
+ */
+function resolveElementColor(): string {
+  const chosen = resolveWidgetTheme(useSettingsStore.getState().widgetTheme);
+  return (
+    toHexColor(chosen.element) ??
+    toHexColor(WIDGET_THEMES[DEFAULT_WIDGET_THEME].element) ??
+    '#1C1B4D'
+  );
+}
+
+/**
  * Transform Weather data to iOS widget format
  */
 function transformWeatherForIOS(
@@ -97,7 +134,7 @@ function transformWeatherForIOS(
   const table = translations[locale];
 
   return {
-    schemaVersion: 2,
+    schemaVersion: 3,
     temp: Math.round(weather.current.temp),
     tempScale,
     weatherId: weather.current.weather[0].id,
@@ -113,6 +150,7 @@ function transformWeatherForIOS(
     lastUpdatedTimestamp: Math.floor(Date.now() / 1000),  // Unix timestamp in seconds
     locale,
     is24Hour: useSettingsStore.getState().getEffectiveClockFormat() === '24hour',
+    elementColor: resolveElementColor(),
     chrome: {
       today: table.Today,
       hi: table.WidgetHi,

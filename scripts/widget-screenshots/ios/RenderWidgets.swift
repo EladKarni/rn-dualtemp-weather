@@ -29,7 +29,16 @@ struct RenderWidgets {
 
         let now = Int(Date().timeIntervalSince1970)
 
-        func fixture(locale: String, is24Hour: Bool, chrome: WidgetChrome, location: String) -> WeatherData {
+        // elementColor defaults to nil so the standard variants exercise the
+        // pre-v3 fallback in resolvedElement — the path a device still holding a
+        // payload from an older app build will take.
+        func fixture(
+            locale: String,
+            is24Hour: Bool,
+            chrome: WidgetChrome,
+            location: String,
+            elementColor: String? = nil
+        ) -> WeatherData {
             WeatherData(
                 temp: 22,
                 tempScale: "C",
@@ -54,10 +63,11 @@ struct RenderWidgets {
                     DailyForecast(dt: now + 259_200, tempMax: 24, tempMin: 15, weatherId: 500),
                     DailyForecast(dt: now + 345_600, tempMax: 26, tempMin: 17, weatherId: 200),
                 ],
-                schemaVersion: 2,
+                schemaVersion: 3,
                 locale: locale,
                 is24Hour: is24Hour,
-                chrome: chrome
+                chrome: chrome,
+                elementColor: elementColor
             )
         }
 
@@ -65,7 +75,7 @@ struct RenderWidgets {
         let heChrome = WidgetChrome(
             today: "היום",
             hi: "מקס",
-            lo: "מינ",
+            lo: "מ״נ",
             ageMinutes: "לפני %{count} ד׳",
             ageHours: "לפני %{count} ש׳",
             ageDays: "לפני %{count} י׳"

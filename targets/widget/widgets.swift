@@ -56,6 +56,11 @@ struct WeatherData: Codable {
     let locale: String?     // App language (en/es/fr/ar/he/zh), not device language
     let is24Hour: Bool?     // Clock-format setting with "auto" already resolved
     let chrome: WidgetChrome?
+    // v3: the user's widget-element fill as opaque "#RRGGBB". Optional for the
+    // same reason as the v2 fields — Swift's synthesised decoder is
+    // all-or-nothing, so a non-optional addition would make every payload
+    // written by an older app build fail to decode and blank the widget.
+    let elementColor: String?
 }
 
 extension WeatherData {
@@ -66,6 +71,12 @@ extension WeatherData {
     // v1 hourly windSpeed is in m/s with no per-hour unit — only v2 can label it.
     var hasConvertedHourlyWind: Bool { (schemaVersion ?? 1) >= 2 }
     var isRTL: Bool { ["he", "ar"].contains(locale ?? "en") }
+    /// The themed element fill, or the shipped default for a pre-v3 payload or
+    /// an unparsable value. Never fails — a widget render must not depend on
+    /// the app having written a well-formed colour.
+    var resolvedElement: Color {
+        Color(hex: elementColor) ?? WidgetColors.defaultElement
+    }
 }
 
 struct HourlyForecast: Codable {
@@ -287,8 +298,42 @@ struct WidgetColors {
     static let textPrimary = Color.white
     static let textSecondary = Color.white.opacity(0.7)
     static let highlight = Color(red: 0.29, green: 0.565, blue: 0.886) // #4A90E2
-    static let cardBackground = Color.white.opacity(0.1)
     static let ageText = Color(red: 0.61, green: 0.64, blue: 0.69) // #9CA3AF
+
+    /// Fallback element fill for a pre-v3 payload: the "indigo" preset, which is
+    /// what DEFAULT_WIDGET_THEME resolves to in src/styles/widgetThemes.ts.
+    ///
+    /// This replaced `Color.white.opacity(0.1)`. That was translucent, and
+    /// widgetThemes.ts documents at length why every element fill is opaque —
+    /// a translucent card composites against whatever the widget sits on, so
+    /// its contrast against the text tiers stops being something the app can
+    /// guarantee. The Android side fixed that; iOS was still compositing.
+    static let defaultElement = Color(red: 0.110, green: 0.106, blue: 0.302) // #1C1B4D
+}
+
+extension Color {
+    /// Parse an opaque "#RRGGBB" string, as written by the v3 payload.
+    ///
+    /// Returns nil rather than substituting a colour, so the single decision
+    /// about what to show when the value is missing or malformed lives in
+    /// `resolvedElement` instead of being spread across call sites.
+    init?(hex: String?) {
+        // Spelled out rather than the `guard let hex` shorthand, which needs a
+        // Swift 5.7+ compiler; this file is built with SWIFT_VERSION 5.0 and
+        // nothing in this repo's toolchain can check it before the Mac does.
+        guard let hex = hex else { return nil }
+
+        let digits = hex.hasPrefix("#") ? String(hex.dropFirst()) : hex
+        guard digits.count == 6, let value = UInt64(digits, radix: 16) else {
+            return nil
+        }
+
+        self.init(
+            red: Double((value & 0xFF0000) >> 16) / 255.0,
+            green: Double((value & 0x00FF00) >> 8) / 255.0,
+            blue: Double(value & 0x0000FF) / 255.0
+        )
+    }
 }
 
 // MARK: - Placeholder View
@@ -374,6 +419,9 @@ struct HourlyItemView: View {
     let windUnit: String
     let showWind: Bool
     let timeFormatter: DateFormatter
+    /// Passed in rather than read from a global: this view has no access to the
+    /// payload, and the fill is now a user preference.
+    let elementColor: Color
 
     var body: some View {
         let temps = formatDualTemp(tempCelsius: forecast.temp, primaryScale: tempScale)
@@ -411,7 +459,7 @@ struct HourlyItemView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(4)
-        .background(WidgetColors.cardBackground)
+        .background(elementColor)
         .cornerRadius(8)
     }
 }
@@ -438,7 +486,8 @@ struct WeatherStandardView: View {
                             tempScale: weather.tempScale,
                             windUnit: weather.windUnit,
                             showWind: weather.hasConvertedHourlyWind,
-                            timeFormatter: timeFormatter
+                            timeFormatter: timeFormatter,
+                            elementColor: weather.resolvedElement
                         )
                     }
                 }
@@ -482,6 +531,8 @@ struct DailyItemView: View {
     let isToday: Bool
     let chrome: WidgetChrome
     let dayFormatter: DateFormatter
+    /// See HourlyItemView.elementColor.
+    let elementColor: Color
 
     var body: some View {
         let highTemps = formatDualTemp(tempCelsius: forecast.tempMax, primaryScale: tempScale)
@@ -521,7 +572,7 @@ struct DailyItemView: View {
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 6)
-        .background(WidgetColors.cardBackground)
+        .background(elementColor)
         .cornerRadius(8)
     }
 }
@@ -546,7 +597,8 @@ struct WeatherExtendedContent: View {
                     tempScale: weather.tempScale,
                     isToday: index == 0,
                     chrome: weather.resolvedChrome,
-                    dayFormatter: dayFormatter
+                    dayFormatter: dayFormatter,
+                    elementColor: weather.resolvedElement
                 )
             }
 
@@ -631,10 +683,13 @@ func previewWeatherData(
         lastUpdatedTimestamp: Int(Date().timeIntervalSince1970),
         hourlyForecast: hourlyForecast,
         dailyForecast: dailyForecast,
-        schemaVersion: 2,
+        schemaVersion: 3,
         locale: "en",
         is24Hour: false,
-        chrome: defaultChrome
+        chrome: defaultChrome,
+        // nil rather than a literal, so the gallery preview and the screenshot
+        // harness both exercise the pre-v3 fallback path in resolvedElement.
+        elementColor: nil
     )
 }
 

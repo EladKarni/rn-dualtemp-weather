@@ -1,5 +1,5 @@
 /**
- * iOS widget payload (schema v2) contract tests.
+ * iOS widget payload (schema v3) contract tests.
  *
  * The Swift widget (targets/widget/widgets.swift) decodes exactly this JSON out
  * of the App Group. These tests pin the v2 contract: localized chrome strings
@@ -93,16 +93,40 @@ afterAll(() => {
   i18n.locale = originalLocale;
 });
 
-describe('updateIOSWidgetData payload (schema v2)', () => {
-  it('writes schemaVersion 2 with resolved locale and clock format, then reloads widgets', async () => {
+describe('updateIOSWidgetData payload (schema v3)', () => {
+  it('writes schemaVersion 3 with resolved locale and clock format, then reloads widgets', async () => {
     await updateIOSWidgetData(weather, 'Tel Aviv');
 
     const payload = writtenPayload();
-    expect(payload.schemaVersion).toBe(2);
+    expect(payload.schemaVersion).toBe(3);
     expect(payload.locale).toBe('en');
     expect(payload.is24Hour).toBe(true);
     expect(payload.locationName).toBe('Tel Aviv');
     expect(ExtensionStorage.reloadWidget).toHaveBeenCalledTimes(1);
+  });
+
+  it('sends the chosen widget theme as an opaque hex colour', async () => {
+    settingsGetState.mockReturnValue({
+      tempScale: 'C',
+      getEffectiveClockFormat: () => '24hour',
+      widgetTheme: 'midnight',
+    });
+
+    await updateIOSWidgetData(weather, 'Tel Aviv');
+
+    // A resolved COLOUR, not the id — widgets.swift deliberately has no copy of
+    // the preset table, so src/styles/widgetThemes.ts stays the only place a
+    // preset is defined.
+    expect(writtenPayload().elementColor).toBe('#0E1020');
+  });
+
+  it('falls back to the default theme colour when nothing is persisted', async () => {
+    // The state a fresh install is in, and the state any install was in before
+    // the picker existed. resolveWidgetTheme maps undefined to the default, and
+    // this pins that the default is what actually reaches Swift.
+    await updateIOSWidgetData(weather, 'Tel Aviv');
+
+    expect(writtenPayload().elementColor).toBe('#1C1B4D');
   });
 
   it('resolves 12-hour clock preference', async () => {
