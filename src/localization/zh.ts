@@ -2,7 +2,7 @@ export const zh = {
   Today: "今天",
   Updated: "最新更新于: ",
   HourlyTitle: "每小时预报",
-  DailyTitle: "全天预报",
+  DailyTitle: "每日预报",
   Feels: "体感",
   MinMax: "最低/最高",
   Sunrise: "日出时间: ",
