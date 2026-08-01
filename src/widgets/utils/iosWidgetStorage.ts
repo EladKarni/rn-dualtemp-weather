@@ -135,6 +135,16 @@ function transformWeatherForIOS(
 
   return {
     schemaVersion: 3,
+    // Rounded, unlike the forecast temperatures below, because Android's
+    // compact widget rounds this one too: processWeatherData does
+    // `Math.round(current.temp)` (widgetDataUtils.ts) and WeatherCompact
+    // derives BOTH scales from that rounded value. Sending the raw reading
+    // instead makes 21.6°C render "22°C / 71°F" on iPhone against Android's
+    // "22°C / 72°F", because Swift would convert from 21.6 rather than 22.
+    //
+    // Android is genuinely inconsistent between its own widgets here; matching
+    // it per-widget is what keeps the two phones showing the same numbers,
+    // which is the property that matters.
     temp: Math.round(weather.current.temp),
     tempScale,
     weatherId: weather.current.weather[0].id,
@@ -159,17 +169,21 @@ function transformWeatherForIOS(
       ageHours: table.WidgetAgeHours,
       ageDays: table.WidgetAgeDays,
     },
+    // Forecast temperatures cross UNROUNDED, matching Android, whose hourly and
+    // daily widgets pass the raw reading straight to DualTemperatureDisplay and
+    // derive each scale from it independently. Pre-rounding here would make the
+    // Fahrenheit drift: 23.4°C sent as 23 renders 73°F where Android shows 74°F.
     hourlyForecast: weather.hourly.slice(0, 6).map((hour) => ({
       dt: hour.dt,
-      temp: Math.round(hour.temp),
+      temp: hour.temp,
       weatherId: hour.weather[0].id,
       pop: hour.pop,
       windSpeed: convertWindSpeed(hour.wind_speed, tempScale).value,
     })),
     dailyForecast: weather.daily.slice(0, 7).map((day) => ({
       dt: day.dt,
-      tempMax: Math.round(day.temp.max),
-      tempMin: Math.round(day.temp.min),
+      tempMax: day.temp.max,
+      tempMin: day.temp.min,
       weatherId: day.weather[0].id,
     })),
   };

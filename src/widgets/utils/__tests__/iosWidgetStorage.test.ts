@@ -94,6 +94,26 @@ afterAll(() => {
 });
 
 describe('updateIOSWidgetData payload (schema v3)', () => {
+  it('rounds the current temperature but sends forecast temperatures raw, per widget', async () => {
+    // Android is inconsistent between its own widgets, and iOS has to match it
+    // widget for widget or the two phones disagree:
+    //   compact  — processWeatherData rounds current.temp and WeatherCompact
+    //              derives BOTH scales from the rounded value
+    //   standard/extended — hourly and daily entries are passed through raw and
+    //              each scale is derived independently
+    // Sending raw current.temp made 21.6°C render "22°C / 71°F" on iPhone
+    // against Android's "22°C / 72°F"; pre-rounding the forecasts made 23.4°C
+    // render 73°F against Android's 74°F. Each half of this assertion pins one
+    // of those two regressions.
+    await updateIOSWidgetData(weather, 'Tel Aviv');
+
+    const payload = writtenPayload();
+    expect(payload.temp).toBe(22);
+    expect(payload.hourlyForecast[0].temp).toBe(22.4);
+    expect(payload.dailyForecast[0].tempMax).toBe(28.4);
+    expect(payload.dailyForecast[0].tempMin).toBe(17.6);
+  });
+
   it('writes schemaVersion 3 with resolved locale and clock format, then reloads widgets', async () => {
     await updateIOSWidgetData(weather, 'Tel Aviv');
 
