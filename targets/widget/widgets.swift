@@ -102,19 +102,86 @@ func getWeatherData() -> WeatherData? {
 
 // MARK: - Weather Icon Mapping
 
+/// Weather-condition icons keyed by OpenWeather condition id.
+///
+/// Mirrors WEATHER_ICON_MAP in src/widgets/utils/widgetDataUtils.ts entry for
+/// entry; iosWidgetParity.test.ts diffs the two on every gate run, on Linux,
+/// without a Swift compiler.
+///
+/// This was a handful of Swift ranges, which read as equivalent to the JS table
+/// but were not. Ranges cannot express a table whose adjacent entries differ,
+/// and this one's do: 500 (light rain) is a sun-and-rain icon while 501-504 are
+/// heavy rain; the snow family alternates between snow and ice at 602, 611-613
+/// and 620-622; and the tornado codes 731, 761, 762 and 771 sit interleaved
+/// with fog codes in the 7xx block. Every one of those landed on the wrong icon
+/// — a tornado warning rendered as fog on iPhone while Android showed 🌪️.
+let weatherIconMap: [Int: String] = [
+    // Clear sky
+    800: "☀️",
+    // Few clouds
+    801: "⛅",
+    // Scattered / broken / overcast clouds
+    802: "☁️",
+    803: "☁️",
+    804: "☁️",
+    // Rain — 500 is light rain and deliberately differs from its neighbours
+    500: "🌦️",
+    501: "🌧️",
+    502: "🌧️",
+    503: "🌧️",
+    504: "🌧️",
+    // Drizzle
+    300: "🌦️",
+    301: "🌦️",
+    302: "🌦️",
+    313: "🌦️",
+    314: "🌦️",
+    321: "🌦️",
+    // Thunderstorm
+    200: "⛈️",
+    201: "⛈️",
+    202: "⛈️",
+    210: "⛈️",
+    211: "⛈️",
+    212: "⛈️",
+    221: "⛈️",
+    230: "⛈️",
+    231: "⛈️",
+    232: "⛈️",
+    // Snow — snow vs ice alternates, it is not a contiguous run
+    600: "🌨️",
+    601: "🌨️",
+    602: "❄️",
+    611: "🌨️",
+    612: "🌨️",
+    613: "🌨️",
+    615: "❄️",
+    616: "❄️",
+    620: "🌨️",
+    621: "🌨️",
+    622: "❄️",
+    // Atmosphere — tornado codes are interleaved with the fog codes
+    701: "🌫️",
+    711: "🌫️",
+    721: "🌫️",
+    731: "🌪️",
+    741: "🌫️",
+    751: "🌫️",
+    761: "🌪️",
+    762: "🌪️",
+    771: "🌪️",
+]
+
+/// Exact id, then the category's base icon (e.g. 5xx -> 500), then a generic
+/// fallback — the same two-step chain as getWeatherIcon in widgetDataUtils.ts.
 func getWeatherIcon(weatherId: Int) -> String {
-    switch weatherId {
-    case 800: return "☀️"
-    case 801: return "⛅"
-    case 802...804: return "☁️"
-    case 500...504: return "🌧️"
-    case 300...321: return "🌦️"
-    case 200...232: return "⛈️"
-    case 600...602: return "🌨️"
-    case 611...622: return "❄️"
-    case 701...781: return "🌫️"
-    default: return "🌤️"
+    if let exact = weatherIconMap[weatherId] {
+        return exact
     }
+    if let category = weatherIconMap[(weatherId / 100) * 100] {
+        return category
+    }
+    return "🌤️"
 }
 
 // MARK: - Temperature Helpers
