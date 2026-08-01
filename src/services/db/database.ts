@@ -173,10 +173,26 @@ export class WeatherDatabase {
     return this.db;
   }
 
+  /**
+   * Delegates to initialize() rather than testing `this.db` itself.
+   *
+   * `this.db` is assigned as soon as openDatabaseAsync resolves, which is
+   * BEFORE the tables are created — and since b3f0860 there are several async
+   * PRAGMA round-trips in between. A `if (!this.db)` guard therefore let a
+   * second, concurrent caller straight through that window: it saw a non-null
+   * handle, skipped the wait, and queried a database that was open but still
+   * empty. That surfaced as `no such table: weather_cache` on cold start, where
+   * the store's hydration and the widget's read both land at once — silently
+   * turning a cache hit into a miss, so a user with no network saw nothing
+   * instead of their last forecast.
+   *
+   * initialize() already handles all three states correctly: it returns the
+   * in-flight initPromise if one exists, returns early if the database is fully
+   * ready, and otherwise starts the work. Deferring to it is what makes the
+   * "wait for the tables, not just the handle" guarantee hold.
+   */
   private async ensureInitialized(): Promise<void> {
-    if (!this.db) {
-      await this.initialize();
-    }
+    await this.initialize();
   }
 
   async saveWeatherData(
