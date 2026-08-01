@@ -32,12 +32,20 @@ const TempText = ({
         TempTextStyles[textStyleType],
       ]}
       allowFontScaling={false}
+      // A reading is always "28°C" left-to-right, whatever the UI language.
+      // Without this the unit letter DISAPPEARED on Android whenever the
+      // device's system language was Hebrew or Arabic: it used to be a nested
+      // <Text> carrying its own padding, and an inline span inside a parent
+      // with textAlign "right" gets laid out past the measured bounds once the
+      // surrounding paragraph resolves right-to-left. The number and degree
+      // sign survived; only the trailing C was clipped away.
+      writingDirection="ltr"
     >
       {tempType?.toUpperCase() !== "F"
         ? Math.round(temp)
         : Math.round(celsiusToFahrenheit(temp))}
       {withSym ? "°" : null}
-      <Text style={TempTextStyles.tempLastLetter}>{tempType}</Text>
+      {tempType}
     </Text>
   );
 };
