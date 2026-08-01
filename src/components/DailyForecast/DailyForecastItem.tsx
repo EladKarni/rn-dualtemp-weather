@@ -40,7 +40,14 @@ const DailyForecastItem = ({
             {formatDayName(day.dt)}
           </Text>
           <View style={[DailyForecastItemStyles.tempIconContainer, isRTL && DailyForecastItemStyles.tempIconContainerRTL]}>
-            <PopType pop={day.pop} percType={percpType} />
+            <View
+              style={[
+                DailyForecastItemStyles.popColumn,
+                isRTL && DailyForecastItemStyles.popColumnRTL,
+              ]}
+            >
+              <PopType pop={day.pop} percType={percpType} />
+            </View>
             <View style={DailyForecastItemStyles.tempContainer}>
               <DualTempText
                 temp={day.temp.day}

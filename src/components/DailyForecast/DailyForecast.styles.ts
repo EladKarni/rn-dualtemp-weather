@@ -47,10 +47,36 @@ export const DailyForecastItemStyles = StyleSheet.create({
   tempIconContainerRTL: {
     flexDirection: "row-reverse",
   },
+  /**
+   * Fixed-width columns, so the rows line up down the list.
+   *
+   * Every column here used to be content-sized inside a right-anchored group,
+   * which meant each row placed its own columns wherever its own text happened
+   * to end: a one-digit "6%" pulled the temperatures right of every other row,
+   * and a shorter reading did it again. Sizing each column for its widest
+   * content makes the position depend on the column rather than on the day.
+   *
+   * Widths are for the worst realistic case — "💧 100%" and a sub-zero dual
+   * reading like "-29°C | -20°F" — not for the values that happen to be on
+   * screen today.
+   */
+  popColumn: {
+    width: 60,
+    // Pinned to the leading edge rather than centred. Centring still let the
+    // droplet drift, because a narrower "6%" centres its whole group and takes
+    // the icon with it; anchoring the group puts every droplet on one line and
+    // moves the slack to the gap before the temperatures, which is padding.
+    alignItems: "flex-start",
+  },
+  popColumnRTL: {
+    alignItems: "flex-end",
+  },
   tempContainer: {
     flexDirection: "row",
     height: 17.5,
     paddingHorizontal: 10,
+    width: 112,
+    justifyContent: "center",
   },
   tempDivider: {
     fontStyle: "italic",
