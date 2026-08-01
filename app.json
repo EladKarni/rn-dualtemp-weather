@@ -18,8 +18,10 @@
       [
         "expo-location",
         {
-          "locationWhenInUsePermission": "Allow DualTemp Weather to use your location.",
-          "isAndroidBackgroundLocationEnabled": false
+          "locationWhenInUsePermission": "This app uses your location to show you the weather.",
+          "isAndroidBackgroundLocationEnabled": false,
+          "locationAlwaysPermission": false,
+          "locationAlwaysAndWhenInUsePermission": false
         }
       ],
       [
@@ -35,7 +37,12 @@
           }
         }
       ],
-      ["expo-localization"],
+      [
+        "expo-localization",
+        {
+          "supportedLocales": ["ar", "en", "es", "fr", "he", "zh"]
+        }
+      ],
       [
         "@sentry/react-native/expo",
         {
@@ -88,18 +95,18 @@
           ]
         }
       ],
+      "./plugins/withWidgetBuildNumber",
       "@bacons/apple-targets"
     ],
     "ios": {
       "appleTeamId": "RUW8C26QSP",
       "supportsTablet": true,
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "This app uses your location to show you the weather.",
         "ExpoLocalization_supportsRTL": true,
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIStatusBarStyle": "UIStatusBarStyleLightContent"
       },
       "bundleIdentifier": "com.ekarni.rndualtempweatherapp",
-      "buildNumber": "2.2.0",
       "entitlements": {
         "com.apple.security.application-groups": ["group.com.ekarni.rndualtempweatherapp.widget"]
       }

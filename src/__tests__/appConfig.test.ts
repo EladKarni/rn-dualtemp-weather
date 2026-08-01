@@ -13,6 +13,9 @@
  * app.config.js (which overlays app.json via a dynamic-config function), so the
  * policy holds after the merge — not just in the source JSON.
  */
+import fs from "fs";
+import path from "path";
+
 import appJson from "../../app.json";
 
 type PluginEntry = string | [string, Record<string, unknown>?];
@@ -68,11 +71,89 @@ describe("app.json — static config policy", () => {
   it("uses a when-in-use location permission string only (D7)", () => {
     const options = getPluginOptions(expo.plugins, "expo-location");
     expect(options?.locationWhenInUsePermission).toBeTruthy();
-    expect(options).not.toHaveProperty("locationAlwaysAndWhenInUsePermission");
+
+    // These must be explicitly `false`, NOT merely absent — which is what this
+    // test used to assert, on the reasonable-sounding but wrong assumption that
+    // a permission you never configure is a permission you never ship.
+    //
+    // @expo/config-plugins/build/ios/Permissions.js:28-31 fills in a DEFAULT
+    // string for any key left undefined, and only `=== false` deletes it:
+    //
+    //   if (permissions[permission] === false) delete infoPlist[permission];
+    //   else infoPlist[permission] =
+    //          permissions[permission] || infoPlist[permission] || description;
+    //
+    // So with these keys omitted, the generated Info.plist carried
+    // NSLocationAlwaysUsageDescription and
+    // NSLocationAlwaysAndWhenInUseUsageDescription reading "Allow
+    // $(PRODUCT_NAME) to access your location" — two always-location purpose
+    // strings for a permission this app never requests, which is a Guideline
+    // 5.1.1 question waiting to be asked at review. Verified against a real
+    // `expo prebuild` plist, not inferred.
+    expect(options?.locationAlwaysPermission).toBe(false);
+    expect(options?.locationAlwaysAndWhenInUsePermission).toBe(false);
   });
 
   it("registers the Sentry Expo plugin exactly once", () => {
     expect(findPluginEntries(expo.plugins, "@sentry/react-native/expo")).toHaveLength(1);
+  });
+
+  it("declares every shipped translation to iOS, or the store lists it English-only", () => {
+    // CFBundleLocalizations is how App Store Connect derives the listing's
+    // Languages field and how iOS decides whether to offer the per-app language
+    // picker in Settings. expo-localization only emits it when given
+    // supportedLocales (withExpoLocalization.js:42-43); without the option the
+    // key is simply absent, so six translations shipped advertising as one.
+    //
+    // Derived from the shipped translation tables rather than hardcoded, so
+    // adding a language fails here until it is also declared to iOS.
+    //
+    // Read off disk rather than imported: src/localization/i18n.ts pulls in
+    // i18n-js, which ships as ESM and is not in this project's
+    // transformIgnorePatterns, so importing it here dies with
+    // "SyntaxError: Unexpected token 'export'". The directory listing is the
+    // same source of truth without the module graph.
+    const shipped = fs
+      .readdirSync(path.join(__dirname, "../localization"))
+      .filter((f) => f.endsWith(".ts") && f !== "i18n.ts")
+      .map((f) => f.replace(/\.ts$/, ""))
+      .sort();
+    const options = getPluginOptions(expo.plugins, "expo-localization");
+
+    expect(shipped.length).toBeGreaterThan(1);
+
+    expect(options?.supportedLocales).toBeDefined();
+    expect([...(options!.supportedLocales as string[])].sort()).toEqual(shipped);
+  });
+
+  it("renders light status-bar glyphs, which the app's dark surface requires", () => {
+    // UIViewControllerBasedStatusBarAppearance resolves to false here, so this
+    // plist key governs the pre-JS window (splash). App.tsx renders
+    // <StatusBar style="light" /> for the post-mount case; the default is dark
+    // glyphs, which on #1C1B4D is dark-on-dark.
+    expect(expo.ios?.infoPlist?.UIStatusBarStyle).toBe(
+      "UIStatusBarStyleLightContent"
+    );
+  });
+
+  it("leaves the iOS build number to EAS, and syncs the widget to it", () => {
+    // eas.json uses appVersionSource "remote" with production.ios.autoIncrement,
+    // so EAS issues the app's build number. A literal here would be ignored for
+    // the app but still consumed by @bacons/apple-targets for the widget
+    // target's CURRENT_PROJECT_VERSION (with-widget.js:232) — which is how the
+    // app and its appex end up disagreeing and the upload is rejected with
+    // ITMS-90473.
+    expect(expo.ios).not.toHaveProperty("buildNumber");
+
+    // The plugin that closes the gap has to run BEFORE apple-targets reads
+    // ios.buildNumber, so order is part of the contract, not a detail.
+    const names = asPlugins(expo.plugins).map(pluginName);
+    const ours = names.indexOf("./plugins/withWidgetBuildNumber");
+    const appleTargets = names.indexOf("@bacons/apple-targets");
+
+    expect(ours).toBeGreaterThanOrEqual(0);
+    expect(appleTargets).toBeGreaterThanOrEqual(0);
+    expect(ours).toBeLessThan(appleTargets);
   });
 });
 

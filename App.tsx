@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
+import { StatusBar } from "expo-status-bar";
 
 import {
   useFonts,
@@ -248,8 +249,16 @@ function App() {
   // ============================================================================
 
   return (
-    <QueryErrorResetBoundary>
-      {({ reset }) => (
+    <>
+      {/* Light glyphs, because every screen sits on the #1C1B4D surface. The
+          Info.plist carries UIStatusBarStyleLightContent for the pre-JS window
+          (splash), but React Native takes the status bar over once it mounts
+          and would otherwise restore the dark default — so both are needed,
+          not either. Rendered outside QueryErrorResetBoundary so it survives
+          the ErrorBoundary fallback path too. */}
+      <StatusBar style="light" />
+      <QueryErrorResetBoundary>
+        {({ reset }) => (
         <ErrorBoundary
           fallback={(error, resetError) => (
             <ErrorScreen
@@ -340,9 +349,10 @@ function App() {
             visible={activeModal === "addLocation"}
             onClose={closeModal}
           />
-        </ErrorBoundary>
-      )}
-    </QueryErrorResetBoundary>
+          </ErrorBoundary>
+        )}
+      </QueryErrorResetBoundary>
+    </>
   );
 }
 
