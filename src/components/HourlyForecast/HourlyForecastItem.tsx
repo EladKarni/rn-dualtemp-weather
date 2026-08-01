@@ -39,7 +39,7 @@ const HourlyForecastItem = ({
   return (
     <Card cardType={CardStyleTypes.HOURLY}>
       <View style={HourlyForecastItemStyles.HourlyItem}>
-        <Text style={HourlyForecastItemStyles.HourText}>
+        <Text style={HourlyForecastItemStyles.HourTimeText}>
           {formatTime(dt)}
         </Text>
         <PopType pop={pop} percType={percType} />

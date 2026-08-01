@@ -22,9 +22,19 @@ export const CardStyles = StyleSheet.create({
   },
   cardHourly: {
     justifyContent: "space-between",
-    minWidth: 90,
-    height: 170,
+    // A fixed width, not a minimum. As a minimum the card grew to whatever the
+    // time string needed, so a long meridiem had nothing to wrap against and
+    // ran outside the card — "1:00 לפנות בוקר" spilled past the rounded edge.
+    // With a real width the text engine decides per string and per locale with
+    // no branching here: "3:00 AM" stays beside the hour, "3:00 לפנה״צ" wraps
+    // to a second line. Wide enough for the longest English time and the
+    // "12 km/h" wind row, narrow enough that a Hebrew meridiem wraps.
+    width: 92,
+    // Sized for the two-line case so a wrap has somewhere to go. The one-line
+    // case simply distributes the slack, since the column is space-between.
+    height: 196,
     paddingVertical: 12,
+    paddingHorizontal: 12,
     borderRadius: 32,
     margin: 7.5,
     shadowRadius: 15,
