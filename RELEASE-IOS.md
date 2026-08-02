@@ -468,6 +468,26 @@ this release). What is shared across platforms is the user-facing `2.2.0`.
 
 Recorded so they are not rediscovered as new findings:
 
+- **Long-pressing the app icon offers only the SMALL widget size.** Deferred to
+  2.2.1 by the owner. Not a defect and not a regression — all three sizes are
+  reachable the normal way (long-press Home Screen → Edit → Widgets → Dualtemp).
+
+  Cause, established by experiment on 2026-08-02, so do not re-derive it: iOS's
+  icon→widget shortcut row offers the families of the **first widget in the
+  `WidgetBundle`**, not the union of all of them. `targets/widget/index.swift`
+  lists `WeatherCompactWidget()` first and it declares `.systemSmall` alone.
+  Proved by moving `WeatherExtendedWidget()` to the front and rebuilding: medium
+  and large became available and small greyed out — the symptom inverted exactly.
+
+  **Reordering is not a fix**, it only moves the limitation, because no single
+  widget covers all three families. The real fix is one widget declaring
+  `supportedFamilies([.systemSmall, .systemMedium, .systemLarge])` and switching
+  layout on `@Environment(\.widgetFamily)` — `WeatherExtendedView` already does
+  exactly that to pick 3 vs 5 days, so the pattern is in place. The cost is a
+  product decision, not a technical one: it collapses three named gallery
+  entries ("Weather (Compact)/(Standard)/(Extended)") into one, so users browsing
+  the gallery lose those distinct choices. Decide that deliberately.
+
 - **iOS transparent widget surface.** ~~Needs `containerBackground(.clear)`~~ —
   **TESTED 2026-08-01 and it does not work. Do not retry this.** Declaring
   `containerBackground(Color.clear, for: .widget)` on Standard and Extended,
