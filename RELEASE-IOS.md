@@ -367,18 +367,53 @@ Most likely causes, in order:
 
 Follow [RELEASE.md §6](RELEASE.md), plus these iOS-specific gates:
 
-- [ ] **Before the first production build**, open the four errored 2026 builds
-      in the EAS dashboard and check for a shared cause. Their logs could not be
-      read from Linux. Budget 2–3 attempts; each is a paid ~20-minute build.
-- [ ] Consider an iOS **development**-profile cloud build first, so the first
-      *production* attempt is not also the first *cloud* compile.
+- ~~**Before the first production build**, open the four errored 2026 builds~~
+      **Resolved 2026-08-02 — not a blocker.** Their logs are still behind
+      expo.dev session auth, but `eas build:list` settles the question without
+      them: every errored build was followed by a SUCCESSFUL build of the same
+      version, usually within hours. 1.2.2 errored 1/9 and 1/12 and shipped
+      1/12; 2.0.0 errored 2/17 07:54 and the same version built clean at 09:28
+      and is what shipped. Transient or one-off, retried, gone — no latent cause
+      waiting for the next release.
+- ~~Consider an iOS **development**-profile cloud build first~~ — **do not
+      bother, it does not test what you want.** `app.config.js:3` reads
+      `process.env.EAS_BUILD_PROFILE || 'production'`, and that variable is NOT
+      set when the CLI resolves config locally to gather credentials. So
+      `eas build --profile development --platform ios` asks for credentials
+      against `com.ekarni.rndualtempweatherapp` while the builder, where the
+      variable IS set, produces `...rndualtempweatherapp.dev`. Credentials and
+      artifact disagree. Go straight at production interactively — the
+      credential prompts surface any App Group problem before the build runs,
+      which is the only thing the dev build was supposed to buy you.
 - [ ] **Never** `eas build --profile preview --platform ios`. The preview
       profile's iOS config is deliberately absent, so an iOS preview build
       carries the **production** bundle id and would overwrite the production
       app. `yarn build:preview` is pinned to `--platform android` for this
       reason, and `releaseConfig.test.ts` asserts `build.preview.ios` stays
       undefined.
-- [ ] After upload, watch for:
+- [ ] After upload, watch for the three ITMS rejections below. **All three were
+      verified clean in the signed 2.2.0 IPA before submission** — do not wait
+      for App Store Connect to tell you, the artifact answers every one of them
+      in about a minute:
+
+      ```bash
+      unzip -q build.ipa -d ipa && A=ipa/Payload/*.app
+      # ITMS-90473 — these two must be identical
+      plutil -extract CFBundleVersion raw -o - $A/Info.plist
+      plutil -extract CFBundleVersion raw -o - $A/PlugIns/WeatherWidget.appex/Info.plist
+      # ITMS-91053 — must exist
+      ls $A/PlugIns/WeatherWidget.appex/PrivacyInfo.xcprivacy
+      # ITMS-90474 — all four orientations, no UIRequiresFullScreen
+      plutil -extract 'UISupportedInterfaceOrientations~ipad' json -o - $A/Info.plist
+      # App Group must be signed into BOTH, or the widget reads an empty container
+      codesign -d --entitlements :- $A 2>/dev/null | grep -A2 application-groups
+      codesign -d --entitlements :- $A/PlugIns/WeatherWidget.appex 2>/dev/null | grep -A2 application-groups
+      ```
+
+      Pass `-o -` on every `plutil -extract`. Without it plutil REWRITES the
+      plist in place with the extracted value, silently destroying the thing you
+      are inspecting and making every later check read garbage.
+
       - **ITMS-90473** (app/appex `CFBundleVersion` mismatch) → the
         `withWidgetBuildNumber` plugin did not take. Check that
         `EAS_BUILD_IOS_BUILD_NUMBER` was set on the builder and that the plugin
@@ -392,6 +427,26 @@ Follow [RELEASE.md §6](RELEASE.md), plus these iOS-specific gates:
 - [ ] Post-ship: confirm the first Sentry event arrives under the `2.2.0`
       release identity **and is symbolicated** — that proves `SENTRY_AUTH_TOKEN`
       resolved on the builder.
+
+### Build numbers
+
+`eas.json` uses `appVersionSource: "remote"`, so EAS owns the iOS build number
+and `appConfig.test.ts` forbids an `ios.buildNumber` in `app.json` — a literal
+there is ignored for the app but still consumed by `@bacons/apple-targets` for
+the widget, which is precisely how ITMS-90473 happens.
+
+`build:version:get` returns the LAST USED value and `autoIncrement` bumps from
+it, so the next build is always stored + 1. There is no way to land on a chosen
+number with autoIncrement on. 2.2.0 shipped as build **2.2.1** for that reason:
+the counter had drifted onto the old 2.0.x train (2.0.2, which reads like a
+different release entirely), so it was reset with
+
+```bash
+eas build:version:set --platform ios    # interactive only, no flag for the value
+```
+
+Android is not comparable here — Play requires an integer `versionCode` (64 for
+this release). What is shared across platforms is the user-facing `2.2.0`.
 
 ### Two standing gates from the owner
 
