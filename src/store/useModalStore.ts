@@ -1,6 +1,6 @@
 import { create } from "zustand";
 
-type ModalType = 'location' | 'settings' | 'addLocation' | null;
+export type ModalType = 'location' | 'settings' | 'addLocation' | null;
 
 interface ModalState {
   activeModal: ModalType;

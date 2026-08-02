@@ -4,9 +4,9 @@ import { View, Text, StyleSheet } from 'react-native';
 import { displayWeatherIcon } from '../../utils/Images';
 import { TempTextStyleTypes } from '../TempText/TempText';
 import Card, { CardStyleTypes } from '../Card/Card';
-import { HourlyForecastItemStyles } from './HourlyForecast.Styles';
+import { HourlyForecastItemStyles } from './HourlyForecast.styles';
 import DualTempText from '../TempText/DualTempText';
-import { AppStateContext } from '../../utils/AppStateContext';
+import { AppStateContext } from '../../contexts/AppStateContext';
 import PopType from "../PopType/PopType";
 import { useTimeFormatting } from '../../utils/dateFormatting';
 import { convertWindSpeed } from '../../utils/temperature';
@@ -39,7 +39,7 @@ const HourlyForecastItem = ({
   return (
     <Card cardType={CardStyleTypes.HOURLY}>
       <View style={HourlyForecastItemStyles.HourlyItem}>
-        <Text style={HourlyForecastItemStyles.HourText}>
+        <Text style={HourlyForecastItemStyles.HourTimeText}>
           {formatTime(dt)}
         </Text>
         <PopType pop={pop} percType={percType} />

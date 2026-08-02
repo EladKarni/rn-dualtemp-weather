@@ -3,7 +3,9 @@
  * Centralizes weather data processing for all widget types
  */
 import { Weather, HourlyEntity, DailyEntity } from '../../types/WeatherTypes';
+import type { SavedLocation } from '../../store/useLocationStore';
 import { formatTemperature, convertWindSpeed } from '../../utils/temperature';
+import { i18n } from '../../localization/i18n';
 
 export interface ProcessedWeatherData {
   // Current weather
@@ -70,73 +72,80 @@ export const processWeatherData = (
 };
 
 /**
- * Get weather icon mapping based on weather ID
+ * Emoji icon per OpenWeather condition-code ID.
+ * Module-scoped single source of truth: shared by getWeatherIcon() and the
+ * widget WeatherIcon component so the mapping isn't rebuilt per render and can't
+ * drift between the two consumers. (Comments reference the OpenWeather condition
+ * numbering — that describes the upstream data format, not a credit.)
+ */
+export const WEATHER_ICON_MAP: Record<number, string> = {
+  // Clear sky
+  800: '☀️',
+  // Few clouds
+  801: '⛅',
+  // Scattered clouds
+  802: '☁️',
+  // Broken clouds
+  803: '☁️',
+  // Overcast clouds
+  804: '☁️',
+  // Rain
+  500: '🌦️',
+  501: '🌧️',
+  502: '🌧️',
+  503: '🌧️',
+  504: '🌧️',
+  // Drizzle
+  300: '🌦️',
+  301: '🌦️',
+  302: '🌦️',
+  313: '🌦️',
+  314: '🌦️',
+  321: '🌦️',
+  // Thunderstorm
+  200: '⛈️',
+  201: '⛈️',
+  202: '⛈️',
+  210: '⛈️',
+  211: '⛈️',
+  212: '⛈️',
+  221: '⛈️',
+  230: '⛈️',
+  231: '⛈️',
+  232: '⛈️',
+  // Snow
+  600: '🌨️',
+  601: '🌨️',
+  602: '❄️',
+  611: '🌨️',
+  612: '🌨️',
+  613: '🌨️',
+  615: '❄️',
+  616: '❄️',
+  620: '🌨️',
+  621: '🌨️',
+  622: '❄️',
+  // Atmosphere
+  701: '🌫️',
+  711: '🌫️',
+  721: '🌫️',
+  731: '🌪️',
+  741: '🌫️',
+  751: '🌫️',
+  761: '🌪️',
+  762: '🌪️',
+  771: '🌪️',
+};
+
+/**
+ * Get weather icon for a condition ID, falling back to the category's base icon
+ * (e.g. 5xx → 500) and finally a generic icon.
  */
 export const getWeatherIcon = (weatherId: number): string => {
-  // Simple mapping for now - can be expanded with proper icon set
-  const iconMap: Record<number, string> = {
-    // Clear sky
-    800: '☀️',
-    // Few clouds
-    801: '⛅',
-    // Scattered clouds
-    802: '☁️',
-    // Broken clouds
-    803: '☁️',
-    // Overcast clouds
-    804: '☁️',
-    // Rain
-    500: '🌦️',
-    501: '🌧️',
-    502: '🌧️',
-    503: '🌧️',
-    504: '🌧️',
-    // Drizzle
-    300: '🌦️',
-    301: '🌦️',
-    302: '🌦️',
-    313: '🌦️',
-    314: '🌦️',
-    321: '🌦️',
-    // Thunderstorm
-    200: '⛈️',
-    201: '⛈️',
-    202: '⛈️',
-    210: '⛈️',
-    211: '⛈️',
-    212: '⛈️',
-    221: '⛈️',
-    230: '⛈️',
-    231: '⛈️',
-    232: '⛈️',
-    // Snow
-    600: '🌨️',
-    601: '🌨️',
-    602: '❄️',
-    611: '🌨️',
-    612: '🌨️',
-    613: '🌨️',
-    615: '❄️',
-    616: '❄️',
-    620: '🌨️',
-    621: '🌨️',
-    622: '❄️',
-    // Atmosphere
-    701: '🌫️',
-    711: '🌫️',
-    721: '🌫️',
-    731: '🌪️',
-    741: '🌫️',
-    751: '🌫️',
-    761: '🌪️',
-    762: '🌪️',
-    771: '🌪️',
-  };
-  
   // Get first digit for general category
   const category = Math.floor(weatherId / 100);
-  
-  return iconMap[weatherId] || iconMap[category * 100] || '🌤️';
+
+  return WEATHER_ICON_MAP[weatherId] || WEATHER_ICON_MAP[category * 100] || '🌤️';
 };
 
 /**
@@ -165,20 +174,57 @@ export const formatUVI = (uvi: number): string => {
 };
 
 /**
- * Format data age for widget display
- * Returns a human-readable string like "2h ago" or "Just now"
- * Returns null if data is fresh (< 30 minutes)
+ * Format data age for widget display, localized via i18n.
+ * Contract (finalized in Phase 3):
+ *   - ageMinutes < 30        -> null   (fresh; no age chip)
+ *   - 30 <= ageMinutes < 60  -> "Xm ago"
+ *   - 60 <= ageMinutes < 1440-> "Xh ago"
+ *   - ageMinutes >= 1440     -> "Xd ago"
+ * Resolved at render (the widget calls this while rendering, with i18n.locale
+ * already set by the store-hydration gate). The previously unreachable
+ * "Just now" branch (it sat after the `< 30 -> null` guard) has been removed.
  */
 export const formatDataAge = (ageMinutes: number): string | null => {
   // Don't show age indicator if data is fresh (< 30 minutes)
   if (ageMinutes < 30) return null;
 
-  if (ageMinutes < 1) return 'Just now';
-  if (ageMinutes < 60) return `${Math.round(ageMinutes)}m ago`;
+  if (ageMinutes < 60) {
+    return i18n.t('WidgetAgeMinutes', { count: Math.round(ageMinutes) });
+  }
 
   const hours = Math.floor(ageMinutes / 60);
-  if (hours < 24) return `${hours}h ago`;
+  if (hours < 24) {
+    return i18n.t('WidgetAgeHours', { count: hours });
+  }
 
   const days = Math.floor(hours / 24);
-  return `${days}d ago`;
+  return i18n.t('WidgetAgeDays', { count: days });
+};
+
+/**
+ * Resolve which saved location the home-screen widgets should show.
+ *
+ * Precedence: GPS entry ?? active location ?? first saved ?? null.
+ *
+ * The app is GPS-optional — a user can decline location access and use manual
+ * cities exclusively — but the widget contract is "widget = current location",
+ * so the GPS entry (keyed off its `isGPS` flag) still wins whenever it exists.
+ * Without one, the widget follows the active location, then the first saved
+ * location, so manual-cities-only users get a working widget instead of a
+ * permanent "Weather data unavailable" fallback. Only a truly empty store
+ * resolves to null.
+ *
+ * Pure function of its inputs: callers own hydrating the location store and
+ * passing its state in.
+ */
+export const resolveWidgetLocation = (
+  savedLocations: SavedLocation[],
+  activeLocationId: string | null
+): SavedLocation | null => {
+  const gpsLocation = savedLocations.find((loc) => loc.isGPS);
+  const activeLocation = savedLocations.find(
+    (loc) => loc.id === activeLocationId
+  );
+
+  return gpsLocation ?? activeLocation ?? savedLocations[0] ?? null;
 };

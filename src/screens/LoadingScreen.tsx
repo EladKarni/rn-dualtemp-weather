@@ -4,7 +4,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import AppHeader from "../components/AppHeader/AppHeader";
 import type { SavedLocation } from "../store/useLocationStore";
 import type { LocationWeatherState } from "../hooks/useMultiLocationWeather";
-import { loadingScreenStyles } from "../styles/screens/LoadingScreen.styles";
+import { loadingScreenStyles } from "./LoadingScreen.styles";
+import { i18n } from "../localization/i18n";
 
 interface LoadingScreenProps {
   locationName: string;
@@ -35,10 +36,10 @@ export default function LoadingScreen({
         />
         <View style={loadingScreenStyles.errorContent}>
           <Text style={loadingScreenStyles.loadingTitle}>
-            Loading Weather...
+            {i18n.t("LoadingTitle")}
           </Text>
           <Text style={loadingScreenStyles.loadingMessage}>
-            Fetching forecast for {locationName}
+            {i18n.t("LoadingMessage", { location: locationName })}
           </Text>
         </View>
       </View>

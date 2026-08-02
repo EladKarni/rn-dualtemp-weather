@@ -1,54 +1,53 @@
-import { useEffect, useState } from 'react';
-import { logger } from '../utils/logger';
+import { useCallback, useEffect, useState } from 'react';
 
 /**
- * Custom hook to manage progressive loading states with timeouts
- * @param splashTimeoutExpired - Whether the 3-second splash timeout has expired
- * @param refreshing - Whether the forecast query is currently fetching
- * @param forecast - The current forecast data (if any)
- * @param hasForecastError - Whether there's an error in the forecast query
- * @returns Object containing loading state flags and setters
+ * Stable identity string for an error, used to key a user's dismissal to a
+ * specific error instance (code + message). When the error changes to a new
+ * identity — or clears — the previously-recorded dismissal no longer matches,
+ * so a fresh error re-shows the banner.
+ */
+function errorIdentity(error: unknown): string | null {
+  if (error == null) return null;
+  const code = (error as { code?: string }).code;
+  const name = (error as { name?: string }).name;
+  const message = error instanceof Error ? error.message : String(error);
+  return `${code ?? name ?? 'ERR'}:${message}`;
+}
+
+/**
+ * Manages the "dismiss the cached-data error banner" lifecycle.
+ *
+ * The banner's dismissal is keyed to the current error's identity rather than a
+ * sticky boolean, fixing the tier-2 bug where dismissing one error permanently
+ * suppressed every future error banner. When `hasForecastError` goes false, or
+ * the error's identity changes, the dismissal resets automatically.
+ *
+ * @param hasForecastError - Whether the forecast query is currently in error.
+ * @param forecastError - The current forecast query error (any shape).
  */
 export function useWeatherLoadingState(
-  splashTimeoutExpired: boolean,
-  refreshing: boolean,
-  forecast: any,
-  hasForecastError: boolean
+  hasForecastError: boolean,
+  forecastError: unknown
 ) {
-  const [showSkeleton, setShowSkeleton] = useState(false);
-  const [showErrorScreen, setShowErrorScreen] = useState(false);
-  const [dismissedError, setDismissedError] = useState<string | null>(null);
-  const [lastUpdated, setLastUpdated] = useState<Date | undefined>();
+  const errorId = hasForecastError ? errorIdentity(forecastError) : null;
+  const [dismissedErrorId, setDismissedErrorId] = useState<string | null>(null);
 
-  // Show skeleton immediately after timeout if still loading
+  // Reset the dismissal when the error clears (errorId === null) or its identity
+  // changes, so a NEW error re-shows the banner even after a previous dismissal.
   useEffect(() => {
-    if (splashTimeoutExpired && refreshing && !forecast && !hasForecastError) {
-      logger.debug('Setting showSkeleton to true (still loading after splash timeout)');
-      setShowSkeleton(true);
-    } else {
-      // Reset skeleton state if conditions change
-      setShowSkeleton(false);
+    if (dismissedErrorId !== null && dismissedErrorId !== errorId) {
+      setDismissedErrorId(null);
     }
-  }, [splashTimeoutExpired, refreshing, forecast, hasForecastError]);
+  }, [errorId, dismissedErrorId]);
 
-  // Show error screen if error persists after splash timeout
-  useEffect(() => {
-    if (splashTimeoutExpired && hasForecastError && !forecast) {
-      // Show error screen immediately after splash timeout expires
-      logger.debug('Setting showErrorScreen to true (error detected after splash timeout)');
-      setShowErrorScreen(true);
-    } else {
-      // Reset error screen state if conditions change
-      setShowErrorScreen(false);
-    }
-  }, [splashTimeoutExpired, hasForecastError, forecast]);
+  const isErrorDismissed = errorId !== null && dismissedErrorId === errorId;
+
+  const dismissError = useCallback(() => {
+    setDismissedErrorId(errorId);
+  }, [errorId]);
 
   return {
-    showSkeleton,
-    showErrorScreen,
-    dismissedError,
-    setDismissedError,
-    lastUpdated,
-    setLastUpdated,
+    isErrorDismissed,
+    dismissError,
   };
 }

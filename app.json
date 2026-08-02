@@ -2,7 +2,7 @@
   "expo": {
     "name": "Dualtemp Weather",
     "slug": "dualtemp-weather",
-    "version": "2.0.1",
+    "version": "2.2.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "splash": {
@@ -12,14 +12,16 @@
     },
     "assetBundlePatterns": ["**/*"],
     "extra": {
-      "supportsRTL": true
+      "supportsRTL": false
     },
     "plugins": [
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Allow DualTemp Weather to use your location.",
-          "isAndroidBackgroundLocationEnabled": true
+          "locationWhenInUsePermission": "This app uses your location to show you the weather.",
+          "isAndroidBackgroundLocationEnabled": false,
+          "locationAlwaysPermission": false,
+          "locationAlwaysAndWhenInUsePermission": false
         }
       ],
       [
@@ -36,12 +38,11 @@
         }
       ],
       [
-        "react-native-localization-settings",
+        "expo-localization",
         {
-          "languages": ["ar", "en", "es", "fr", "he", "zh"]
+          "supportedLocales": ["ar", "en", "es", "fr", "he", "zh"]
         }
       ],
-      ["expo-localization"],
       [
         "@sentry/react-native/expo",
         {
@@ -80,30 +81,32 @@
             {
               "name": "WeatherExtended",
               "label": "Weather (Extended)",
-              "minWidth": "270dp",
+              "minWidth": "110dp",
               "minHeight": "40dp",
               "targetCellWidth": 3,
               "targetCellHeight": 1,
-              "description": "Today's forecast with vertical expansion in 3x1+ size",
+              "description": "Daily forecast, resizable from 2x1 to 5x5",
               "previewImage": "./assets/widget-preview/Extended.png",
               "updatePeriodMillis": 1800000,
-              "resizeMode": "vertical"
+              "resizeMode": "horizontal|vertical",
+              "maxResizeWidth": "320dp",
+              "maxResizeHeight": "320dp"
             }
           ]
         }
       ],
+      "./plugins/withWidgetBuildNumber",
       "@bacons/apple-targets"
     ],
     "ios": {
       "appleTeamId": "RUW8C26QSP",
       "supportsTablet": true,
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "This app uses your location to show you the weather.",
-        "ExpoLocalization_supportsRTL": true,
-        "ITSAppUsesNonExemptEncryption": false
+        "ExpoLocalization_supportsRTL": false,
+        "ITSAppUsesNonExemptEncryption": false,
+        "UIStatusBarStyle": "UIStatusBarStyleLightContent"
       },
       "bundleIdentifier": "com.ekarni.rndualtempweatherapp",
-      "buildNumber": "2.0.1",
       "entitlements": {
         "com.apple.security.application-groups": ["group.com.ekarni.rndualtempweatherapp.widget"]
       }
@@ -114,7 +117,7 @@
         "backgroundColor": "#1C1B4D"
       },
       "package": "com.ekarni.rndualtempweatherapp",
-      "permissions": ["ACCESS_BACKGROUND_LOCATION"]
+      "permissions": []
     },
     "updates": {
       "url": "https://u.expo.dev/444bda66-1ab4-4665-ba53-c2b76743a33b"

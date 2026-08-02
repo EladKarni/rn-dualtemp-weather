@@ -3,22 +3,20 @@
  * Centralizes device language extraction and normalization
  */
 
-import { getLanguage } from 'react-native-localization-settings';
+import { getLocales } from 'expo-localization';
 import { logger } from './logger';
 
 /**
  * Gets the device's language code, normalized to 2-letter ISO code
- * Handles locale strings like 'en-US', 'zh-CN', etc. and extracts base language
+ * expo-localization already exposes the base language code (e.g. 'en' from
+ * 'en-US') via getLocales()[0].languageCode, and works on web and native alike.
  * @returns Normalized 2-letter language code (e.g., 'en', 'zh', 'ar')
  */
 export const getDeviceLanguage = (): string => {
   try {
-    const deviceLocale = getLanguage();
+    const languageCode = (getLocales()[0]?.languageCode ?? 'en').toLowerCase();
 
-    // Extract base language code before hyphen (e.g., 'en-US' -> 'en')
-    const languageCode = deviceLocale.split('-')[0].toLowerCase();
-
-    logger.debug('Device language detected:', { deviceLocale, languageCode });
+    logger.debug('Device language detected:', { languageCode });
 
     return languageCode;
   } catch (error) {
@@ -34,7 +32,7 @@ export const getDeviceLanguage = (): string => {
  */
 export const getDeviceLocale = (): string => {
   try {
-    return getLanguage();
+    return getLocales()[0]?.languageTag ?? 'en-US';
   } catch (error) {
     logger.error('Error getting device locale:', error);
     return 'en-US';

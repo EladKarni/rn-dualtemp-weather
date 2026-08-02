@@ -7,11 +7,15 @@ import {
   TouchableWithoutFeedback,
   Animated,
   FlatList,
-  Alert,
 } from "react-native";
 import { i18n } from "../../localization/i18n";
-import { styles } from "./LocationDropdown.Styles";
-import { useLocationStore, SavedLocation } from "../../store/useLocationStore";
+import { showAlert } from "../../utils/alert";
+import { styles } from "./LocationDropdown.styles";
+import {
+  useLocationStore,
+  SavedLocation,
+  MAX_SAVED_LOCATIONS,
+} from "../../store/useLocationStore";
 
 type LocationDropdownProps = {
   visible: boolean;
@@ -69,7 +73,7 @@ const LocationDropdown = ({
   };
 
   const handleDeleteLocation = (location: SavedLocation) => {
-    Alert.alert(
+    showAlert(
       i18n.t("DeleteLocation"),
       `${i18n.t("DeleteLocationConfirm")} ${location.name}?`,
       [
@@ -176,7 +180,8 @@ const LocationDropdown = ({
                   ]}
                 >
                   + {i18n.t("AddLocation")}
-                  {!canAddMoreLocations && ` (${nonGPSLocations.length}/5)`}
+                  {!canAddMoreLocations &&
+                    ` (${nonGPSLocations.length}/${MAX_SAVED_LOCATIONS})`}
                 </Text>
               </TouchableOpacity>
             </Animated.View>

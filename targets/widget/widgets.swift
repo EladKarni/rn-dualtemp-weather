@@ -16,6 +16,27 @@ extension View {
 
 // MARK: - Shared Data Model
 
+/// Localized chrome strings written by the app (src/widgets/utils/iosWidgetStorage.ts).
+/// The age strings are i18n templates whose "%{count}" placeholder is filled here,
+/// because data age is computed at render time.
+struct WidgetChrome: Codable {
+    let today: String
+    let hi: String
+    let lo: String
+    let ageMinutes: String
+    let ageHours: String
+    let ageDays: String
+}
+
+let defaultChrome = WidgetChrome(
+    today: "Today",
+    hi: "Hi",
+    lo: "Lo",
+    ageMinutes: "%{count}m ago",
+    ageHours: "%{count}h ago",
+    ageDays: "%{count}d ago"
+)
+
 struct WeatherData: Codable {
     let temp: Double
     let tempScale: String // "C" or "F"
@@ -29,6 +50,33 @@ struct WeatherData: Codable {
     let lastUpdatedTimestamp: Int?  // Optional for backward compatibility
     let hourlyForecast: [HourlyForecast]
     let dailyForecast: [DailyForecast]
+    // v2 payload fields — all optional so a stale v1 payload (written by an
+    // older app build) still decodes and renders with English defaults.
+    let schemaVersion: Int?
+    let locale: String?     // App language (en/es/fr/ar/he/zh), not device language
+    let is24Hour: Bool?     // Clock-format setting with "auto" already resolved
+    let chrome: WidgetChrome?
+    // v3: the user's widget-element fill as opaque "#RRGGBB". Optional for the
+    // same reason as the v2 fields — Swift's synthesised decoder is
+    // all-or-nothing, so a non-optional addition would make every payload
+    // written by an older app build fail to decode and blank the widget.
+    let elementColor: String?
+}
+
+extension WeatherData {
+    var resolvedChrome: WidgetChrome { chrome ?? defaultChrome }
+    var resolvedLocale: Locale { Locale(identifier: locale ?? "en") }
+    // v1 payloads always rendered 24-hour time; keep that until the app rewrites.
+    var resolvedIs24Hour: Bool { is24Hour ?? true }
+    // v1 hourly windSpeed is in m/s with no per-hour unit — only v2 can label it.
+    var hasConvertedHourlyWind: Bool { (schemaVersion ?? 1) >= 2 }
+    var isRTL: Bool { ["he", "ar"].contains(locale ?? "en") }
+    /// The themed element fill, or the shipped default for a pre-v3 payload or
+    /// an unparsable value. Never fails — a widget render must not depend on
+    /// the app having written a well-formed colour.
+    var resolvedElement: Color {
+        Color(hex: elementColor) ?? WidgetColors.defaultElement
+    }
 }
 
 struct HourlyForecast: Codable {
@@ -65,19 +113,86 @@ func getWeatherData() -> WeatherData? {
 
 // MARK: - Weather Icon Mapping
 
+/// Weather-condition icons keyed by OpenWeather condition id.
+///
+/// Mirrors WEATHER_ICON_MAP in src/widgets/utils/widgetDataUtils.ts entry for
+/// entry; iosWidgetParity.test.ts diffs the two on every gate run, on Linux,
+/// without a Swift compiler.
+///
+/// This was a handful of Swift ranges, which read as equivalent to the JS table
+/// but were not. Ranges cannot express a table whose adjacent entries differ,
+/// and this one's do: 500 (light rain) is a sun-and-rain icon while 501-504 are
+/// heavy rain; the snow family alternates between snow and ice at 602, 611-613
+/// and 620-622; and the tornado codes 731, 761, 762 and 771 sit interleaved
+/// with fog codes in the 7xx block. Every one of those landed on the wrong icon
+/// — a tornado warning rendered as fog on iPhone while Android showed 🌪️.
+let weatherIconMap: [Int: String] = [
+    // Clear sky
+    800: "☀️",
+    // Few clouds
+    801: "⛅",
+    // Scattered / broken / overcast clouds
+    802: "☁️",
+    803: "☁️",
+    804: "☁️",
+    // Rain — 500 is light rain and deliberately differs from its neighbours
+    500: "🌦️",
+    501: "🌧️",
+    502: "🌧️",
+    503: "🌧️",
+    504: "🌧️",
+    // Drizzle
+    300: "🌦️",
+    301: "🌦️",
+    302: "🌦️",
+    313: "🌦️",
+    314: "🌦️",
+    321: "🌦️",
+    // Thunderstorm
+    200: "⛈️",
+    201: "⛈️",
+    202: "⛈️",
+    210: "⛈️",
+    211: "⛈️",
+    212: "⛈️",
+    221: "⛈️",
+    230: "⛈️",
+    231: "⛈️",
+    232: "⛈️",
+    // Snow — snow vs ice alternates, it is not a contiguous run
+    600: "🌨️",
+    601: "🌨️",
+    602: "❄️",
+    611: "🌨️",
+    612: "🌨️",
+    613: "🌨️",
+    615: "❄️",
+    616: "❄️",
+    620: "🌨️",
+    621: "🌨️",
+    622: "❄️",
+    // Atmosphere — tornado codes are interleaved with the fog codes
+    701: "🌫️",
+    711: "🌫️",
+    721: "🌫️",
+    731: "🌪️",
+    741: "🌫️",
+    751: "🌫️",
+    761: "🌪️",
+    762: "🌪️",
+    771: "🌪️",
+]
+
+/// Exact id, then the category's base icon (e.g. 5xx -> 500), then a generic
+/// fallback — the same two-step chain as getWeatherIcon in widgetDataUtils.ts.
 func getWeatherIcon(weatherId: Int) -> String {
-    switch weatherId {
-    case 800: return "☀️"
-    case 801: return "⛅"
-    case 802...804: return "☁️"
-    case 500...504: return "🌧️"
-    case 300...321: return "🌦️"
-    case 200...232: return "⛈️"
-    case 600...602: return "🌨️"
-    case 611...622: return "❄️"
-    case 701...781: return "🌫️"
-    default: return "🌤️"
+    if let exact = weatherIconMap[weatherId] {
+        return exact
     }
+    if let category = weatherIconMap[(weatherId / 100) * 100] {
+        return category
+    }
+    return "🌤️"
 }
 
 // MARK: - Temperature Helpers
@@ -97,24 +212,47 @@ func formatDualTemp(tempCelsius: Double, primaryScale: String) -> (primary: Stri
     }
 }
 
+// MARK: - Date Formatting
+
+/// Mirrors the Android widget's formatTime: "HH:mm" for 24-hour, "h:mm a" for 12-hour,
+/// in the app's language (not the device language, which may differ).
+func makeTimeFormatter(locale: Locale, is24Hour: Bool) -> DateFormatter {
+    let f = DateFormatter()
+    f.locale = locale
+    f.dateFormat = is24Hour ? "HH:mm" : "h:mm a"
+    return f
+}
+
+/// Mirrors the Android widget's moment("ddd") day label in the app's language.
+func makeDayFormatter(locale: Locale) -> DateFormatter {
+    let f = DateFormatter()
+    f.locale = locale
+    f.dateFormat = "EEE"
+    return f
+}
+
 // MARK: - Age Calculation
 
+func fillCount(_ template: String, _ n: Int) -> String {
+    return template.replacingOccurrences(of: "%{count}", with: String(n))
+}
+
 /**
- * Calculate data age and return formatted string
- * Returns nil if data is fresh (< 30 minutes)
+ * Calculate data age and return a localized string.
+ * Contract matches the Android widget's formatDataAge:
+ * < 30 min fresh (nil), then Xm / Xh / Xd ago.
  */
-func calculateDataAge(timestamp: Int) -> String? {
+func calculateDataAge(timestamp: Int, chrome: WidgetChrome) -> String? {
     let now = Date().timeIntervalSince1970
     let ageMinutes = Int((now - Double(timestamp)) / 60)
 
     // Don't show age if fresh (< 30 min)
     if ageMinutes < 30 { return nil }
 
-    if ageMinutes < 60 { return "\(ageMinutes)m ago" }
+    if ageMinutes < 60 { return fillCount(chrome.ageMinutes, ageMinutes) }
     let hours = ageMinutes / 60
-    if hours < 24 { return "\(hours)h ago" }
-    let days = hours / 24
-    return "\(days)d ago"
+    if hours < 24 { return fillCount(chrome.ageHours, hours) }
+    return fillCount(chrome.ageDays, hours / 24)
 }
 
 // MARK: - Timeline Entry
@@ -132,25 +270,25 @@ struct WeatherProvider: TimelineProvider {
     }
 
     func getSnapshot(in context: Context, completion: @escaping (WeatherEntry) -> Void) {
-        let entry = WeatherEntry(date: Date(), weatherData: getWeatherData())
-        completion(entry)
+        // Gallery browsing calls getSnapshot with isPreview, and a fresh install
+        // has no payload yet — show fixtures there; real data still wins.
+        let data = getWeatherData()
+        if data == nil, context.isPreview {
+            completion(WeatherEntry(date: Date(), weatherData: previewWeatherData()))
+            return
+        }
+        completion(WeatherEntry(date: Date(), weatherData: data))
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<WeatherEntry>) -> Void) {
+        // The data only changes when the foregrounded app rewrites the App Group
+        // payload — there is no background refresh task on iOS — so a single
+        // entry re-read every 30 minutes (matching the Android cycle) is
+        // sufficient; the age label surfaces staleness in between.
         let currentDate = Date()
-        let weatherData = getWeatherData()
-
-        // Create entries for the next 30 minutes (matching Android refresh cycle)
-        var entries: [WeatherEntry] = []
-        for minuteOffset in stride(from: 0, to: 30, by: 15) {
-            let entryDate = Calendar.current.date(byAdding: .minute, value: minuteOffset, to: currentDate)!
-            entries.append(WeatherEntry(date: entryDate, weatherData: weatherData))
-        }
-
-        // Refresh after 30 minutes
+        let entry = WeatherEntry(date: currentDate, weatherData: getWeatherData())
         let nextUpdate = Calendar.current.date(byAdding: .minute, value: 30, to: currentDate)!
-        let timeline = Timeline(entries: entries, policy: .after(nextUpdate))
-        completion(timeline)
+        completion(Timeline(entries: [entry], policy: .after(nextUpdate)))
     }
 }
 
@@ -159,25 +297,64 @@ struct WeatherProvider: TimelineProvider {
 struct WidgetColors {
     static let background = Color(red: 0.11, green: 0.106, blue: 0.302) // #1C1B4D
     static let textPrimary = Color.white
-    static let textSecondary = Color.white.opacity(0.7)
-    static let highlight = Color(red: 0.29, green: 0.565, blue: 0.886) // #4A90E2
-    static let cardBackground = Color.white.opacity(0.1)
+    // The two label tiers mirror src/styles/Palette.ts (`textColorSecondary`,
+    // `highlightColor`) — the Android widget is the reference implementation,
+    // and widgetThemes.contrast.test.ts guarantees both against every element
+    // fill a payload can carry. This replaced white-70% and #4A90E2, which
+    // matched nothing in the app and carried no contrast guarantee.
+    static let textSecondary = Color(red: 0.631, green: 0.604, blue: 0.847) // #A19AD8
+    static let highlight = Color(red: 0.918, green: 0.918, blue: 0.953) // #EAEAF3
+    static let ageText = Color(red: 0.61, green: 0.64, blue: 0.69) // #9CA3AF
+
+    /// Fallback element fill for a pre-v3 payload: the "indigo" preset, which is
+    /// what DEFAULT_WIDGET_THEME resolves to in src/styles/widgetThemes.ts.
+    ///
+    /// This replaced `Color.white.opacity(0.1)`. That was translucent, and
+    /// widgetThemes.ts documents at length why every element fill is opaque —
+    /// a translucent card composites against whatever the widget sits on, so
+    /// its contrast against the text tiers stops being something the app can
+    /// guarantee. The Android side fixed that; iOS was still compositing.
+    static let defaultElement = Color(red: 0.110, green: 0.106, blue: 0.302) // #1C1B4D
+}
+
+extension Color {
+    /// Parse an opaque "#RRGGBB" string, as written by the v3 payload.
+    ///
+    /// Returns nil rather than substituting a colour, so the single decision
+    /// about what to show when the value is missing or malformed lives in
+    /// `resolvedElement` instead of being spread across call sites.
+    init?(hex: String?) {
+        // Spelled out rather than the `guard let hex` shorthand, which needs a
+        // Swift 5.7+ compiler; this file is built with SWIFT_VERSION 5.0 and
+        // nothing in this repo's toolchain can check it before the Mac does.
+        guard let hex = hex else { return nil }
+
+        let digits = hex.hasPrefix("#") ? String(hex.dropFirst()) : hex
+        guard digits.count == 6, let value = UInt64(digits, radix: 16) else {
+            return nil
+        }
+
+        self.init(
+            red: Double((value & 0xFF0000) >> 16) / 255.0,
+            green: Double((value & 0x00FF00) >> 8) / 255.0,
+            blue: Double(value & 0x0000FF) / 255.0
+        )
+    }
 }
 
 // MARK: - Placeholder View
 
 struct PlaceholderView: View {
     var body: some View {
-        VStack {
+        // No text: the placeholder renders before any payload exists, so there is
+        // no locale to localize copy into.
+        VStack(spacing: 4) {
             Text("--°")
                 .font(.title2)
                 .fontWeight(.bold)
                 .foregroundColor(WidgetColors.textPrimary)
             Text("🌤️")
                 .font(.title3)
-            Text("Loading...")
-                .font(.caption2)
-                .foregroundColor(WidgetColors.textSecondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(WidgetColors.background)
@@ -192,7 +369,9 @@ struct WeatherCompactView: View {
     var body: some View {
         if let weather = entry.weatherData {
             let temps = formatDualTemp(tempCelsius: weather.temp, primaryScale: weather.tempScale)
-            let ageText = weather.lastUpdatedTimestamp.flatMap { calculateDataAge(timestamp: $0) }
+            let ageText = weather.lastUpdatedTimestamp.flatMap {
+                calculateDataAge(timestamp: $0, chrome: weather.resolvedChrome)
+            }
 
             VStack(spacing: 2) {
                 Text(temps.primary)
@@ -212,11 +391,16 @@ struct WeatherCompactView: View {
                 if let ageText = ageText {
                     Text(ageText)
                         .font(.system(size: 9))
-                        .foregroundColor(Color(red: 0.61, green: 0.64, blue: 0.69)) // #9CA3AF
+                        .foregroundColor(WidgetColors.ageText)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(WidgetColors.background)
+            // The element fill, not the fixed background: on Android the whole
+            // visible face of the compact widget is one themed element card, so
+            // this surface is what the style picker repaints. Standard and
+            // Extended keep the fixed background behind their per-item cards.
+            .background(weather.resolvedElement)
+            .environment(\.layoutDirection, weather.isRTL ? .rightToLeft : .leftToRight)
         } else {
             PlaceholderView()
         }
@@ -229,7 +413,10 @@ struct WeatherCompactWidget: Widget {
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: WeatherProvider()) { entry in
             WeatherCompactView(entry: entry)
-                .widgetBackground(WidgetColors.background)
+                // Must track the view's own fill: on iOS 17+ this is the
+                // containerBackground that shows through the system content
+                // margins, and a fixed colour there would ring a themed face.
+                .widgetBackground(entry.weatherData?.resolvedElement ?? WidgetColors.background)
         }
         .configurationDisplayName("Weather (Compact)")
         .description("Essential weather info with dual temperature display")
@@ -242,15 +429,16 @@ struct WeatherCompactWidget: Widget {
 struct HourlyItemView: View {
     let forecast: HourlyForecast
     let tempScale: String
+    let windUnit: String
+    let showWind: Bool
+    let timeFormatter: DateFormatter
+    /// Passed in rather than read from a global: this view has no access to the
+    /// payload, and the fill is now a user preference.
+    let elementColor: Color
 
     var body: some View {
         let temps = formatDualTemp(tempCelsius: forecast.temp, primaryScale: tempScale)
         let time = Date(timeIntervalSince1970: TimeInterval(forecast.dt))
-        let timeFormatter: DateFormatter = {
-            let f = DateFormatter()
-            f.dateFormat = "HH:mm"
-            return f
-        }()
 
         VStack(spacing: 2) {
             Text(timeFormatter.string(from: time))
@@ -261,6 +449,14 @@ struct HourlyItemView: View {
                 .font(.system(size: 9))
                 .foregroundColor(WidgetColors.textSecondary)
 
+            // Wind is only labeled correctly by v2 payloads (converted units)
+            if showWind {
+                Text("\(Int(forecast.windSpeed.rounded()))\(windUnit)")
+                    .font(.system(size: 9))
+                    .foregroundColor(WidgetColors.textSecondary)
+                    .minimumScaleFactor(0.7)
+            }
+
             Text(getWeatherIcon(weatherId: forecast.weatherId))
                 .font(.system(size: 16))
 
@@ -269,14 +465,17 @@ struct HourlyItemView: View {
                 .foregroundColor(WidgetColors.textPrimary)
                 .minimumScaleFactor(0.7)
 
+            // White like the primary reading, not the secondary tier: Android's
+            // stacked DualTemperatureDisplay renders both scales in textColor,
+            // with weight alone marking which is preferred.
             Text(temps.secondary)
                 .font(.system(size: 9))
-                .foregroundColor(WidgetColors.textSecondary)
+                .foregroundColor(WidgetColors.textPrimary)
                 .minimumScaleFactor(0.7)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(4)
-        .background(WidgetColors.cardBackground)
+        .background(elementColor)
         .cornerRadius(8)
     }
 }
@@ -286,13 +485,26 @@ struct WeatherStandardView: View {
 
     var body: some View {
         if let weather = entry.weatherData {
-            let ageText = weather.lastUpdatedTimestamp.flatMap { calculateDataAge(timestamp: $0) }
+            let ageText = weather.lastUpdatedTimestamp.flatMap {
+                calculateDataAge(timestamp: $0, chrome: weather.resolvedChrome)
+            }
+            let timeFormatter = makeTimeFormatter(
+                locale: weather.resolvedLocale,
+                is24Hour: weather.resolvedIs24Hour
+            )
 
             VStack(spacing: 4) {
                 // Hourly forecast row
                 HStack(spacing: 4) {
                     ForEach(weather.hourlyForecast.prefix(4), id: \.dt) { forecast in
-                        HourlyItemView(forecast: forecast, tempScale: weather.tempScale)
+                        HourlyItemView(
+                            forecast: forecast,
+                            tempScale: weather.tempScale,
+                            windUnit: weather.windUnit,
+                            showWind: weather.hasConvertedHourlyWind,
+                            timeFormatter: timeFormatter,
+                            elementColor: weather.resolvedElement
+                        )
                     }
                 }
 
@@ -300,12 +512,13 @@ struct WeatherStandardView: View {
                 if let ageText = ageText {
                     Text(ageText)
                         .font(.system(size: 9))
-                        .foregroundColor(Color(red: 0.61, green: 0.64, blue: 0.69)) // #9CA3AF
+                        .foregroundColor(WidgetColors.ageText)
                 }
             }
             .padding(8)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(WidgetColors.background)
+            .environment(\.layoutDirection, weather.isRTL ? .rightToLeft : .leftToRight)
         } else {
             PlaceholderView()
         }
@@ -332,52 +545,142 @@ struct DailyItemView: View {
     let forecast: DailyForecast
     let tempScale: String
     let isToday: Bool
+    let chrome: WidgetChrome
+    let dayFormatter: DateFormatter
+    /// See HourlyItemView.elementColor.
+    let elementColor: Color
+    /// Whether this row gets the roomier five-day (systemLarge) metrics.
+    ///
+    /// Content-sized rows left that layout occupying under half the widget with
+    /// dead bands above and below. Roomy rows get a height CEILING, a larger
+    /// icon and more vertical padding.
+    ///
+    /// There is deliberately no height FLOOR. A floor is a hard constraint, and
+    /// five floored rows plus spacing and padding would demand more height than
+    /// the systemLarge content box offers on every iPhone except the 6.7"/6.9"
+    /// — clipping the end rows and pushing the age label out entirely, worst on
+    /// the stale payload that is the steady state. A ceiling alone still fills
+    /// a roomy widget, because the rows expand into whatever space exists, and
+    /// degrades safely on a small one by letting them shrink back toward their
+    /// content height.
+    let isRoomy: Bool
 
     var body: some View {
         let highTemps = formatDualTemp(tempCelsius: forecast.tempMax, primaryScale: tempScale)
         let lowTemps = formatDualTemp(tempCelsius: forecast.tempMin, primaryScale: tempScale)
         let date = Date(timeIntervalSince1970: TimeInterval(forecast.dt))
-        let dayFormatter: DateFormatter = {
-            let f = DateFormatter()
-            f.dateFormat = "EEE"
-            return f
-        }()
 
-        HStack {
-            Text(isToday ? "Today" : dayFormatter.string(from: date))
+        // Every column except the temperatures gets a FIXED width and the two
+        // temperature groups split the leftover equally — the same shape as the
+        // Android row (WeatherExtended.tsx), and for the same reason: fixed
+        // widths are identical in every row whatever that row's text, so the
+        // columns line up. Spacers cannot do this — a Spacer absorbs whatever
+        // its neighbours don't claim, so each row's temperature groups landed
+        // wherever that row's digit and label widths happened to push them.
+        // (RTL needs nothing here: SwiftUI reverses an HStack with the
+        // layoutDirection environment, which the container view already sets.)
+        // Tighter than SwiftUI's default 8pt between columns, which returns
+        // 12pt across the three gaps to the temperature groups — that is what
+        // buys the larger type below without the Hebrew labels wrapping.
+        HStack(spacing: 4) {
+            Text(isToday ? chrome.today : dayFormatter.string(from: date))
                 .font(.system(size: 14, weight: .semibold))
                 .foregroundColor(WidgetColors.textPrimary)
                 .frame(width: 50, alignment: .leading)
 
+            // The icon is the one glyph that can grow freely: it sits in a
+            // fixed-width column, so a larger size costs no horizontal room.
+            // Roomy-only, like the padding below — both grow the row's height,
+            // and the three-day layout has no spare height to give.
             Text(getWeatherIcon(weatherId: forecast.weatherId))
-                .font(.system(size: 16))
+                .font(.system(size: isRoomy ? 20 : 16))
+                .frame(width: 26)
 
-            Spacer()
-
-            HStack(spacing: 2) {
-                Text("Hi")
+            HStack(spacing: 3) {
+                Text(chrome.hi)
                     .font(.system(size: 11))
                     .foregroundColor(WidgetColors.highlight)
                 Text("\(highTemps.primary) / \(highTemps.secondary)")
                     .font(.system(size: 11))
                     .foregroundColor(WidgetColors.textPrimary)
             }
+            .frame(maxWidth: .infinity)
 
-            Spacer()
-
-            HStack(spacing: 2) {
-                Text("Lo")
+            HStack(spacing: 3) {
+                Text(chrome.lo)
                     .font(.system(size: 11))
                     .foregroundColor(WidgetColors.highlight)
                 Text("\(lowTemps.primary) / \(lowTemps.secondary)")
                     .font(.system(size: 11))
                     .foregroundColor(WidgetColors.textPrimary)
             }
+            .frame(maxWidth: .infinity)
         }
+        // Text sizes here are deliberately NOT raised. The screenshot harness
+        // renders this view at a full 364pt, but WidgetKit insets the real
+        // widget by its content margins, so the device has appreciably less
+        // width than render.sh suggests — 13pt temperatures looked right in the
+        // harness and truncated to "32°C / 9…" on an actual home screen. Verify
+        // any type change on a device, not on the rendered PNG.
+        //
+        // Scale before truncating: a sub-zero dual reading ("-18°C / -64°F") is
+        // wider than anything the fixtures cover, and shrinking slightly reads
+        // better than losing the unit.
+        .lineLimit(1)
+        .minimumScaleFactor(0.85)
         .padding(.horizontal, 8)
-        .padding(.vertical, 6)
-        .background(WidgetColors.cardBackground)
+        .padding(.vertical, isRoomy ? 8 : 6)
+        .frame(maxHeight: isRoomy ? 62 : nil)
+        .background(elementColor)
         .cornerRadius(8)
+    }
+}
+
+// Content is split from the widget-family switch so the screenshot harness
+// (scripts/widget-screenshots) can render it at an explicit day count —
+// \.widgetFamily is a read-only environment value and cannot be injected.
+struct WeatherExtendedContent: View {
+    let weather: WeatherData
+    let dayCount: Int
+
+    var body: some View {
+        let ageText = weather.lastUpdatedTimestamp.flatMap {
+            calculateDataAge(timestamp: $0, chrome: weather.resolvedChrome)
+        }
+        let dayFormatter = makeDayFormatter(locale: weather.resolvedLocale)
+        // Only the five-day (systemLarge) layout gets the roomier metrics. At
+        // three days the rows already fill their smaller frame, and its content
+        // box has no spare height — so every value below stays as it was there.
+        let isLarge = dayCount >= 5
+
+        // 10 rather than 12: at 12 the five-row stale stack needs 295pt, which
+        // overflows the systemLarge content box on a 4.7" device once content
+        // margins are taken off. The four gaps buy back the 8pt that costs, and
+        // the cards still read as separate at this spacing.
+        VStack(spacing: isLarge ? 10 : 4) {
+            ForEach(Array(weather.dailyForecast.prefix(dayCount).enumerated()), id: \.element.dt) { index, forecast in
+                DailyItemView(
+                    forecast: forecast,
+                    tempScale: weather.tempScale,
+                    isToday: index == 0,
+                    chrome: weather.resolvedChrome,
+                    dayFormatter: dayFormatter,
+                    elementColor: weather.resolvedElement,
+                    isRoomy: isLarge
+                )
+            }
+
+            // Age indicator (only if stale)
+            if let ageText = ageText {
+                Text(ageText)
+                    .font(.system(size: 9))
+                    .foregroundColor(WidgetColors.ageText)
+            }
+        }
+        .padding(isLarge ? 12 : 8)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(WidgetColors.background)
+        .environment(\.layoutDirection, weather.isRTL ? .rightToLeft : .leftToRight)
     }
 }
 
@@ -387,27 +690,7 @@ struct WeatherExtendedView: View {
 
     var body: some View {
         if let weather = entry.weatherData {
-            let ageText = weather.lastUpdatedTimestamp.flatMap { calculateDataAge(timestamp: $0) }
-
-            VStack(spacing: 4) {
-                ForEach(Array(weather.dailyForecast.prefix(family == .systemLarge ? 5 : 3).enumerated()), id: \.element.dt) { index, forecast in
-                    DailyItemView(
-                        forecast: forecast,
-                        tempScale: weather.tempScale,
-                        isToday: index == 0
-                    )
-                }
-
-                // Age indicator (only if stale)
-                if let ageText = ageText {
-                    Text(ageText)
-                        .font(.system(size: 9))
-                        .foregroundColor(Color(red: 0.61, green: 0.64, blue: 0.69)) // #9CA3AF
-                }
-            }
-            .padding(8)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(WidgetColors.background)
+            WeatherExtendedContent(weather: weather, dayCount: family == .systemLarge ? 5 : 3)
         } else {
             PlaceholderView()
         }
@@ -428,75 +711,75 @@ struct WeatherExtendedWidget: Widget {
     }
 }
 
+// MARK: - Preview Fixtures
+
+func previewHourlyForecast() -> [HourlyForecast] {
+    let now = Int(Date().timeIntervalSince1970)
+    return [
+        HourlyForecast(dt: now, temp: 22, weatherId: 800, pop: 0.1, windSpeed: 18),
+        HourlyForecast(dt: now + 3600, temp: 24, weatherId: 801, pop: 0.2, windSpeed: 22),
+        HourlyForecast(dt: now + 7200, temp: 25, weatherId: 802, pop: 0.3, windSpeed: 25),
+        HourlyForecast(dt: now + 10800, temp: 23, weatherId: 800, pop: 0.1, windSpeed: 18)
+    ]
+}
+
+func previewDailyForecast() -> [DailyForecast] {
+    let now = Int(Date().timeIntervalSince1970)
+    return [
+        DailyForecast(dt: now, tempMax: 28, tempMin: 18, weatherId: 800),
+        DailyForecast(dt: now + 86400, tempMax: 27, tempMin: 17, weatherId: 801),
+        DailyForecast(dt: now + 172800, tempMax: 25, tempMin: 16, weatherId: 802),
+        DailyForecast(dt: now + 259200, tempMax: 24, tempMin: 15, weatherId: 500),
+        DailyForecast(dt: now + 345600, tempMax: 26, tempMin: 17, weatherId: 800)
+    ]
+}
+
+func previewWeatherData(
+    hourlyForecast: [HourlyForecast] = previewHourlyForecast(),
+    dailyForecast: [DailyForecast] = previewDailyForecast()
+) -> WeatherData {
+    WeatherData(
+        temp: 22,
+        tempScale: "C",
+        weatherId: 800,
+        description: "Clear sky",
+        humidity: 65,
+        windSpeed: 19.8,
+        windUnit: "km/h",
+        locationName: "Tel Aviv",
+        lastUpdated: "12:00",
+        lastUpdatedTimestamp: Int(Date().timeIntervalSince1970),
+        hourlyForecast: hourlyForecast,
+        dailyForecast: dailyForecast,
+        schemaVersion: 3,
+        locale: "en",
+        is24Hour: false,
+        chrome: defaultChrome,
+        // nil rather than a literal, so the gallery preview and the screenshot
+        // harness both exercise the pre-v3 fallback path in resolvedElement.
+        elementColor: nil
+    )
+}
+
 // MARK: - Previews
 
 @available(iOS 17.0, *)
 #Preview("Compact", as: .systemSmall) {
     WeatherCompactWidget()
 } timeline: {
-    WeatherEntry(date: .now, weatherData: WeatherData(
-        temp: 22,
-        tempScale: "C",
-        weatherId: 800,
-        description: "Clear sky",
-        humidity: 65,
-        windSpeed: 5.5,
-        windUnit: "m/s",
-        locationName: "Tel Aviv",
-        lastUpdated: "12:00",
-        lastUpdatedTimestamp: Int(Date().timeIntervalSince1970),
-        hourlyForecast: [],
-        dailyForecast: []
-    ))
+    WeatherEntry(date: .now, weatherData: previewWeatherData())
 }
 
 @available(iOS 17.0, *)
 #Preview("Standard", as: .systemMedium) {
     WeatherStandardWidget()
 } timeline: {
-    WeatherEntry(date: .now, weatherData: WeatherData(
-        temp: 22,
-        tempScale: "C",
-        weatherId: 800,
-        description: "Clear sky",
-        humidity: 65,
-        windSpeed: 5.5,
-        windUnit: "m/s",
-        locationName: "Tel Aviv",
-        lastUpdated: "12:00",
-        lastUpdatedTimestamp: Int(Date().timeIntervalSince1970),
-        hourlyForecast: [
-            HourlyForecast(dt: Int(Date().timeIntervalSince1970), temp: 22, weatherId: 800, pop: 0.1, windSpeed: 5),
-            HourlyForecast(dt: Int(Date().timeIntervalSince1970) + 3600, temp: 24, weatherId: 801, pop: 0.2, windSpeed: 6),
-            HourlyForecast(dt: Int(Date().timeIntervalSince1970) + 7200, temp: 25, weatherId: 802, pop: 0.3, windSpeed: 7),
-            HourlyForecast(dt: Int(Date().timeIntervalSince1970) + 10800, temp: 23, weatherId: 800, pop: 0.1, windSpeed: 5)
-        ],
-        dailyForecast: []
-    ))
+    WeatherEntry(date: .now, weatherData: previewWeatherData())
 }
 
 @available(iOS 17.0, *)
 #Preview("Extended", as: .systemLarge) {
     WeatherExtendedWidget()
 } timeline: {
-    WeatherEntry(date: .now, weatherData: WeatherData(
-        temp: 22,
-        tempScale: "C",
-        weatherId: 800,
-        description: "Clear sky",
-        humidity: 65,
-        windSpeed: 5.5,
-        windUnit: "m/s",
-        locationName: "Tel Aviv",
-        lastUpdated: "12:00",
-        lastUpdatedTimestamp: Int(Date().timeIntervalSince1970),
-        hourlyForecast: [],
-        dailyForecast: [
-            DailyForecast(dt: Int(Date().timeIntervalSince1970), tempMax: 28, tempMin: 18, weatherId: 800),
-            DailyForecast(dt: Int(Date().timeIntervalSince1970) + 86400, tempMax: 27, tempMin: 17, weatherId: 801),
-            DailyForecast(dt: Int(Date().timeIntervalSince1970) + 172800, tempMax: 25, tempMin: 16, weatherId: 802),
-            DailyForecast(dt: Int(Date().timeIntervalSince1970) + 259200, tempMax: 24, tempMin: 15, weatherId: 500),
-            DailyForecast(dt: Int(Date().timeIntervalSince1970) + 345600, tempMax: 26, tempMin: 17, weatherId: 800)
-        ]
-    ))
+    WeatherEntry(date: .now, weatherData: previewWeatherData())
 }

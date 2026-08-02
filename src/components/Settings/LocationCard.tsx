@@ -4,6 +4,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import type { SavedLocation } from "../../store/useLocationStore";
 import { i18n } from "../../localization/i18n";
 import { palette } from "../../styles/Palette";
+import { useLanguageStore } from "../../store/useLanguageStore";
 import { DeleteButton } from "./DeleteButton";
 import { styles } from "./LocationCard.styles";
 
@@ -22,6 +23,8 @@ export const LocationCard: React.FC<LocationCardProps> = ({
     onDelete(location);
   };
 
+  const isRTL = useLanguageStore((state) => state.isRTL);
+
   const handlePress = () => {
     onPress?.(location);
   };
@@ -34,16 +37,20 @@ export const LocationCard: React.FC<LocationCardProps> = ({
     >
       <LinearGradient
         colors={[palette.primaryLight, palette.primaryColor]}
-        style={styles.gradientCard}
+        style={[styles.gradientCard, isRTL && styles.gradientCardRTL]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
       >
         <View style={styles.locationInfo}>
-          <Text style={styles.locationName}>
+          <Text style={[styles.locationName, isRTL && styles.locationTextRTL]}>
             {location.isGPS ? `📍 ${i18n.t("CurrentLocation")}` : location.name}
           </Text>
           {location.isGPS && location.name && (
-            <Text style={styles.locationSubtitle}>{location.name}</Text>
+            <Text
+              style={[styles.locationSubtitle, isRTL && styles.locationTextRTL]}
+            >
+              {location.name}
+            </Text>
           )}
         </View>
 

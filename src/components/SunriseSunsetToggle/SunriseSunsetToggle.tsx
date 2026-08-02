@@ -1,46 +1,25 @@
 import React from "react";
-import { View, Text, TouchableOpacity } from "react-native";
 import { useSettingsStore } from "../../store/useSettingsStore";
+import { useLanguageStore } from "../../store/useLanguageStore";
 import { i18n } from "../../localization/i18n";
-import { styles } from "./SunriseSunsetToggle.Styles";
+import { SegmentedControl } from "../SegmentedControl/SegmentedControl";
 
 export const SunriseSunsetToggle = () => {
+  const isRTL = useLanguageStore((state) => state.isRTL);
   const showSunriseSunset = useSettingsStore((state) => state.showSunriseSunset);
-  const setShowSunriseSunset = useSettingsStore((state) => state.setShowSunriseSunset);
+  const setShowSunriseSunset = useSettingsStore(
+    (state) => state.setShowSunriseSunset
+  );
 
   return (
-    <View style={styles.container}>
-      <TouchableOpacity
-        style={[styles.button, showSunriseSunset && styles.buttonActive]}
-        onPress={() => setShowSunriseSunset(true)}
-        activeOpacity={0.7}
-      >
-        <Text
-          style={[
-            styles.buttonText,
-            showSunriseSunset && styles.buttonTextActive,
-          ]}
-        >
-          {i18n.t("Show")}
-        </Text>
-      </TouchableOpacity>
-
-      <View style={styles.divider} />
-
-      <TouchableOpacity
-        style={[styles.button, !showSunriseSunset && styles.buttonActive]}
-        onPress={() => setShowSunriseSunset(false)}
-        activeOpacity={0.7}
-      >
-        <Text
-          style={[
-            styles.buttonText,
-            !showSunriseSunset && styles.buttonTextActive,
-          ]}
-        >
-          {i18n.t("Hide")}
-        </Text>
-      </TouchableOpacity>
-    </View>
+    <SegmentedControl
+      reversed={isRTL}
+      value={showSunriseSunset}
+      onChange={setShowSunriseSunset}
+      options={[
+        { value: true, label: i18n.t("Show") },
+        { value: false, label: i18n.t("Hide") },
+      ]}
+    />
   );
 };

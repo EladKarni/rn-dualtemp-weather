@@ -7,6 +7,7 @@ import { getActualDimensions, calculateOptimalFontSize } from './utils/widgetLay
 import { celsiusToFahrenheit } from '../utils/temperature';
 import { WeatherIcon } from './components/shared/WeatherIcon';
 import { palette } from '../styles/Palette';
+import { getWidgetElementColor } from './utils/widgetTheme';
 import { formatDataAge } from './utils/widgetDataUtils';
 
 interface WeatherCompactProps {
@@ -59,51 +60,64 @@ export function WeatherCompact({
       style={{
         height: 'match_parent',
         width: 'match_parent',
-        backgroundColor: palette.primaryColor,
-        borderRadius: 16,
+        backgroundColor: palette.widgetSurface,
         flexDirection: 'column',
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: getActualDimensions('WeatherCompact').width === 1 && getActualDimensions('WeatherCompact').height === 1 ? 4 : 8,
       }}
       clickAction="REFRESH"
     >
-      {/* Primary Temperature - User's preferred scale, prominent at top */}
-      <TextWidget
-        text={primaryTemp}
+      {/* Element card. Compact is a single content block, so unlike Standard's
+          hour columns or Extended's day rows it has exactly one — but it still
+          needs its own fill, or a transparent root leaves the text floating
+          directly on the wallpaper with nothing behind it. */}
+      <FlexWidget
         style={{
-          fontSize: calculateOptimalFontSize('WeatherCompact', 'primary-temp'),
-          color: palette.textColor,
-          fontWeight: 'bold',
-          textAlign: 'center',
+          height: 'match_parent',
+          width: 'match_parent',
+          backgroundColor: getWidgetElementColor(),
+          borderRadius: 16,
+          flexDirection: 'column',
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: getActualDimensions('WeatherCompact').width === 1 && getActualDimensions('WeatherCompact').height === 1 ? 4 : 8,
         }}
-      />
-
-      {/* Weather Icon - Visual divider in center */}
-      <WeatherIcon weatherId={processedData.weatherId} size="small" />
-
-      {/* Secondary Temperature - Supporting scale at bottom */}
-      <TextWidget
-        text={secondaryTemp}
-        style={{
-          fontSize: calculateOptimalFontSize('WeatherCompact', 'secondary-temp'),
-          color: palette.highlightColor,
-          textAlign: 'center',
-        }}
-      />
-
-      {/* Age Indicator - Only shown if data is stale (>30 min) */}
-      {ageText && (
+      >
+        {/* Primary Temperature - User's preferred scale, prominent at top */}
         <TextWidget
-          text={ageText}
+          text={primaryTemp}
           style={{
-            fontSize: 9,
-            color: '#9CA3AF',
+            fontSize: calculateOptimalFontSize('WeatherCompact', 'primary-temp'),
+            color: palette.textColor,
+            fontWeight: 'bold',
             textAlign: 'center',
-            marginTop: 2,
           }}
         />
-      )}
+
+        {/* Weather Icon - Visual divider in center */}
+        <WeatherIcon weatherId={processedData.weatherId} size="small" />
+
+        {/* Secondary Temperature - Supporting scale at bottom */}
+        <TextWidget
+          text={secondaryTemp}
+          style={{
+            fontSize: calculateOptimalFontSize('WeatherCompact', 'secondary-temp'),
+            color: palette.highlightColor,
+            textAlign: 'center',
+          }}
+        />
+
+        {/* Age Indicator - Only shown if data is stale (>30 min) */}
+        {ageText && (
+          <TextWidget
+            text={ageText}
+            style={{
+              fontSize: 9,
+              color: '#9CA3AF',
+              textAlign: 'center',
+              marginTop: 2,
+            }}
+          />
+        )}
+      </FlexWidget>
     </FlexWidget>
   );
 }

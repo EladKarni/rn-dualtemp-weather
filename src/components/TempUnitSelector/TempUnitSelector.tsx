@@ -1,53 +1,51 @@
 import React from "react";
-import { View, Text, TouchableOpacity } from "react-native";
 import { useSettingsStore } from "../../store/useSettingsStore";
+import { useLanguageStore } from "../../store/useLanguageStore";
+import { useForecastStore } from "../../store/useForecastStore";
+import { useLocationStore } from "../../store/useLocationStore";
 import { i18n } from "../../localization/i18n";
-import { styles } from "./TempUnitSelector.Styles";
-import { updateAllWeatherWidgets } from "../../utils/widgetUpdater";
+import { SegmentedControl } from "../SegmentedControl/SegmentedControl";
+import { updateAllWeatherWidgets } from "../../widgets/widgetUpdater";
+import { resolveWidgetLocation } from "../../widgets/utils/widgetDataUtils";
 
 export const TempUnitSelector = () => {
+  const isRTL = useLanguageStore((state) => state.isRTL);
   const tempScale = useSettingsStore((state) => state.tempScale);
   const setTempScale = useSettingsStore((state) => state.setTempScale);
 
+  // Re-render the home-screen widgets in the new unit. We resolve which
+  // location the widgets show (GPS ?? active ?? first saved), read its cached
+  // weather here (the store owns the data) and pass both in, so widgetUpdater
+  // never imports the forecast store. NB: the argument is the payload, NOT the
+  // changed segment value — SegmentedControl calls onAfterChange with the
+  // option value, which we deliberately ignore.
+  const pushUnitChangeToWidgets = async () => {
+    const locationStore = useLocationStore.getState();
+    const widgetLocation = resolveWidgetLocation(
+      locationStore.savedLocations,
+      locationStore.activeLocationId,
+    );
+    if (!widgetLocation) {
+      return;
+    }
+    const weather = await useForecastStore
+      .getState()
+      .getWeatherData(widgetLocation.id);
+    if (weather) {
+      await updateAllWeatherWidgets(weather, widgetLocation.id);
+    }
+  };
+
   return (
-    <View style={styles.container}>
-      <TouchableOpacity
-        style={[styles.button, tempScale === "C" && styles.buttonActive]}
-        onPress={async () => {
-          setTempScale("C");
-          await updateAllWeatherWidgets();
-        }}
-        activeOpacity={0.7}
-      >
-        <Text
-          style={[
-            styles.buttonText,
-            tempScale === "C" && styles.buttonTextActive,
-          ]}
-        >
-          {i18n.t("Celsius")} (°C)
-        </Text>
-      </TouchableOpacity>
-
-      <View style={styles.divider} />
-
-      <TouchableOpacity
-        style={[styles.button, tempScale === "F" && styles.buttonActive]}
-        onPress={async () => {
-          setTempScale("F");
-          await updateAllWeatherWidgets();
-        }}
-        activeOpacity={0.7}
-      >
-        <Text
-          style={[
-            styles.buttonText,
-            tempScale === "F" && styles.buttonTextActive,
-          ]}
-        >
-          {i18n.t("Fahrenheit")} (°F)
-        </Text>
-      </TouchableOpacity>
-    </View>
+    <SegmentedControl
+      reversed={isRTL}
+      value={tempScale}
+      onChange={setTempScale}
+      onAfterChange={() => pushUnitChangeToWidgets()}
+      options={[
+        { value: "C", label: `${i18n.t("Celsius")} (°C)` },
+        { value: "F", label: `${i18n.t("Fahrenheit")} (°F)` },
+      ]}
+    />
   );
 };

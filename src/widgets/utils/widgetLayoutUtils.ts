@@ -61,9 +61,13 @@ export const getActualDimensions = (widgetName: string): WidgetDimensions => {
       minHeight: '180dp'
     },
     'WeatherExtended': {
+      // Default placement size (targetCellWidth/Height in app.json). Unlike the
+      // others this one is resizable on BOTH axes, 2-5 cells, so these values
+      // describe where it starts, not where it stays — anything that needs the
+      // live size must read the width/height props instead.
       width: 3,
-      height: 1,        // True 3x1 (270dp x 40dp) - expands vertically
-      minWidth: '270dp',
+      height: 1,
+      minWidth: '110dp',  // 2 cells
       minHeight: '40dp'
     }
   };
@@ -188,6 +192,84 @@ export const calculateHourlyItemCount = (widthPx: number, maxItems: number = 4):
 };
 
 /**
+ * How much detail a daily-forecast row can carry at a given widget width.
+ *
+ * - `wide`   day · icon · UV · "Hi 31° / 87°" · "Lo 14° / 58°" at 16dp
+ * - `full`   drops UV and tightens the type to 13dp
+ * - `medium` also drops the Hi/Lo labels
+ * - `narrow` shows a single AVERAGE temperature instead of a high/low pair
+ *
+ * The icon survives every step: dropping the high/low pair frees far more room
+ * than the icon occupies, and it is the most scannable thing in the row.
+ *
+ * Both temperature scales survive every step too — showing °C and °F together
+ * is the point of the app, so it is the last thing that should go. At `narrow`
+ * that means one dual-scale average rather than two cramped dual-scale pairs.
+ *
+ * UV is the last thing added rather than the first, because it is the only
+ * element the row can lose without losing meaning: the labels say which
+ * temperature is which, and the icon and day say what and when.
+ */
+export type DailyRowDensity = 'wide' | 'full' | 'medium' | 'narrow';
+
+/**
+ * Widget widths in dp, as the launcher MEASURES them (`widgetInfo.width`) —
+ * not as app.json declares them.
+ *
+ * These are easy to conflate and the difference is large. `minWidth = 70n - 30`
+ * sizes the *declaration*; what arrives at render time is whatever width the
+ * launcher's grid actually gave the widget. Measured on device 2026-07-30
+ * (Pixel launcher, 411dp screen): consecutive resize steps reported 179dp and
+ * 276dp — roughly 97dp per cell, not 70. Thresholds derived from the
+ * declaration formula therefore misclassify every size, so these come from what
+ * each layout NEEDS instead.
+ *
+ * Budgets below are measured from rendered pixels, in dp: a dual-scale reading
+ * is 42dp at 13dp type (48dp allowing for a three-digit Fahrenheit value like
+ * "38°/100°") and 60dp at 16dp type; "Today" is 36dp inside a 44dp column; the
+ * icon column is 26dp and UV 38dp; an "Hi "/"Lo " label is 17dp at 13dp type
+ * and 21dp at 16dp; columns are 4dp apart; and the widget's own padding plus
+ * the row's costs a flat 40dp.
+ *
+ *   narrow  44 + 26 + 48 + 8               + 40 = 166
+ *   medium  44 + 26 + 48x2 + 12            + 40 = 218
+ *   full    44 + 26 + (17 + 48)x2 + 12     + 40 = 252
+ *   wide    44 + 26 + 38 + (21 + 60)x2 + 16 + 40 = 326
+ */
+const DAILY_WIDTH_HIGH_LOW = 220;
+const DAILY_WIDTH_LABELS = 255;
+const DAILY_WIDTH_UV = 330;
+
+/**
+ * Pick a row density for the given widget width.
+ *
+ * `widthDp` is dp, not pixels — confirmed on device by rendering the raw value
+ * the task handler passes in: a three-row widget reported 203, which only
+ * resolves to three rows when read as dp.
+ *
+ * Undefined width falls to `narrow` rather than a roomier tier: an unknown
+ * width must not assume space it may not have, because guessing too wide
+ * overflows the row while guessing too narrow merely leaves space unused.
+ */
+export const calculateDailyRowDensity = (
+  widthDp?: number
+): DailyRowDensity => {
+  if (widthDp === undefined) {
+    return 'narrow';
+  }
+  if (widthDp >= DAILY_WIDTH_UV) {
+    return 'wide';
+  }
+  if (widthDp >= DAILY_WIDTH_LABELS) {
+    return 'full';
+  }
+  if (widthDp >= DAILY_WIDTH_HIGH_LOW) {
+    return 'medium';
+  }
+  return 'narrow';
+};
+
+/**
  * Calculate optimal gap between items based on item count
  * More items = tighter gaps to maximize space
  */
@@ -211,8 +293,6 @@ export const calculateDailyItemCount = (heightPx: number, maxItems: number = 7):
 
   // Calculate how many items fit
   const itemCount = Math.floor((availableHeight + ITEM_GAP) / (MIN_ITEM_HEIGHT + ITEM_GAP));
-
-  console.log('[calculateDailyItemCount] heightPx:', heightPx, 'availableHeight:', availableHeight, 'itemCount:', itemCount, 'maxItems:', maxItems);
 
   // Clamp between 1 and maxItems
   return Math.max(1, Math.min(itemCount, maxItems));

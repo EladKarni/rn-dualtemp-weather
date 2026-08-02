@@ -1,8 +1,8 @@
 import React from "react";
 import { View, StyleSheet } from "react-native";
 import Subtitle from "../Subtitle/Subtitle";
-import { HourlyForecastStyles } from "./HourlyForecast.Styles";
-import { palette } from "../../styles/Palette";
+import { SkeletonBox } from "../LoadingSkeleton/SkeletonBox";
+import { HourlyForecastStyles } from "./HourlyForecast.styles";
 import { i18n } from "../../localization/i18n";
 
 /**
@@ -19,10 +19,10 @@ const HourlyForecastSkeleton = () => {
       <View style={styles.scrollContainer}>
         {skeletonItems.map((_, index) => (
           <View key={index} style={styles.skeletonItem}>
-            <View style={styles.skeletonBox} />
-            <View style={[styles.skeletonBox, styles.skeletonIcon]} />
-            <View style={styles.skeletonBox} />
-            <View style={styles.skeletonBox} />
+            <SkeletonBox style={styles.line} />
+            <SkeletonBox style={styles.icon} />
+            <SkeletonBox style={styles.line} />
+            <SkeletonBox style={styles.line} />
           </View>
         ))}
       </View>
@@ -42,14 +42,11 @@ const styles = StyleSheet.create({
     width: 60,
     gap: 8,
   },
-  skeletonBox: {
-    backgroundColor: palette.textColor,
-    opacity: 0.15,
-    borderRadius: 4,
+  line: {
     height: 16,
     width: 40,
   },
-  skeletonIcon: {
+  icon: {
     height: 40,
     width: 40,
     borderRadius: 20,

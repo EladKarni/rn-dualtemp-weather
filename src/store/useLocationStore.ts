@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { logger } from "../utils/logger";
+import { DuplicateLocationError, MaxLocationsError } from "../utils/errors";
 
 export interface SavedLocation {
   id: string;
@@ -20,6 +21,7 @@ interface LocationState {
     location: Omit<SavedLocation, "id" | "addedAt" | "isGPS">,
   ) => void;
   removeLocation: (id: string) => void;
+  removeGPSLocation: () => void;
   setActiveLocation: (id: string) => void;
   updateGPSLocation: (
     latitude: number,
@@ -32,27 +34,32 @@ interface LocationState {
 }
 
 export const GPS_LOCATION_ID = "gps-location";
-const MAX_SAVED_LOCATIONS = 25;
+// Exported so UI copy (LocationDropdown cap, AddLocationScreen/MaxLocations
+// message) derives the cap from one source instead of hardcoding it.
+export const MAX_SAVED_LOCATIONS = 25;
 
 export const useLocationStore = create<LocationState>()(
   persist(
     (set, get) => ({
-      savedLocations: [],
+      savedLocations: [] as SavedLocation[],
       activeLocationId: GPS_LOCATION_ID,
 
       addLocation: (location) => {
         const state = get();
 
-        // Check if we've reached the limit (excluding GPS location)
+        // Check if we've reached the limit (excluding GPS location). Throw a
+        // typed UserError so the caller can surface a localized message instead
+        // of silently dropping the request (the translation was previously lost).
         const nonGPSLocations = state.savedLocations.filter(
           (loc) => !loc.isGPS,
         );
         if (nonGPSLocations.length >= MAX_SAVED_LOCATIONS) {
           logger.warn("Maximum locations reached");
-          return;
+          throw new MaxLocationsError();
         }
 
-        // Check for duplicate locations (within ~1km radius)
+        // Check for duplicate locations (within ~1km radius). Throw a typed
+        // UserError instead of silently no-op'ing so the user gets feedback.
         const isDuplicate = state.savedLocations.some((loc) => {
           const latDiff = Math.abs(loc.latitude - location.latitude);
           const lonDiff = Math.abs(loc.longitude - location.longitude);
@@ -61,7 +68,7 @@ export const useLocationStore = create<LocationState>()(
 
         if (isDuplicate) {
           logger.warn("Location already saved");
-          return;
+          throw new DuplicateLocationError();
         }
 
         const newLocation: SavedLocation = {
@@ -71,8 +78,16 @@ export const useLocationStore = create<LocationState>()(
           isGPS: false,
         };
 
+        // Self-heal a dangling active id: if the currently-active location no
+        // longer resolves to a real entry (e.g. it was removed leaving nothing
+        // to fall back to), adopt the newly-added location as active.
+        const activeResolves = state.savedLocations.some(
+          (loc) => loc.id === state.activeLocationId,
+        );
+
         set({
           savedLocations: [...state.savedLocations, newLocation],
+          ...(activeResolves ? {} : { activeLocationId: newLocation.id }),
         });
       },
 
@@ -89,15 +104,48 @@ export const useLocationStore = create<LocationState>()(
           (loc) => loc.id !== id,
         );
 
-        // If removing the active location, switch to GPS
-        const newActiveId =
-          state.activeLocationId === id
-            ? GPS_LOCATION_ID
-            : state.activeLocationId;
+        // If removing the active location, resolve a valid fallback instead of
+        // blindly pointing at GPS (which may not exist): prefer the GPS entry if
+        // present, else the first remaining location, else null (no active).
+        let newActiveId = state.activeLocationId;
+        if (state.activeLocationId === id) {
+          const gps = filteredLocations.find(
+            (loc) => loc.id === GPS_LOCATION_ID,
+          );
+          if (gps) {
+            newActiveId = GPS_LOCATION_ID;
+          } else if (filteredLocations.length > 0) {
+            newActiveId = filteredLocations[0].id;
+          } else {
+            newActiveId = null;
+          }
+        }
 
         set({
           savedLocations: filteredLocations,
           activeLocationId: newActiveId,
+        });
+      },
+
+      removeGPSLocation: () => {
+        // Unlike removeLocation (which guards the GPS entry from manual
+        // deletion), this is the app's own cleanup for when the GPS position
+        // can never update again (e.g. web permission denied) — stale
+        // coordinates must not keep masquerading as "current location".
+        const state = get();
+        const gps = state.savedLocations.find((loc) => loc.isGPS);
+        if (!gps) return;
+
+        const filteredLocations = state.savedLocations.filter(
+          (loc) => !loc.isGPS,
+        );
+
+        set({
+          savedLocations: filteredLocations,
+          activeLocationId:
+            state.activeLocationId === gps.id
+              ? (filteredLocations[0]?.id ?? null)
+              : state.activeLocationId,
         });
       },
 
@@ -132,10 +180,17 @@ export const useLocationStore = create<LocationState>()(
             ),
           });
         } else {
-          // Add GPS location for the first time
+          // Add GPS location for the first time. Only take over activation
+          // when the current active id doesn't resolve to a saved location
+          // (first run's placeholder id) — a manually chosen city stays active
+          const activeExists = state.savedLocations.some(
+            (loc) => loc.id === state.activeLocationId,
+          );
           set({
             savedLocations: [gpsLocation, ...state.savedLocations],
-            activeLocationId: GPS_LOCATION_ID,
+            activeLocationId: activeExists
+              ? state.activeLocationId
+              : GPS_LOCATION_ID,
           });
         }
       },
@@ -178,6 +233,27 @@ export const useLocationStore = create<LocationState>()(
     {
       name: "@saved_locations",
       storage: createJSONStorage(() => AsyncStorage),
+      onRehydrateStorage: () => (state) => {
+        // Self-heal installs whose persisted activeLocationId points at a
+        // location that no longer exists (e.g. the initial GPS placeholder id
+        // persisted when locations were saved without GPS ever granting)
+        if (
+          !state ||
+          !Array.isArray(state.savedLocations) ||
+          state.savedLocations.length === 0
+        )
+          return;
+        const resolves = state.savedLocations.some(
+          (loc) => loc.id === state.activeLocationId,
+        );
+        if (!resolves) {
+          useLocationStore.setState({
+            activeLocationId:
+              state.savedLocations.find((loc) => loc.isGPS)?.id ??
+              state.savedLocations[0].id,
+          });
+        }
+      },
     },
   ),
 );

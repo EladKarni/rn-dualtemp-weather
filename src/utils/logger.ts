@@ -20,6 +20,12 @@ const PREFIX = '[RN-Weather]';
 const formatMessage = (args: any[]): string => {
   return args
     .map(arg => {
+      // Errors have non-enumerable name/message/stack, so JSON.stringify(error)
+      // returns "{}". Render the real message so logged errors are
+      // self-describing instead of an empty object.
+      if (arg instanceof Error) {
+        return `${arg.name}: ${arg.message}`;
+      }
       if (typeof arg === 'object') {
         try {
           return JSON.stringify(arg, null, 2);
@@ -88,18 +94,48 @@ export const logger = {
   /**
    * Error-level logging (always shown)
    * Use for exceptions and failures
-   * Sends message to Sentry as error-level event
+   * Sends to Sentry as an error-level event
+   *
+   * Reporting shape matters here, because most call sites look like
+   * `logger.error("Widget render failed:", error)`:
+   *  - When any argument is an Error, that Error is captured with
+   *    `captureException`, so the report keeps the real exception type and the
+   *    original throw-site stack. Reporting it as a message instead threw both
+   *    away — the attached stack pointed back into this file, and every event
+   *    grouped by a message string containing the error text, so one bug
+   *    fragmented across many Sentry issues.
+   *  - When there is no Error to capture, the message is sent but fingerprinted
+   *    on the first (static) argument rather than the fully-formatted text, so
+   *    interpolated values don't split one log site into many issues.
    */
   error: (...args: any[]) => {
     console.error(PREFIX, '[ERROR]', ...args);
 
-    // Send as error message to Sentry
     const message = formatMessage(args);
+    const cause = args.find((arg): arg is Error => arg instanceof Error);
+
+    if (cause) {
+      Sentry.captureException(cause, {
+        level: 'error',
+        tags: {
+          error_source: 'logger.error',
+        },
+        // The surrounding call-site text is context, not identity — it stays out
+        // of grouping but remains visible on the event.
+        extra: { log_message: message },
+      });
+      return;
+    }
+
     Sentry.captureMessage(message, {
       level: 'error',
       tags: {
         error_source: 'logger.error',
       },
+      fingerprint: [
+        'logger.error',
+        typeof args[0] === 'string' ? args[0] : 'unlabeled',
+      ],
     });
   },
 
@@ -207,6 +243,42 @@ export const logger = {
    */
   setTag: (key: string, value: string) => {
     Sentry.setTag(key, value);
+  },
+
+  /**
+   * Wait for queued Sentry events to be delivered.
+   *
+   * Only needed where the JS runtime is about to be torn down — chiefly the
+   * Android widget headless task, which the OS kills as soon as the handler
+   * resolves. Without this, an event captured on the way out is dropped before
+   * the transport flushes it, so widget failures are exactly the ones least
+   * likely to reach Sentry. Never rejects: a failed flush must not turn into a
+   * second failure at the call site.
+   *
+   * The React Native SDK's `flush()` accepts no deadline and waits on the
+   * transport, so on a stalled network it would hold the task open rather than
+   * let it exit — trading a dropped event for a hung one. Race it against our
+   * own timer so the wait is bounded either way.
+   *
+   * @param timeoutMs - How long to wait before giving up (default 2000ms).
+   * @returns true if the queue drained, false on timeout/error.
+   */
+  flush: async (timeoutMs: number = 2000): Promise<boolean> => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      return await Promise.race([
+        Sentry.flush(),
+        new Promise<boolean>((resolve) => {
+          timer = setTimeout(() => resolve(false), timeoutMs);
+        }),
+      ]);
+    } catch {
+      return false;
+    } finally {
+      if (timer !== undefined) {
+        clearTimeout(timer);
+      }
+    }
   },
 };
 

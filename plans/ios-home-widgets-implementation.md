@@ -6,6 +6,49 @@ This plan outlines implementation of iOS home widgets to mirror to existing Andr
 
 **Update**: Based on [Exo's blog post on iOS widgets](https://expo.dev/blog/how-to-implement-ios-widgets-in-expo-apps), this plan has been validated and refined with real-world implementation insights from the Glow app case study.
 
+### Implementation Status (per the 2026-07 feature audit)
+
+| Phase | Status |
+| --- | --- |
+| Phase 1 — Project Setup & Dependencies | ✅ Done |
+| Phase 2 — Widget Architecture & Configuration | ✅ Done |
+| Phase 3 — Data Management & Integration | ✅ Done |
+| Phase 4 — Widget UI Implementation | ✅ Done (2026-07-28 quality pass; device verification pending) |
+| Phase 5 — Native Integration & Build Configuration | ✅ Done |
+| Phase 6 — Testing & Quality Assurance | 🔶 Partial (JS payload contract tested; Swift unverified on device) |
+| Phase 7 — Advanced Features (Phase 2) | ⬜ Not started |
+
+### 2026-07-28 quality pass (unblocks store screenshots)
+
+The Swift widget had shipped as a rough draft: review finding 12's iOS half was
+never actually fixed — commit `b5cd4fa` localized only the Android widget layer.
+Fixed in this pass:
+
+- **Payload v2** (`src/widgets/utils/iosWidgetStorage.ts`): the app now writes
+  `schemaVersion: 2` with `locale` (app language, not device language),
+  `is24Hour` (clock-format setting with "auto" resolved), and `chrome` —
+  pre-localized Today/Hi/Lo strings plus raw `%{count}` age templates from the
+  app's i18n tables. Hourly wind speeds are converted to the display unit
+  matching `windUnit` (km/h / mph). Contract pinned by
+  `src/widgets/utils/__tests__/iosWidgetStorage.test.ts`.
+- **Swift** (`targets/widget/widgets.swift`): hourly times honor the clock
+  format and locale (was hardcoded `HH:mm`), day labels use the app locale (was
+  English `EEE`), Today/Hi/Lo/age strings come from the payload chrome (were
+  hardcoded English), the Standard widget shows per-hour wind like Android
+  (v2 payloads only), he/ar payloads render right-to-left, the placeholder
+  dropped its untranslatable "Loading..." text, and the timeline collapsed to a
+  single entry per 30-minute refresh. v1 payloads (older app builds) still
+  decode via optional fields and fall back to the old English behavior.
+- **Screenshot harness**: `scripts/widget-screenshots/ios/render.sh` renders all
+  three widget views to PNGs at exact WidgetKit sizes via `ImageRenderer`
+  (macOS only) — both the store-capture route and the quickest visual check of
+  these fixes.
+
+Still open: compile + visual verification on a Mac or EAS build (this
+environment cannot build Swift), and Phase 7 remains unstarted.
+
+Legend: ✅ done · 🔶 partial · ⚠️ untracked · ⬜ not started. Per-phase status is repeated under each phase heading below.
+
 ## Technology Stack
 
 ### Primary iOS Widget Solution
@@ -21,6 +64,8 @@ This plan outlines implementation of iOS home widgets to mirror to existing Andr
 - **iOS 15.0+** - Minimum deployment target
 
 ## Phase 1: Project Setup & Dependencies
+
+> **Status: ✅ Done.**
 
 ### 1.1 Install Required Packages
 ```bash
@@ -57,6 +102,8 @@ This will create iOS widget structure in `/targets/widget/` (✅ **Confirmed str
 
 ## Phase 2: Widget Architecture & Configuration
 
+> **Status: ✅ Done.**
+
 ### 2.1 Widget Target Configuration
 Create `/targets/widget/expo-target.config.js`:
 ```javascript
@@ -89,6 +136,8 @@ Implement three widget sizes mirroring Android:
 - **WeatherExtended** (systemLarge - 4x4)
 
 ## Phase 3: Data Management & Integration
+
+> **Status: ✅ Done.**
 
 ### 3.1 Shared Data Architecture
 **Leverage existing SQLite database** from Android widgets:
@@ -131,6 +180,8 @@ struct Provider: TimelineProvider {
 
 ## Phase 4: Widget UI Implementation
 
+> **Status: 🔶 Partial.**
+
 ### 4.1 SwiftUI Widget Views
 Create widget views that mirror Android components:
 
@@ -168,6 +219,8 @@ Implement adaptive design:
 
 ## Phase 5: Native Integration & Build Configuration
 
+> **Status: ✅ Done.**
+
 ### 5.1 Prebuild Setup (Enhanced workflow from blog insights)
 ```bash
 npx expo prebuild -p ios --clean
@@ -201,6 +254,8 @@ Handle deep links in React Native using Expo Router for seamless widget-to-app i
 
 ## Phase 6: Testing & Quality Assurance
 
+> **Status: ⚠️ Untracked.**
+
 ### 6.1 Widget Testing
 - Test all three widget sizes
 - Verify data synchronization with main app
@@ -221,6 +276,8 @@ Handle deep links in React Native using Expo Router for seamless widget-to-app i
 - Validate battery usage optimization
 
 ## Phase 7: Advanced Features (Phase 2)
+
+> **Status: ⬜ Not started.**
 
 ### 7.1 Interactive Widgets (iOS 16+)
 - Tap-to-refresh functionality

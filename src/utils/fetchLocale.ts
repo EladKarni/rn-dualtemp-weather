@@ -1,8 +1,15 @@
-import { uses24HourClock } from "react-native-localize";
+import { getCalendars } from "expo-localization";
 import { useLanguageStore } from "../store/useLanguageStore";
 import { logger } from "./logger";
 import moment from "moment";
 import { i18n } from "../localization/i18n";
+
+/**
+ * Whether the device is configured for a 24-hour clock. expo-localization's
+ * uses24hourClock is nullable (the platform may not report it); default to
+ * 12-hour (false) when absent.
+ */
+const uses24HourClock = (): boolean => getCalendars()[0]?.uses24hourClock ?? false;
 
 /**
  * Fetches current locale settings

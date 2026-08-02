@@ -1,7 +1,7 @@
 import React from 'react'
 import { View, Text, TouchableOpacity } from 'react-native'
 import { DailyEntity } from '../../types/WeatherTypes';
-import { DailyForecastItemStyles } from './DailyForecast.Styles';
+import { DailyForecastItemStyles } from './DailyForecast.styles';
 import Card, { CardStyleTypes } from '../Card/Card';
 import WeatherIcon, { IconSizeTypes } from '../WeatherIcon/WeatherIcon';
 import { displayWeatherIcon } from '../../utils/Images';
@@ -40,7 +40,14 @@ const DailyForecastItem = ({
             {formatDayName(day.dt)}
           </Text>
           <View style={[DailyForecastItemStyles.tempIconContainer, isRTL && DailyForecastItemStyles.tempIconContainerRTL]}>
-            <PopType pop={day.pop} percType={percpType} />
+            <View
+              style={[
+                DailyForecastItemStyles.popColumn,
+                isRTL && DailyForecastItemStyles.popColumnRTL,
+              ]}
+            >
+              <PopType pop={day.pop} percType={percpType} />
+            </View>
             <View style={DailyForecastItemStyles.tempContainer}>
               <DualTempText
                 temp={day.temp.day}

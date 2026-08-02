@@ -11,22 +11,31 @@ npm-debug.*
 web-build/
 api-gcs.*
 
-# Environment variables
-.env.local
-.env*.local
+# Environment variables — ignore all env files, keep the committed example
+.env
+.env.*
+!.env.example
 
-# Native Code
-android/
-ios/
+# Native Code (Expo prebuild output at the repo root only — nested ios/ and
+# android/ dirs such as scripts/widget-screenshots/ios/ are tracked)
+/android/
+/ios/
+*.apk
 
 # macOS
 .DS_Store
 
-# native
-android/
-ios/
+# Play Store — never commit the real service-account key (eas submit writes it here)
+serviceKey*.json
+!serviceKey.example.json
+# Local Netlify folder
+.netlify
 
-# Play Store
-serviceKey.json
+# Device smoke-test artifacts (screenshots, logcat)
+.smoke/
 
-.env.local
+# Jest coverage output
+coverage/
+
+# Build provenance sidecars (written next to local APKs)
+*.build-info

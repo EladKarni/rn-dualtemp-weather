@@ -1,7 +1,14 @@
 import moment from 'moment';
 import { logger } from './logger';
-import { uses24HourClock } from 'react-native-localize';
+import { getCalendars } from 'expo-localization';
 import { useSettingsStore } from '../store/useSettingsStore';
+
+/**
+ * Whether the device is configured for a 24-hour clock. expo-localization's
+ * uses24hourClock is nullable; default to 12-hour (false) when the platform
+ * does not report it.
+ */
+const uses24HourClock = (): boolean => getCalendars()[0]?.uses24hourClock ?? false;
 
 /**
  * Safe date formatting utility that ensures locale synchronization
@@ -43,6 +50,21 @@ const safeMomentFormat = (
 };
 
 /**
+ * Lowercase `a`, not `A`. moment overloads the case of this token to mean
+ * "abbreviated", and every consumer of this function is space-constrained — a
+ * widget column ~70dp wide, or a compact hourly row.
+ *
+ * It matters most in Hebrew, where the two forms are not remotely comparable:
+ * `A` yields "אחרי הצהריים" (12 characters, which wrapped onto two lines in the
+ * hourly widget) while `a` yields "אחה״צ", the standard abbreviation. Hours
+ * outside 10:00-18:00 return the same string either way — "בבוקר", "בערב" —
+ * because moment's Hebrew locale only distinguishes the two around noon.
+ *
+ * The side effect in English is "5:00 pm" rather than "5:00 PM".
+ */
+const TWELVE_HOUR_FORMAT = "h:mm a";
+
+/**
  * Helper function to get time format string based on clock format preference
  * @param clockFormat The clock format preference ("12hour", "24hour", or "auto")
  * @returns The appropriate moment format string
@@ -50,12 +72,12 @@ const safeMomentFormat = (
 const getTimeFormatString = (clockFormat?: "12hour" | "24hour" | "auto"): string => {
   switch (clockFormat) {
     case "12hour":
-      return "h:mm A";
+      return TWELVE_HOUR_FORMAT;
     case "24hour":
       return "HH:mm";
     case "auto":
     default:
-      return uses24HourClock() ? "HH:mm" : "h:mm A";
+      return uses24HourClock() ? "HH:mm" : TWELVE_HOUR_FORMAT;
   }
 };
 

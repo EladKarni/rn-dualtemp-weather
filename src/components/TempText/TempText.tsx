@@ -1,7 +1,8 @@
 import { Text } from "react-native";
 import React from "react";
-import { TempTextStyles } from "./TempText.Styles";
+import { TempTextStyles } from "./TempText.styles";
 import { typography } from "../../styles/Typography";
+import { celsiusToFahrenheit } from "../../utils/temperature";
 
 type TempTextPropsType = {
   textStyleType: TempTextStyleTypes;
@@ -34,9 +35,9 @@ const TempText = ({
     >
       {tempType?.toUpperCase() !== "F"
         ? Math.round(temp)
-        : Math.round((temp * 9) / 5 + 32)}
+        : Math.round(celsiusToFahrenheit(temp))}
       {withSym ? "°" : null}
-      <Text style={TempTextStyles.tempLastLetter}>{tempType}</Text>
+      {tempType}
     </Text>
   );
 };

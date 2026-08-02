@@ -7,25 +7,36 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
-      "channel": "development"
+      "channel": "development",
+      "environment": "development",
+      "env": {
+        "EXPO_PUBLIC_WEATHER_APP_TOKEN": "4274b43fed7f81acae0e7aeec9383401d144bbedd555fb24fc743528eb8f708f"
+      }
     },
     "preview": {
       "distribution": "internal",
       "channel": "preview",
-      "env": {
-        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
-      }
-    },
-    "preview-apk": {
+      "environment": "preview",
       "android": {
-        "buildType": "apk"
+        "buildType": "apk",
+        "autoIncrement": true
       },
-      "channel": "preview-apk"
+      "env": {
+        "EXPO_PUBLIC_WEATHER_API_URL": "https://open-weather-proxy-q9xk-git-feat-pro-4cc9b7-eladkarnis-projects.vercel.app/api/v1/",
+        "EXPO_PUBLIC_WEATHER_APP_TOKEN": "4274b43fed7f81acae0e7aeec9383401d144bbedd555fb24fc743528eb8f708f"
+      }
     },
     "production": {
       "channel": "production",
+      "environment": "production",
+      "android": {
+        "autoIncrement": true
+      },
       "ios": {
         "autoIncrement": true
+      },
+      "env": {
+        "EXPO_PUBLIC_WEATHER_APP_TOKEN": "4274b43fed7f81acae0e7aeec9383401d144bbedd555fb24fc743528eb8f708f"
       }
     }
   },

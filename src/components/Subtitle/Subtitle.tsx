@@ -1,7 +1,7 @@
 import React from 'react';
 import { Text } from 'react-native';
 
-import { SubTitleStyles } from './Subtitle.Styles'
+import { SubTitleStyles } from './Subtitle.styles'
 import { useLanguageStore } from '../../store/useLanguageStore';
 
 interface TitleProps {

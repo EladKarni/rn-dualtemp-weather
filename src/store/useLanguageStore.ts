@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { getLanguage } from "react-native-localization-settings";
+import { getLocales } from "expo-localization";
 import moment from "moment";
 import "moment/locale/he";
 import "moment/locale/es";
@@ -9,12 +9,34 @@ import "moment/locale/ar";
 import "moment/locale/fr";
 import "moment/locale/zh-cn";
 import { i18n, translations } from "../localization/i18n";
+import { installHebrewMeridiem } from "../utils/hebrewMeridiem";
 import { isRTLLanguage, getTextDirection } from "../utils/rtlDetection";
 import { logger } from "../utils/logger";
 
+// Must run before anything formats a Hebrew time — see the module for why.
+installHebrewMeridiem();
+
 // CRITICAL: Reset moment to English after importing locales
-// Some locale files (especially zh-cn) set themselves as the default global locale on import
+// Some locale files (especially zh-cn) set themselves as the default global
+// locale on import, and updateLocale above also switches to the locale it edits
 moment.locale('en');
+
+/**
+ * Resolve the device's primary language code (e.g. "en" from "en-US").
+ *
+ * Uses expo-localization, which has a real web implementation (unlike the old
+ * native-only getLanguage()) and returns the base language code directly via
+ * getLocales()[0].languageCode. Wrapped in try/catch with an "en" fallback so
+ * locale resolution can never crash the store on any platform.
+ */
+const getDeviceLanguage = (): string => {
+  try {
+    return getLocales()[0]?.languageCode ?? "en";
+  } catch (error) {
+    logger.warn("Failed to resolve device language, falling back to 'en':", error);
+    return "en";
+  }
+};
 
 interface LanguageState {
   selectedLanguage: string | null; // null = auto-detect
@@ -35,7 +57,7 @@ interface LanguageState {
 export const useLanguageStore = create<LanguageState>()(
   persist(
     (set, get) => ({
-      selectedLanguage: null, // Default to auto-detect
+      selectedLanguage: null as string | null, // Default to auto-detect
       currentLocale: 'en',
       momentLocale: 'en',
       isRTL: false,
@@ -49,9 +71,9 @@ export const useLanguageStore = create<LanguageState>()(
       initializeLocale: () => {
         try {
           const state = get();
-          const deviceLanguage = getLanguage().split("-")[0];
+          const deviceLanguage = getDeviceLanguage();
           const userLocale = state.selectedLanguage || deviceLanguage;
-          const locale = translations[userLocale] ? userLocale : "en";
+          const locale = userLocale in translations ? userLocale : "en";
 
           logger.info('Initializing locale:', {
             selectedLanguage: state.selectedLanguage,
@@ -145,9 +167,9 @@ export const useLanguageStore = create<LanguageState>()(
         set({ selectedLanguage: language });
 
         // Determine and apply the new locale
-        const deviceLanguage = getLanguage().split("-")[0];
+        const deviceLanguage = getDeviceLanguage();
         const userLocale = language || deviceLanguage;
-        const locale = translations[userLocale] ? userLocale : "en";
+        const locale = userLocale in translations ? userLocale : "en";
 
         // Apply locale immediately (synchronous)
         get().applyLocale(locale);

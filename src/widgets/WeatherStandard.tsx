@@ -8,7 +8,12 @@ import { WeatherIcon } from "./components/shared/WeatherIcon";
 import { convertWindSpeed } from "../utils/temperature";
 import { calculateHourlyItemCount, getItemSpacing } from "./utils/widgetLayoutUtils";
 import { palette } from "../styles/Palette";
+import { getWidgetElementColor } from "./utils/widgetTheme";
 import { formatDataAge } from "./utils/widgetDataUtils";
+import { formatTime } from "../utils/dateFormatting";
+import { i18n } from "../localization/i18n";
+import { isRTLLanguage } from "../utils/rtlDetection";
+import { useSettingsStore } from "../store/useSettingsStore";
 
 interface WeatherStandardProps {
   weather: Weather;
@@ -29,11 +34,12 @@ const HourlyItem = ({
   tempScale: "C" | "F";
   showBackground?: boolean;
 }) => {
-  // Format time using device locale
-  const timeText = new Date(forecast.dt * 1000).toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  // Honor the user's clock-format preference (settings store is hydrated in the
+  // widget context by the store-hydration gate).
+  const timeText = formatTime(
+    forecast.dt,
+    useSettingsStore.getState().clockFormat
+  );
 
   // Calculate wind speed
   const { value: windSpeed, unit: windUnit } = convertWindSpeed(
@@ -45,9 +51,16 @@ const HourlyItem = ({
     <FlexWidget
       style={{
         height: "match_parent",
+        // width 0 WITH flex is what makes every column identical. Without an
+        // explicit width the native side defaults to WRAP_CONTENT, and a
+        // weighted WRAP_CONTENT child gets its natural size PLUS a share of the
+        // leftover — so "5:00 אחה״צ" produced a visibly wider column than
+        // "6:00 בערב". At width 0 the weight alone decides, so every column is
+        // the same regardless of how long its label happens to be.
+        width: 0,
         flex: 1,
         ...(showBackground && {
-          backgroundColor: "rgba(255, 255, 255, 0.1)",
+          backgroundColor: getWidgetElementColor(),
           borderRadius: 8,
           padding: 8,
         }),
@@ -88,8 +101,18 @@ const HourlyItem = ({
       {/* Weather Icon */}
       <WeatherIcon weatherId={forecast.weather[0].id} size="small" />
 
-      {/* Dual Temperature */}
-      <DualTemperatureDisplay temp={forecast.temp} size="small" tempScale={tempScale} />
+      {/* Dual Temperature. Stacked rather than left to wrap: the column was
+          already narrow enough that the inline form broke onto a second line by
+          itself, so this keeps the two-line shape but makes it deliberate —
+          which is what lets the preferred scale carry its own weight and both
+          lines carry their unit letter. */}
+      <DualTemperatureDisplay
+        temp={forecast.temp}
+        size="small"
+        tempScale={tempScale}
+        layout="stacked"
+        maxLines={1}
+      />
     </FlexWidget>
   );
 };
@@ -121,6 +144,10 @@ export function WeatherStandard({
   // Always use compact layout when itemCount is 1 or less
   const isExpanded = itemCount > 1;
 
+  // Read from the locale rather than a store field: this also runs in the
+  // headless widget context, where i18n is hydrated but React state is not.
+  const isRTL = isRTLLanguage(i18n.locale);
+
   // Format age indicator if data is stale
   const ageText = dataAge !== undefined ? formatDataAge(dataAge) : null;
 
@@ -129,7 +156,7 @@ export function WeatherStandard({
       style={{
         height: "match_parent",
         width: "match_parent",
-        backgroundColor: palette.primaryColor,
+        backgroundColor: palette.widgetSurface,
         borderRadius: 16,
         padding: 12,
         flexDirection: "column",
@@ -145,11 +172,18 @@ export function WeatherStandard({
             flex: 1,
             width: "match_parent",
             flexDirection: "row",
-            justifyContent: "space-between",
+            // NOT space-between: this renderer implements the space-* values by
+            // injecting an invisible `flex: 1` child between every pair, which
+            // both takes width from the real columns and makes their final
+            // widths depend on content again. Spacing comes from flexGap.
             flexGap: itemGap,
           }}
         >
-          {forecastItems.map((forecast) => (
+          {/* Chronological order carries the layout direction. In an RTL locale
+              time reads right-to-left, so the earliest hour belongs on the
+              right — this renderer has no layoutDirection and no row-reverse,
+              so reversing the items is the only way to express that. */}
+          {(isRTL ? [...forecastItems].reverse() : forecastItems).map((forecast) => (
             <HourlyItem
               key={forecast.dt}
               forecast={forecast}
@@ -159,12 +193,15 @@ export function WeatherStandard({
           ))}
         </FlexWidget>
       ) : (
-        // Compact layout: Single item without background, fills space
+        // Compact layout: one item filling the space. It still draws its own
+        // element background — at this size it used to rely on the root's solid
+        // fill, which is now transparent, so without it the text would sit
+        // directly on the wallpaper.
         forecastItems.length > 0 && (
           <HourlyItem
             forecast={forecastItems[0]}
             tempScale={tempScale}
-            showBackground={false}
+            showBackground={true}
           />
         )
       )}
@@ -182,22 +219,6 @@ export function WeatherStandard({
         />
       )}
 
-      {/* Footer */}
-      <FlexWidget
-        style={{
-          width: "match_parent",
-          alignItems: "center",
-          marginTop: 8,
-        }}
-      >
-        <TextWidget
-          text="Tap to refresh"
-          style={{
-            fontSize: 9,
-            color: palette.textColorSecondary,
-          }}
-        />
-      </FlexWidget>
     </FlexWidget>
   );
 }

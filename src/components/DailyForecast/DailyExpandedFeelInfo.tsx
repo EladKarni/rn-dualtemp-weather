@@ -1,7 +1,7 @@
 import { View, Text } from 'react-native'
 import React from 'react'
 import { TempTextStyleTypes } from '../TempText/TempText'
-import { DailyForecastExtendedItemStyles } from './DailyForecastExtendedItemStyles.Styles'
+import { DailyForecastExtendedItemStyles } from './DailyForecastExtendedItem.styles'
 import DualTempText from '../TempText/DualTempText'
 type DailyExpandedFeelInfoPropTypes = {
     temp: number;

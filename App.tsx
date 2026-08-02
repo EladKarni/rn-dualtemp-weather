@@ -1,5 +1,6 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { QueryErrorResetBoundary } from "@tanstack/react-query";
+import { StatusBar } from "expo-status-bar";
 
 import {
   useFonts,
@@ -11,32 +12,21 @@ import {
   DMSans_700Bold_Italic,
 } from "@expo-google-fonts/dm-sans";
 import * as Sentry from "@sentry/react-native";
-import Constants from "expo-constants";
 
 import { logger } from "./src/utils/logger";
-import { toAppError } from "./src/utils/errors";
+import { toAppError, NoConnectionError } from "./src/utils/errors";
 
-// Initialize Sentry - only if DSN is provided
-const sentryDsn = Constants.expoConfig?.extra?.sentryDsn;
-if (sentryDsn) {
-  Sentry.init({
-    dsn: sentryDsn,
-    debug: __DEV__, // Enable debug mode in development
-    enabled: !__DEV__, // Only send events in production builds
-  });
-  if (__DEV__) {
-    logger.info("Sentry initialized (dev mode - events disabled)");
-  }
-} else if (__DEV__) {
-  logger.info(
-    "Sentry not initialized: No DSN provided. Set EXPO_PUBLIC_SENTRY_DSN environment variable to enable."
-  );
-}
+// Sentry is initialized by src/config/sentryBootstrap, imported first in
+// index.js so it runs before the rest of the module graph. Sentry.wrap below is
+// the only Sentry usage left in this file.
 
 // Stores
 import { useSettingsStore } from "./src/store/useSettingsStore";
 import { useLocationStore } from "./src/store/useLocationStore";
 import { useModalStore } from "./src/store/useModalStore";
+
+// Widget sync
+import { startWidgetLocationSync } from "./src/widgets/widgetLocationSync";
 
 // Custom hooks
 import { useGPSLocation } from "./src/hooks/useGPSLocation";
@@ -47,24 +37,46 @@ import { useWeatherLoadingState } from "./src/hooks/useWeatherLoadingState";
 import { useLocaleQuery } from "./src/hooks/useLocaleQuery";
 import { useScreenProps } from "./src/hooks/useScreenProps";
 import { useRenderDecision } from "./src/hooks/useRenderDecision";
-import { initializeForecastStore } from "./src/store/useForecastStore";
+import {
+  initializeForecastStore,
+  scheduleForecastCleanup,
+} from "./src/store/useForecastStore";
 
 // Screens
 import LoadingScreen from "./src/screens/LoadingScreen";
 import ErrorScreen from "./src/screens/ErrorScreen";
 import SkeletonScreen from "./src/screens/SkeletonScreen";
 import MainWeatherWithModals from "./src/screens/MainWeatherWithModals";
+import EmptyLocationScreen from "./src/screens/EmptyLocationScreen";
+import AddLocationScreen from "./src/screens/AddLocationScreen";
+import SettingsScreen from "./src/screens/SettingsScreen";
 
 // Error Boundary
 import ErrorBoundary from "./src/components/ErrorBoundary/ErrorBoundary";
 
 function App() {
-  // Initialize forecast store
+  // Initialize forecast store, then evict stale cache entries once the app has
+  // settled. The eviction is deliberately deferred rather than chained onto
+  // initialization: as a startup step its DELETE raced the widget task's
+  // connection and failed with "database is locked", and nothing needs a
+  // 24-hour eviction to have finished before the first render.
   useEffect(() => {
-    initializeForecastStore().catch((error) => {
-      console.error("Failed to initialize forecast store:", error);
-    });
+    let cancelCleanup: (() => void) | undefined;
+
+    initializeForecastStore()
+      .then(() => {
+        cancelCleanup = scheduleForecastCleanup();
+      })
+      .catch((error) => {
+        console.error("Failed to initialize forecast store:", error);
+      });
+
+    return () => cancelCleanup?.();
   }, []);
+
+  // Repaint widgets when the location they resolve to changes (returns its
+  // unsubscribe for cleanup).
+  useEffect(() => startWidgetLocationSync(), []);
 
   // Store state
   const tempScale = useSettingsStore((state) => state.tempScale);
@@ -72,13 +84,13 @@ function App() {
   const activeLocationId = useLocationStore((state) => state.activeLocationId);
   const activeModal = useModalStore((state) => state.activeModal);
   const openLocationDropdown = useModalStore(
-    (state) => state.openLocationDropdown
+    (state) => state.openLocationDropdown,
   );
   const openSettings = useModalStore((state) => state.openSettings);
   const openAddLocation = useModalStore((state) => state.openAddLocation);
 
   const activeLocation = savedLocations.find(
-    (loc) => loc.id === activeLocationId
+    (loc) => loc.id === activeLocationId,
   );
 
   // Locale/date query - fetch locale settings and create moment object
@@ -87,8 +99,36 @@ function App() {
     useLocaleQuery();
 
   // Custom hooks
-  useGPSLocation();
+  const { gpsResolved } = useGPSLocation();
   useAppLifecycle();
+
+  // Track persisted-store rehydration reactively — persist finishing with an
+  // empty store doesn't trigger a re-render on its own, so a bare
+  // hasHydrated() call in render could stay false forever
+  const [locationsHydrated, setLocationsHydrated] = useState(() =>
+    useLocationStore.persist.hasHydrated(),
+  );
+  useEffect(() => {
+    const unsubscribe = useLocationStore.persist.onFinishHydration(() =>
+      setLocationsHydrated(true),
+    );
+    // Hydration may have finished between first render and this effect
+    if (useLocationStore.persist.hasHydrated()) {
+      // Not replaceable with useSyncExternalStore, which the no-initialize-state
+      // rule suggests: that is a pure subscription, and this effect also needs
+      // the bounded timeout below — a failed hydration never fires
+      // onFinishHydration, and the empty state must not stay locked behind it.
+      // eslint-disable-next-line react-you-might-not-need-an-effect/no-initialize-state
+      setLocationsHydrated(true);
+    }
+    // Bounded wait: a failed hydration never fires onFinishHydration, and
+    // the empty state must not stay locked behind it forever
+    const timer = setTimeout(() => setLocationsHydrated(true), 3000);
+    return () => {
+      clearTimeout(timer);
+      unsubscribe();
+    };
+  }, []);
 
   const {
     activeWeather: forecast,
@@ -101,33 +141,18 @@ function App() {
   } = useMultiLocationWeather(
     savedLocations,
     activeLocationId,
-    fetchedLocaleSuccessfully && !isLocaleLoading
+    fetchedLocaleSuccessfully && !isLocaleLoading,
   );
 
   const setActiveLocation = useLocationStore(
-    (state) => state.setActiveLocation
-  );
-
-  const handleLocationSelect = React.useCallback(
-    (locationId: string) => {
-      setActiveLocation(locationId);
-    },
-    [setActiveLocation]
+    (state) => state.setActiveLocation,
   );
 
   const { splashTimeoutExpired, onLayoutRootView } = useSplashScreen(isFetched);
 
-  const {
-    showSkeleton,
-    showErrorScreen,
-    dismissedError,
-    setDismissedError,
-    lastUpdated,
-  } = useWeatherLoadingState(
-    splashTimeoutExpired,
-    refreshing,
-    forecast,
-    hasForecastError
+  const { isErrorDismissed, dismissError } = useWeatherLoadingState(
+    hasForecastError,
+    forecastError,
   );
 
   // Font loading
@@ -163,13 +188,23 @@ function App() {
     localeData,
   ]);
 
-  if (hasForecastError) {
-    logger.error("Forecast query error:", forecastError);
-  }
+  // Report forecast errors from an effect (never the render body — that would
+  // fire on every re-render). Offline (NoConnectionError) is an expected,
+  // user-visible state, not an anomaly worth a Sentry event.
+  React.useEffect(() => {
+    if (forecastError && !(forecastError instanceof NoConnectionError)) {
+      logger.error("Forecast query error:", forecastError);
+    }
+  }, [forecastError]);
 
   const onRefresh = React.useCallback(() => {
     refetch();
   }, [refetch]);
+
+  const closeModal = React.useCallback(
+    () => useModalStore.getState().closeModal(),
+    [],
+  );
 
   // Common props for all screen components
   const screenProps = useScreenProps({
@@ -181,8 +216,9 @@ function App() {
     locationLoadingStates,
   });
 
-  // Render decision logic - determines when to block on splash and logs state
-  const { essentialResourcesLoading, shouldBlockOnSplash } = useRenderDecision({
+  // Render decision logic - determines when to block on splash and which single
+  // screen to render (mutually-exclusive screenState replaces the old guards).
+  const { shouldBlockOnSplash, screenState } = useRenderDecision({
     splashTimeoutExpired,
     activeLocation,
     date,
@@ -193,6 +229,9 @@ function App() {
     fetchedLocaleSuccessfully,
     localeData,
     fontsLoaded,
+    locationsHydrated,
+    gpsResolved,
+    hasSavedLocations: savedLocations.length > 0,
   });
 
   // Block on splash screen if timeout hasn't expired AND resources not ready
@@ -202,18 +241,24 @@ function App() {
 
   // ============================================================================
   // RENDER DECISION TREE - WRAPPED WITH ERROR BOUNDARY
-  // After 3-second splash timeout, we always render one of the screens below
-  // All screens are wrapped with ErrorBoundary to catch render errors
-  // ============================================================================
-
-  // ============================================================================
-  // RENDER DECISION TREE
-  // All components are wrapped with ErrorBoundary to catch render errors
+  // After the 3-second splash timeout, we render exactly ONE screen, chosen by
+  // the mutually-exclusive `screenState` (see useRenderDecision.computeScreenState).
+  // This replaces the previous set of independent boolean guards, which could
+  // mount two screens simultaneously (double SkeletonScreen / Skeleton+Loading).
+  // All screens are wrapped with ErrorBoundary to catch render errors.
   // ============================================================================
 
   return (
-    <QueryErrorResetBoundary>
-      {({ reset }) => (
+    <>
+      {/* Light glyphs, because every screen sits on the #1C1B4D surface. The
+          Info.plist carries UIStatusBarStyleLightContent for the pre-JS window
+          (splash), but React Native takes the status bar over once it mounts
+          and would otherwise restore the dark default — so both are needed,
+          not either. Rendered outside QueryErrorResetBoundary so it survives
+          the ErrorBoundary fallback path too. */}
+      <StatusBar style="light" />
+      <QueryErrorResetBoundary>
+        {({ reset }) => (
         <ErrorBoundary
           fallback={(error, resetError) => (
             <ErrorScreen
@@ -227,71 +272,87 @@ function App() {
             />
           )}
         >
-          {/* CRITICAL SAFETY CHECK: Timeout expired but essential resources still loading */}
-          {splashTimeoutExpired && essentialResourcesLoading && (
-            <SkeletonScreen {...screenProps} />
-          )}
+          {(() => {
+            switch (screenState) {
+              // EMPTY STATE: no saved locations (e.g. GPS denied on first
+              // run) — a reachable manual-add screen instead of an endless
+              // skeleton
+              case "empty":
+                return (
+                  <EmptyLocationScreen
+                    onAddLocation={openAddLocation}
+                    {...screenProps}
+                  />
+                );
 
-          {/* LOADING STATE: Initial fetch in progress */}
-          {refreshing && !forecast && !hasForecastError && (
-            <LoadingScreen {...screenProps} />
-          )}
-
-          {/* LOADING STATE: Post-timeout loading */}
-          {showSkeleton && !showErrorScreen && (
-            <SkeletonScreen {...screenProps} />
-          )}
-
-          {/* ERROR STATE: Network/API error with no cached data */}
-          {showErrorScreen &&
-            hasForecastError &&
-            !forecast &&
-            (() => {
-              const appError = forecastError ? toAppError(forecastError) : null;
-              return (
-                <ErrorScreen
-                  {...screenProps}
-                  errorMessage={appError?.userMessage}
-                  onRetry={() => refetch()}
-                />
-              );
-            })()}
-
-          {/* FALLBACK STATE: Safety net for missing data */}
-          {!forecast && !showErrorScreen && !refreshing && (
-            <SkeletonScreen {...screenProps} />
-          )}
-
-          {/* SUCCESS STATE: All data loaded successfully (with optional error banner for cached data) */}
-          {forecast && (
-            <MainWeatherWithModals
-              forecast={forecast}
-              date={date}
-              tempScale={tempScale}
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              onLayoutRootView={onLayoutRootView}
-              activeModal={activeModal}
-              closeModal={() => useModalStore.getState().closeModal()}
-              openAddLocation={openAddLocation}
-              savedLocations={savedLocations}
-              activeLocationId={activeLocationId}
-              locationLoadingStates={locationLoadingStates}
-              onLocationSelect={handleLocationSelect}
-              appError={
-                hasForecastError && !dismissedError
+              // ERROR STATE: Network/API error with no cached data
+              case "error": {
+                const appError = forecastError
                   ? toAppError(forecastError)
-                  : null
+                  : null;
+                return (
+                  <ErrorScreen
+                    {...screenProps}
+                    errorMessage={appError?.userMessage}
+                    onRetry={() => refetch()}
+                  />
+                );
               }
-              onRetry={() => refetch()}
-              onDismissError={() => setDismissedError("dismissed")}
-              lastUpdated={lastUpdated}
-              {...screenProps}
-            />
-          )}
-        </ErrorBoundary>
-      )}
-    </QueryErrorResetBoundary>
+
+              // SUCCESS STATE: Data loaded (with optional error banner for cached data)
+              case "content":
+                return (
+                  <MainWeatherWithModals
+                    // `content` is only selected when forecast is present
+                    // (useRenderDecision precedence), so it is non-null here.
+                    forecast={forecast!}
+                    date={date}
+                    tempScale={tempScale}
+                    refreshing={refreshing}
+                    onRefresh={onRefresh}
+                    onLayoutRootView={onLayoutRootView}
+                    activeModal={activeModal}
+                    closeModal={closeModal}
+                    openAddLocation={openAddLocation}
+                    appError={
+                      hasForecastError && !isErrorDismissed
+                        ? toAppError(forecastError)
+                        : null
+                    }
+                    onRetry={() => refetch()}
+                    onDismissError={dismissError}
+                    {...screenProps}
+                  />
+                );
+
+              // LOADING STATE: Initial fetch in progress
+              case "loading":
+                return <LoadingScreen {...screenProps} />;
+
+              // SKELETON STATE: Post-timeout fallback while resources resolve
+              case "skeleton":
+              default:
+                return <SkeletonScreen {...screenProps} />;
+            }
+          })()}
+
+          {/* GLOBAL MODALS: mounted outside the screenState switch so
+              settings and manual city add stay reachable from every screen
+              state, including the empty state. RN Modal renders nothing
+              while visible is false. */}
+          <SettingsScreen
+            visible={activeModal === "settings"}
+            onClose={closeModal}
+            onAddLocationPress={openAddLocation}
+          />
+          <AddLocationScreen
+            visible={activeModal === "addLocation"}
+            onClose={closeModal}
+          />
+          </ErrorBoundary>
+        )}
+      </QueryErrorResetBoundary>
+    </>
   );
 }
 

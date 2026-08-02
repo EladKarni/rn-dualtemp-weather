@@ -1,7 +1,8 @@
 import React from "react";
 import { View, StyleSheet } from "react-native";
 import Subtitle from "../Subtitle/Subtitle";
-import { DailyForecastStyles } from "./DailyForecast.Styles";
+import { SkeletonBox } from "../LoadingSkeleton/SkeletonBox";
+import { DailyForecastStyles } from "./DailyForecast.styles";
 import { palette } from "../../styles/Palette";
 import { i18n } from "../../localization/i18n";
 
@@ -19,10 +20,10 @@ const DailyForecastSkeleton = () => {
       {skeletonItems.map((_, index) => (
         <View key={index}>
           <View style={styles.skeletonItem}>
-            <View style={styles.skeletonDay} />
+            <SkeletonBox style={styles.day} />
             <View style={styles.itemRight}>
-              <View style={styles.skeletonIcon} />
-              <View style={styles.skeletonTemp} />
+              <SkeletonBox style={styles.icon} />
+              <SkeletonBox style={styles.temp} />
             </View>
           </View>
           {index < skeletonItems.length - 1 && <View style={styles.divider} />}
@@ -45,24 +46,16 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 15,
   },
-  skeletonDay: {
-    backgroundColor: palette.textColor,
-    opacity: 0.15,
-    borderRadius: 4,
+  day: {
     height: 18,
     width: 80,
   },
-  skeletonIcon: {
-    backgroundColor: palette.textColor,
-    opacity: 0.15,
+  icon: {
     borderRadius: 15,
     height: 30,
     width: 30,
   },
-  skeletonTemp: {
-    backgroundColor: palette.textColor,
-    opacity: 0.15,
-    borderRadius: 4,
+  temp: {
     height: 18,
     width: 60,
   },

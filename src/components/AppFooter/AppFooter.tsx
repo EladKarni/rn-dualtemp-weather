@@ -1,25 +1,15 @@
 import React from "react";
-import { View, Text, StyleSheet, Linking, Image } from "react-native";
-import { palette } from "../../styles/Palette";
-import { i18n } from "../../localization/i18n";
+import { View, Text, StyleSheet } from "react-native";
+import Constants from "expo-constants";
 
 const AppFooter = () => {
+  // Read the version from app config (single source of truth); fall back to the
+  // current shipped version if the manifest is unavailable.
+  const version = Constants.expoConfig?.version ?? "2.2.0";
+
   return (
     <View style={styles.footerContainer}>
-      <Text style={styles.openweatherText}>
-        <Text>{i18n.t("ProvidedBy")}</Text>
-        <Text
-          style={styles.linkText}
-          onPress={() => Linking.openURL("https://openweathermap.org/")}
-        >
-          {i18n.t("OpenWeather")}
-        </Text>
-      </Text>
-      <Image
-        source={require("../../../assets/Images/OpenWeatherLogo.png")}
-        style={styles.weatherLogo}
-      />
-      <Text style={styles.versionNumber}>Version: 2.0.1</Text>
+      <Text style={styles.versionNumber}>Version: {version}</Text>
     </View>
   );
 };
@@ -28,22 +18,6 @@ const styles = StyleSheet.create({
   footerContainer: {
     alignItems: "center",
     paddingVertical: 5,
-  },
-  geoapifyText: {
-    color: palette.highlightColor,
-    textAlign: "center",
-  },
-  openweatherText: {
-    color: palette.highlightColor,
-    textAlign: "center",
-  },
-  linkText: {
-    color: palette.primaryLight,
-    textAlign: "center",
-  },
-  weatherLogo: {
-    width: 150,
-    height: 100,
   },
   versionNumber: {
     color: "#777",

@@ -5,6 +5,7 @@ import {
   Text,
   TouchableOpacity,
   TouchableWithoutFeedback,
+  KeyboardAvoidingView,
   Platform,
   Animated,
   TextInput,
@@ -17,14 +18,14 @@ import {
   searchCities,
   formatLocationName,
 } from "../utils/geocoding";
-import { useLocationStore } from "../store/useLocationStore";
+import { useLocationStore, MAX_SAVED_LOCATIONS } from "../store/useLocationStore";
 import { useLanguageStore } from "../store/useLanguageStore";
 import { logger } from "../utils/logger";
 import { AppError, toAppError } from "../utils/errors";
 import { useModalAnimation } from "../hooks/useModalAnimation";
 import { palette } from "../styles/Palette";
 import { CityResultItem } from "../components/AddLocation/CityResultItem/CityResultItem";
-import { styles } from "../styles/screens/AddLocationScreen.styles";
+import { styles } from "./AddLocationScreen.styles";
 
 type AddLocationScreenProps = {
   visible: boolean;
@@ -40,9 +41,6 @@ const AddLocationScreen = ({ visible, onClose }: AddLocationScreenProps) => {
   const selectedLanguage = useLanguageStore((state) => state.selectedLanguage);
 
   const addLocation = useLocationStore((state) => state.addLocation);
-  const canAddMoreLocations = useLocationStore((state) =>
-    state.canAddMoreLocations()
-  );
 
   const { fadeAnim, slideAnim } = useModalAnimation(visible);
 
@@ -70,7 +68,10 @@ const AddLocationScreen = ({ visible, onClose }: AddLocationScreenProps) => {
 
     searchTimeoutRef.current = setTimeout(async () => {
       try {
-        const locale = selectedLanguage || "en";
+        // Auto-detect mode ("selectedLanguage" is null) uses the resolved active
+        // locale so city names come back in the language the user actually sees,
+        // instead of the previous hardcoded "en".
+        const locale = selectedLanguage || i18n.locale;
         const results = await searchCities(searchQuery, locale);
         setSearchResults(results);
         setError(null);
@@ -92,24 +93,27 @@ const AddLocationScreen = ({ visible, onClose }: AddLocationScreenProps) => {
   }, [searchQuery, selectedLanguage]);
 
   const handleSelectCity = (city: CityResult) => {
-    if (!canAddMoreLocations) {
-      setError(toAppError(new Error(i18n.t("MaxLocationsReached"))));
-      return;
-    }
-
     const locationName = formatLocationName(
       city.name,
       city.state,
       city.country
     );
 
-    addLocation({
-      name: locationName,
-      latitude: city.lat,
-      longitude: city.lon,
-    });
-
-    onClose();
+    try {
+      addLocation({
+        name: locationName,
+        latitude: city.lat,
+        longitude: city.lon,
+      });
+      onClose();
+    } catch (err) {
+      // addLocation throws typed UserErrors (DuplicateLocationError /
+      // MaxLocationsError) carrying a userMessageKey. Surface localized feedback
+      // and keep the modal open so the user can pick a different city.
+      const appError = err instanceof AppError ? err : toAppError(err);
+      logger.warn("Add location failed:", appError);
+      setError(appError);
+    }
   };
 
   const handleRetry = () => {
@@ -147,6 +151,14 @@ const AddLocationScreen = ({ visible, onClose }: AddLocationScreenProps) => {
       onRequestClose={onClose}
       statusBarTranslucent
     >
+      {/* Same shape as SettingsScreen: the sheet lives in flex flow inside a
+          KeyboardAvoidingView, so the keyboard shrinks the sheet instead of
+          covering the results list — the search field autofocuses, so on iOS
+          the keyboard is up for the entire life of this screen. */}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.overlay}
+      >
       <TouchableWithoutFeedback onPress={onClose}>
         <Animated.View style={[styles.backdrop, { opacity: fadeAnim }]} />
       </TouchableWithoutFeedback>
@@ -183,7 +195,11 @@ const AddLocationScreen = ({ visible, onClose }: AddLocationScreenProps) => {
           <View style={styles.errorBanner}>
             <View style={styles.errorContent}>
               <Text style={styles.errorIcon}>⚠️</Text>
-              <Text style={styles.errorMessage}>{error.userMessage}</Text>
+              <Text style={styles.errorMessage}>
+                {error.userMessageKey
+                  ? i18n.t(error.userMessageKey, { count: MAX_SAVED_LOCATIONS })
+                  : error.userMessage}
+              </Text>
             </View>
             <View style={styles.errorActions}>
               {error.recoverable && (
@@ -228,6 +244,7 @@ const AddLocationScreen = ({ visible, onClose }: AddLocationScreenProps) => {
           )}
         </View>
       </Animated.View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 };
